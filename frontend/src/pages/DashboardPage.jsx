@@ -160,8 +160,8 @@ function DashboardPage({ accessToken, onLogout, onSessionExpired, user }) {
           </div>
           <AnalysisPanel
             accessToken={accessToken}
-            analysisResult={analysisResult}
-            analysisState={analysisState}
+            analysisResult={analysisResult?.repository?.id === selectedRepo?.id ? analysisResult : null}
+            analysisState={analysisState.targetRepositoryId === selectedRepo?.id ? analysisState : { status: "idle", error: null }}
             onAnalyze={handleAnalyze}
             repository={selectedRepo}
           />

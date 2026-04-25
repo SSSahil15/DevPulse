@@ -230,15 +230,42 @@ jobs:
           print(count)" 2>/dev/null || echo "0"
           }
 
+          parse_details() {
+            python3 -c "
+          import json, base64
+          try:
+            data = json.load(open('security-reports/trivy-fs-results.json'))
+            results = data.get('Results', [])
+            vulns = []
+            for r in results:
+              for v in r.get('Vulnerabilities', []):
+                vulns.append({
+                  'id': v.get('VulnerabilityID', 'Unknown'),
+                  'pkgName': v.get('PkgName', 'Unknown'),
+                  'severity': v.get('Severity', 'UNKNOWN'),
+                  'installedVersion': v.get('InstalledVersion', ''),
+                  'fixedVersion': v.get('FixedVersion', 'No fix available'),
+                  'title': v.get('Title', v.get('VulnerabilityID', ''))
+                })
+            sev_map = {'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1, 'UNKNOWN': 0}
+            vulns.sort(key=lambda x: sev_map.get(x['severity'], 0), reverse=True)
+            out = json.dumps(vulns[:20])
+            print(base64.b64encode(out.encode('utf-8')).decode('utf-8'))
+          except Exception as e:
+            print(base64.b64encode(b'[]').decode('utf-8'))"
+          }
+
           CRITICAL=$(parse_count CRITICAL)
           HIGH=$(parse_count HIGH)
           MEDIUM=$(parse_count MEDIUM)
           TOTAL=$((CRITICAL + HIGH + MEDIUM))
+          VULN_DETAILS=$(parse_details)
 
           echo "vuln_critical=$CRITICAL" >> $GITHUB_OUTPUT
           echo "vuln_high=$HIGH" >> $GITHUB_OUTPUT
           echo "vuln_medium=$MEDIUM" >> $GITHUB_OUTPUT
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "vuln_details=$VULN_DETAILS" >> $GITHUB_OUTPUT
 
           # Generate summary report
           {
@@ -293,6 +320,7 @@ jobs:
       vuln_high: ${{ steps.vuln_count.outputs.vuln_high }}
       vuln_medium: ${{ steps.vuln_count.outputs.vuln_medium }}
       total: ${{ steps.vuln_count.outputs.total }}
+      vuln_details: ${{ steps.vuln_count.outputs.vuln_details }}
 
   # ─── Stage 4: Docker ──────────────────────────────────────
   docker:
@@ -414,16 +442,26 @@ jobs:
             OVERALL="failure"
           fi
 
-          PAYLOAD=$(cat <<'HEREDOC'
+          # Decode vulnerability details
+          VULN_DETAILS_JSON=$(echo "${{ needs.security.outputs.vuln_details }}" | base64 --decode || echo "[]")
+          if [ -z "$VULN_DETAILS_JSON" ]; then
+            VULN_DETAILS_JSON="[]"
+          fi
+
+          # Extract first line of commit message securely
+          COMMIT_MSG=$(git log -1 --pretty=format:%s | sed 's/"/\\"/g' | cut -c1-150)
+
+          PAYLOAD=$(cat <<EOF
           {
             "repository": "${{ github.repository }}",
             "commitSha": "${{ github.sha }}",
+            "commitMessage": "$COMMIT_MSG",
             "branch": "${{ github.ref_name }}",
             "triggeredBy": "${{ github.actor }}",
             "runId": "${{ github.run_id }}",
             "runUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
             "event": "${{ github.event_name }}",
-            "timestamp": "TIMESTAMP_PLACEHOLDER",
+            "timestamp": "$(date -u '+%Y-%m-%dT%H:%M:%SZ')",
             "stages": {
               "backend": {
                 "tests": "${{ needs.backend.outputs.test_result || 'skipped' }}"
@@ -435,7 +473,8 @@ jobs:
               "security": {
                 "critical": ${{ needs.security.outputs.vuln_critical || 0 }},
                 "high": ${{ needs.security.outputs.vuln_high || 0 }},
-                "medium": ${{ needs.security.outputs.vuln_medium || 0 }}
+                "medium": ${{ needs.security.outputs.vuln_medium || 0 }},
+                "vulnerabilities": $VULN_DETAILS_JSON
               },
               "docker": {
                 "build": "${{ needs.docker.outputs.build_result || 'skipped' }}",
@@ -443,13 +482,10 @@ jobs:
                 "imageVulnerabilities": ${{ needs.docker.outputs.docker_vulns || 0 }}
               }
             },
-            "overallStatus": "OVERALL_PLACEHOLDER"
+            "overallStatus": "$OVERALL"
           }
-          HEREDOC
+          EOF
           )
-
-          # Inject dynamic values
-          PAYLOAD=$(echo "$PAYLOAD" | sed "s/TIMESTAMP_PLACEHOLDER/$(date -u '+%Y-%m-%dT%H:%M:%SZ')/" | sed "s/OVERALL_PLACEHOLDER/$OVERALL/")
 
           echo "══════════════════════════════════════════════"
           echo "  DevPulse Pipeline Report"
