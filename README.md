@@ -23,7 +23,7 @@ By merging CI/CD heuristics, Trivy container security scanning, and Predictive M
 
 ## ✨ Key Features
 
-- 🔒 **Secure GitHub OAuth**: Authenticate via Supabase with encrypted, server-side GitHub provider tokens.
+- 🔒 **Secure GitHub OAuth**: Direct authentication using GitHub OAuth Apps with encrypted, server-side JWT session management.
 - 📊 **The DevPulse Score**: A proprietary 0-100 metric calculated from security vulnerabilities, test results, and ML-driven predictive failure analysis.
 - 🤖 **Action-First AI Copilot**: A context-aware chat widget powered by `llama-3.3-70b-versatile` (via Groq). Automatically references pipeline data, cites CVEs, and provides one-click action buttons to solve issues fast.
 - 🛡️ **Intelligent Fallback**: Even if the LLM API is unavailable, DevPulse falls back to a deterministic, data-driven reasoning engine to guide you.
@@ -36,12 +36,12 @@ By merging CI/CD heuristics, Trivy container security scanning, and Predictive M
 **Frontend**
 - React 18 & Vite
 - Tailwind CSS (Glassmorphism design, Dark Mode)
-- Supabase Auth (GitHub OAuth)
 - Recharts (Data Visualization)
 - Lucide React (Icons)
 
 **Backend (Node.js)**
 - Express.js
+- Custom JWT Authentication & GitHub OAuth
 - Axios (GitHub API, LLM API calls)
 - Cryptography for token encryption
 - Nodemon (Development)
@@ -81,9 +81,8 @@ devpulse/
 ### Prerequisites
 - Node.js (v24+)
 - Python (v3.11+)
-- Supabase Project
 - Groq API Key
-- GitHub account
+- GitHub OAuth App (created via Developer Settings in your GitHub account)
 
 ### 1. Environment Configuration
 
@@ -95,12 +94,13 @@ PORT=4000
 FRONTEND_URL=http://localhost:5173
 BACKEND_URL=http://localhost:4000
 
-# Supabase details
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+# GitHub OAuth App credentials
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
 
-# 32-character secret for encrypting GitHub tokens
+# Secrets (min 32 characters)
 TOKEN_ENCRYPTION_SECRET=12345678901234567890123456789012
+JWT_SECRET=your_secure_jwt_secret_string
 
 # LLM integration
 GROQ_API_KEY=your-groq-api-key
@@ -108,12 +108,10 @@ GROQ_API_KEY=your-groq-api-key
 
 **Frontend (`frontend/.env`):**
 ```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-publishable-key
 VITE_API_URL=http://localhost:4000
 ```
 
-*Note: Make sure to configure GitHub as an Auth Provider inside your Supabase project dashboard.*
+*Note: Make sure your GitHub OAuth App's Authorization callback URL is set to `http://localhost:4000/auth/github/callback`.*
 
 ### 2. Start the AI Microservice (Terminal 1)
 
