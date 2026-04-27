@@ -1,0 +1,52 @@
+# render.yaml — DevPulse Infrastructure as Code
+# Defines both backend and AI services for one-click deploy on Render.
+# https://render.com/docs/blueprint-spec
+
+services:
+  # ─── Backend: Node.js Express API ───────────────────────
+  - type: web
+    name: devpulse-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: BACKEND_URL
+        sync: false   # Fill in after first deploy — your Render backend URL
+      - key: FRONTEND_URL
+        sync: false   # Fill in after Vercel deploy — your Vercel URL
+      - key: AI_SERVICE_URL
+        sync: false   # Fill in after AI service deploys — Render AI URL
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: TOKEN_ENCRYPTION_SECRET
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GITHUB_TOKEN_STORE_FILE_PATH
+        value: /app/.data/github-provider-tokens.json
+      - key: GITHUB_REPO_PAGE_LIMIT
+        value: 10
+      - key: GROQ_API_KEY
+        sync: false
+      - key: DISCORD_WEBHOOK_URL
+        sync: false
+
+  # ─── AI Service: Python FastAPI ─────────────────────────
+  - type: web
+    name: devpulse-ai
+    runtime: docker
+    dockerfilePath: ./ai/Dockerfile
+    dockerContext: ./ai
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8000

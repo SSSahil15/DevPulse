@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+.env
+.env.*
+.data
+.sessions
+logs
+coverage
+.DS_Store
+.temp_scans
+test
+*.test.js
