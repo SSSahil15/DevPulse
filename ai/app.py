@@ -33,7 +33,7 @@ class SecurityScan(BaseModel):
     status: str
     severityScore: float
     summary: SecuritySummary
-    vulnerabilities: List[str]
+    vulnerabilities: List[dict]
 
 class PredictionResult(BaseModel):
     probability: float

@@ -26,7 +26,8 @@ function AuthCallbackPage() {
 
     // Store the JWT and redirect to the dashboard
     storeToken(token);
-    navigate("/dashboard", { replace: true });
+    // Use window.location.href to force a full app reload so App.jsx bootstraps the new session state
+    window.location.href = "/dashboard";
   }, [navigate, searchParams]);
 
   return (

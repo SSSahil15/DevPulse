@@ -24,6 +24,11 @@ const envSchema = z.object({
   GITHUB_CLIENT_ID: z.string().min(1, "GITHUB_CLIENT_ID is required."),
   GITHUB_CLIENT_SECRET: z.string().min(1, "GITHUB_CLIENT_SECRET is required."),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters."),
+  DISCORD_WEBHOOK_URL: z.string().url().optional(),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().optional().default(587),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -50,5 +55,12 @@ module.exports = {
   port: env.PORT,
   supabasePublishableKey: env.SUPABASE_PUBLISHABLE_KEY,
   supabaseUrl: env.SUPABASE_URL,
-  tokenEncryptionSecret: env.TOKEN_ENCRYPTION_SECRET
+  tokenEncryptionSecret: env.TOKEN_ENCRYPTION_SECRET,
+  discordWebhookUrl: env.DISCORD_WEBHOOK_URL,
+  smtp: {
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    user: env.SMTP_USER,
+    pass: env.SMTP_PASS
+  }
 };

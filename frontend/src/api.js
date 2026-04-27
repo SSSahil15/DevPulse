@@ -22,7 +22,10 @@ export function clearToken() {
 
 export function decodeJWTPayload(token) {
   try {
-    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    let base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    while (base64.length % 4) {
+      base64 += "=";
+    }
     return JSON.parse(atob(base64));
   } catch {
     return null;

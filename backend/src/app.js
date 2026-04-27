@@ -9,6 +9,9 @@ const authRoutes = require("./routes/auth.routes");
 const repoRoutes = require("./routes/repo.routes");
 const webhookRoutes = require("./routes/webhook.routes");
 const pipelineRoutes = require("./routes/pipeline.routes");
+const feedbackRoutes = require("./routes/feedback.routes");
+const reportRoutes = require("./routes/report.routes");
+const aiChatRoutes = require("./routes/aiChat.routes");
 
 const app = express();
 
@@ -47,6 +50,9 @@ app.use("/repos", repoRoutes);
 app.use("/analyze", analyzeRoutes);
 app.use("/webhooks", webhookRoutes);
 app.use("/api/pipeline", pipelineRoutes);
+app.use("/api/feedback", feedbackRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/ai", aiChatRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

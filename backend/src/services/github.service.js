@@ -93,8 +93,109 @@ async function fetchRepository(accessToken, repositoryFullName) {
   return response.data;
 }
 
+/**
+ * Fetch commit activity for the last 30 days.
+ * Returns commit frequency (commits per week) and code churn (total additions + deletions).
+ */
+async function fetchCommitActivity(accessToken, repoFullName) {
+  const client = createGitHubClient(accessToken);
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  try {
+    // Fetch up to 100 recent commits with stats
+    const response = await client.get(`/repos/${repoFullName}/commits`, {
+      params: { since, per_page: 100 }
+    });
+
+    const commits = response.data || [];
+    const totalCommits = commits.length;
+    const commitsPerWeek = Math.round((totalCommits / 30) * 7 * 10) / 10;
+
+    // Fetch stats for up to 20 most recent commits to estimate churn
+    let totalAdditions = 0;
+    let totalDeletions = 0;
+    const statsPromises = commits.slice(0, 20).map(async (commit) => {
+      try {
+        const detail = await client.get(`/repos/${repoFullName}/commits/${commit.sha}`);
+        return detail.data.stats || { additions: 0, deletions: 0 };
+      } catch {
+        return { additions: 0, deletions: 0 };
+      }
+    });
+
+    const statsResults = await Promise.allSettled(statsPromises);
+    statsResults.forEach(result => {
+      if (result.status === "fulfilled") {
+        totalAdditions += result.value.additions || 0;
+        totalDeletions += result.value.deletions || 0;
+      }
+    });
+
+    return {
+      totalCommits,
+      commitsPerWeek,
+      totalAdditions,
+      totalDeletions,
+      codeChurn: totalAdditions + totalDeletions,
+      periodDays: 30
+    };
+  } catch (error) {
+    console.error(`[GitHub] Failed to fetch commit activity for ${repoFullName}:`, error.message);
+    return {
+      totalCommits: 0,
+      commitsPerWeek: 0,
+      totalAdditions: 0,
+      totalDeletions: 0,
+      codeChurn: 0,
+      periodDays: 30
+    };
+  }
+}
+
+/**
+ * Fetch the contributor count for a repository.
+ */
+async function fetchContributors(accessToken, repoFullName) {
+  const client = createGitHubClient(accessToken);
+
+  try {
+    const response = await client.get(`/repos/${repoFullName}/contributors`, {
+      params: { per_page: 100, anon: false }
+    });
+    return {
+      count: (response.data || []).length,
+      contributors: (response.data || []).slice(0, 10).map(c => ({
+        login: c.login,
+        contributions: c.contributions,
+        avatarUrl: c.avatar_url
+      }))
+    };
+  } catch (error) {
+    console.error(`[GitHub] Failed to fetch contributors for ${repoFullName}:`, error.message);
+    return { count: 1, contributors: [] };
+  }
+}
+
+/**
+ * Orchestrator: Fetch all repo health metrics in parallel.
+ */
+async function fetchRepoHealth(accessToken, repoFullName) {
+  const [commitActivity, contributorData] = await Promise.all([
+    fetchCommitActivity(accessToken, repoFullName),
+    fetchContributors(accessToken, repoFullName),
+  ]);
+
+  return {
+    commitActivity,
+    contributors: contributorData,
+  };
+}
+
 module.exports = {
   fetchAuthenticatedViewer,
+  fetchCommitActivity,
+  fetchContributors,
+  fetchRepoHealth,
   fetchRepository,
   fetchUserRepositories,
   getNextPageUrl,

@@ -102,7 +102,7 @@ function DashboardPage({ accessToken, onLogout, onSessionExpired, user }) {
           {repoState.status === "loading" && (
             <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-600">
               <Loader2 className="w-6 h-6 animate-spin" />
-              <span className="text-xs">Loading repos...</span>
+              <span className="text-xs">Fetching repositories from GitHub...</span>
             </div>
           )}
           {repoState.status === "error" && (
@@ -124,29 +124,47 @@ function DashboardPage({ accessToken, onLogout, onSessionExpired, user }) {
         </div>
 
         {/* User footer */}
-        <div className="border-t border-white/[0.06] bg-white/[0.01] p-4">
-          <div className="flex items-center gap-3">
+        <div className="border-t border-white/[0.06] bg-white/[0.01] p-4 group relative">
+          {/* Hover Card */}
+          <div className="absolute bottom-full left-0 w-full p-4 mb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none translate-y-2 group-hover:translate-y-0 z-50">
+            <div className="bg-slate-900 border border-white/10 rounded-xl p-4 shadow-2xl">
+              <div className="grid grid-cols-4 gap-2 text-center divide-x divide-white/10">
+                <div>
+                  <div className="text-lg font-black text-emerald-400">{user.publicRepos || 0}</div>
+                  <div className="text-[9px] uppercase tracking-widest text-slate-500 font-bold mt-1">Public</div>
+                </div>
+                <div>
+                  <div className="text-lg font-black text-purple-400">{user.privateRepos || 0}</div>
+                  <div className="text-[9px] uppercase tracking-widest text-slate-500 font-bold mt-1">Private</div>
+                </div>
+                <div>
+                  <div className="text-lg font-black text-white">{user.followers || 0}</div>
+                  <div className="text-[9px] uppercase tracking-widest text-slate-500 font-bold mt-1">Followers</div>
+                </div>
+                <div>
+                  <div className="text-lg font-black text-white">{user.following || 0}</div>
+                  <div className="text-[9px] uppercase tracking-widest text-slate-500 font-bold mt-1">Following</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <a href={user.profileUrl || "#"} target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:bg-white/[0.04] p-2 -m-2 rounded-xl transition-colors">
             {user.avatarUrl ? (
-              <img src={user.avatarUrl} alt="" className="w-9 h-9 rounded-full ring-2 ring-white/10 shrink-0" />
+              <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-full ring-2 ring-white/10 shrink-0" />
             ) : (
-              <div className="w-9 h-9 rounded-full bg-blue-900 ring-2 ring-white/10 flex items-center justify-center text-xs font-bold shrink-0">
+              <div className="w-10 h-10 rounded-full bg-blue-900 ring-2 ring-white/10 flex items-center justify-center text-xs font-bold shrink-0 text-white">
                 {getInitials(user)}
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate text-white">{user.username}</p>
-              <div className="flex items-center gap-1 text-[10px] text-emerald-500 font-semibold">
-                <ShieldCheck className="w-3 h-3" /> Connected
+              <p className="text-sm font-semibold truncate text-white hover:text-blue-400 transition-colors">{user.username}</p>
+              <div className="flex items-center gap-1.5 text-[9px] text-emerald-400 font-bold mt-1 bg-emerald-400/10 w-fit px-1.5 py-0.5 rounded ring-1 ring-emerald-400/20">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                Connected via GitHub OAuth
               </div>
             </div>
-            <button
-              onClick={onLogout}
-              className="p-2 hover:bg-red-500/10 text-slate-600 hover:text-red-400 rounded-lg transition-colors"
-              title="Log out"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
+          </a>
         </div>
       </aside>
 
@@ -154,9 +172,25 @@ function DashboardPage({ accessToken, onLogout, onSessionExpired, user }) {
       <main className="flex-1 overflow-y-auto relative z-10">
         <div className="max-w-5xl mx-auto p-8">
           {/* Dashboard header */}
-          <div className="mb-8">
-            <p className="text-[10px] text-slate-600 uppercase tracking-widest font-bold mb-1">DevPulse Dashboard</p>
-            <h1 className="text-2xl font-black text-white">Welcome back, {user.displayName || user.username} 👋</h1>
+          <div className="mb-8 flex items-start justify-between">
+            <div>
+              <p className="text-[10px] text-slate-600 uppercase tracking-widest font-bold mb-1">DevPulse Dashboard</p>
+              <h1 className="text-2xl font-black text-white">Welcome back, {user.displayName || user.username} 👋</h1>
+            </div>
+            <div className="flex items-center gap-5">
+              <div className="text-right">
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Session Info</p>
+                <p className="text-xs text-slate-400">Synced {repositories.length} repos at {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+              </div>
+              <button
+                onClick={onLogout}
+                className="flex items-center gap-2 bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/20 text-slate-300 hover:text-red-400 font-semibold text-sm px-4 py-2.5 rounded-xl transition-all"
+                title="Log out"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
           </div>
           <AnalysisPanel
             accessToken={accessToken}

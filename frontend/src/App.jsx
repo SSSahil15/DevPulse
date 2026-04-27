@@ -5,6 +5,7 @@ import { getStoredToken, clearToken, isTokenExpired, decodeJWTPayload, apiReques
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
+import SharedReportPage from "./pages/SharedReportPage";
 
 function LoadingScreen() {
   return (
@@ -42,6 +43,10 @@ function App() {
         avatarUrl: payload.avatarUrl,
         profileUrl: payload.profileUrl,
         email: payload.email,
+        followers: payload.followers || 0,
+        following: payload.following || 0,
+        publicRepos: payload.publicRepos || 0,
+        privateRepos: payload.privateRepos || 0,
       };
 
       setSession({ status: "authenticated", user, accessToken: token, error: "" });
@@ -83,6 +88,7 @@ function App() {
               user={session.user}
             />}
       />
+      <Route path="/report/:token" element={<SharedReportPage />} />
       <Route path="*" element={<Navigate replace to={session.status === "authenticated" ? "/dashboard" : "/login"} />} />
     </Routes>
   );

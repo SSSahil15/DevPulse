@@ -51,6 +51,10 @@ function issueDevPulseJWT(githubUser, githubAccessToken) {
     avatarUrl: githubUser.avatar_url,
     profileUrl: githubUser.html_url,
     email: githubUser.email || null,
+    followers: githubUser.followers || 0,
+    following: githubUser.following || 0,
+    publicRepos: githubUser.public_repos || 0,
+    privateRepos: githubUser.total_private_repos || 0,
     githubToken: githubAccessToken,
   };
 

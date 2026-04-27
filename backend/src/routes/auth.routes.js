@@ -23,6 +23,7 @@ router.get("/github", (req, res) => {
     client_id: config.githubClientId,
     redirect_uri: `${config.backendUrl}/auth/github/callback`,
     scope: "repo read:user user:email",
+    prompt: "consent", // Force GitHub to ask for permission every time
   });
   res.redirect(`https://github.com/login/oauth/authorize?${params}`);
 });

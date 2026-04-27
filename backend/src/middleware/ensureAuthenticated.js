@@ -27,6 +27,10 @@ const ensureAuthenticated = asyncHandler(async (req, res, next) => {
     avatarUrl: payload.avatarUrl,
     profileUrl: payload.profileUrl,
     email: payload.email,
+    followers: payload.followers,
+    following: payload.following,
+    publicRepos: payload.publicRepos,
+    privateRepos: payload.privateRepos,
   };
 
   // Keep supabaseUser alias for backwards compatibility with existing routes

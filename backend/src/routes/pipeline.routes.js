@@ -4,6 +4,10 @@ const {
   calculateDevPulseScore,
   generatePipelineInsights,
 } = require("../services/devpulseScore.service");
+const ensureAuthenticated = require("../middleware/ensureAuthenticated");
+const ensureGitHubTokenSynced = require("../middleware/ensureGitHubTokenSynced");
+const { runTrivyScan } = require("../services/security.service");
+const { fetchRepoHealth } = require("../services/github.service");
 
 const router = express.Router();
 
@@ -65,7 +69,9 @@ router.post(
     };
 
     // ── DevPulse Score + AI Insights ─────────────────────────
-    const devpulseScore = calculateDevPulseScore(normalizedStages);
+    // Get pipeline history for this repo (for historical failure rate)
+    const repoHistory = pipelineResults.filter(r => r.repository === repository);
+    const devpulseScore = calculateDevPulseScore(normalizedStages, null, repoHistory);
     const insights = generatePipelineInsights(normalizedStages, devpulseScore);
 
     const record = {
@@ -117,6 +123,76 @@ router.post(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
+// POST /api/pipeline/simulate
+// Simulates a pipeline run for demo purposes
+// ─────────────────────────────────────────────────────────────────────────────
+router.post(
+  "/simulate",
+  ensureAuthenticated,
+  ensureGitHubTokenSynced,
+  asyncHandler(async (req, res) => {
+    const { repositoryFullName } = req.body;
+    
+    if (!repositoryFullName) {
+      return res.status(400).json({ message: "repositoryFullName is required." });
+    }
+
+    // Run real Trivy scan + GitHub health metrics in parallel for speed
+    const [securityScan, repoHealth] = await Promise.all([
+      runTrivyScan(repositoryFullName, req.githubAccessToken),
+      fetchRepoHealth(req.githubAccessToken, repositoryFullName),
+    ]);
+
+    const runId = Math.floor(Math.random() * 10000000).toString();
+
+    const stages = {
+      backend: { tests: "success" },
+      frontend: { build: "success", tests: "success" },
+      docker: { build: "success", imageSize: "450MB", imageVulnerabilities: securityScan.summary?.unknown || 0 },
+      security: {
+        critical: securityScan.summary?.critical || 0,
+        high: securityScan.summary?.high || 0,
+        medium: securityScan.summary?.medium || 0,
+        vulnerabilities: securityScan.vulnerabilities || []
+      }
+    };
+
+    const overallStatus = stages.security.critical > 0 ? "failure" : "success";
+
+    // Get pipeline history for this repo (for historical failure rate factor)
+    const repoHistory = pipelineResults.filter(r => r.repository === repositoryFullName);
+    const devpulseScore = calculateDevPulseScore(stages, repoHealth, repoHistory);
+    const insights = generatePipelineInsights(stages, devpulseScore, repoHealth);
+
+    const record = {
+      id: `sim-${runId}-${Date.now()}`,
+      repository: repositoryFullName,
+      commitSha: Math.random().toString(16).slice(2, 14),
+      commitMessage: `Simulated commit ${Math.random().toString(36).substring(7)}`,
+      branch: "main",
+      triggeredBy: "DevPulse Simulator",
+      runId,
+      runUrl: null, // intentionally null for simulation
+      event: "push",
+      timestamp: new Date().toISOString(),
+      receivedAt: new Date().toISOString(),
+      overallStatus,
+      stages,
+      devpulseScore,
+      insights,
+    };
+
+    pipelineResults.unshift(record);
+    if (pipelineResults.length > MAX_RESULTS) pipelineResults.length = MAX_RESULTS;
+
+    return res.status(201).json({
+      message: "Pipeline simulated successfully",
+      record
+    });
+  })
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
 // GET /api/pipeline/results
 // List results with optional ?repository, ?branch, ?limit filters.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -151,6 +227,39 @@ router.get(
       });
     }
     return res.status(200).json(result);
+  })
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/pipeline/score/:repository/history
+// Returns score history (up to 20 runs) for trending.
+// ─────────────────────────────────────────────────────────────────────────────
+router.get(
+  "/score/:repository(*)/history",
+  asyncHandler(async (req, res) => {
+    const repository = req.params.repository;
+    const limit = Math.min(Number(req.query.limit) || 20, 50);
+
+    const filtered = pipelineResults
+      .filter((r) => r.repository === repository)
+      .slice(0, limit)
+      .map((r) => ({
+        runId: r.runId,
+        commitSha: r.commitSha,
+        branch: r.branch,
+        score: r.devpulseScore?.score ?? null,
+        status: r.devpulseScore?.status ?? null,
+        overallStatus: r.overallStatus,
+        timestamp: r.timestamp,
+        commitMessage: r.commitMessage,
+        event: r.event,
+      }));
+
+    return res.status(200).json({
+      repository,
+      count: filtered.length,
+      history: filtered,
+    });
   })
 );
 
@@ -198,38 +307,6 @@ router.get(
   })
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /api/pipeline/score/:repository/history
-// Returns score history (up to 20 runs) for trending.
-// ─────────────────────────────────────────────────────────────────────────────
-router.get(
-  "/score/:repository(*)/history",
-  asyncHandler(async (req, res) => {
-    const repository = req.params.repository;
-    const limit = Math.min(Number(req.query.limit) || 20, 50);
-
-    const filtered = pipelineResults
-      .filter((r) => r.repository === repository)
-      .slice(0, limit)
-      .map((r) => ({
-        runId: r.runId,
-        commitSha: r.commitSha,
-        branch: r.branch,
-        score: r.devpulseScore?.score ?? null,
-        status: r.devpulseScore?.status ?? null,
-        overallStatus: r.overallStatus,
-        timestamp: r.timestamp,
-        commitMessage: r.commitMessage,
-        event: r.event,
-      }));
-
-    return res.status(200).json({
-      repository,
-      count: filtered.length,
-      history: filtered,
-    });
-  })
-);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/pipeline/health
@@ -273,5 +350,8 @@ router.get(
     });
   })
 );
+
+// Expose pipeline results for cross-module access (e.g. report generation)
+router._pipelineResults = pipelineResults;
 
 module.exports = router;
