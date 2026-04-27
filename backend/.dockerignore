@@ -8,3 +8,5 @@ logs
 coverage
 .DS_Store
 .temp_scans
+test
+*.test.js
