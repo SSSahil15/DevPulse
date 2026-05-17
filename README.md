@@ -69,10 +69,10 @@ devpulse/
 ## 📸 Screenshots
 
 ### Dashboard & Analysis Panel
-![Dashboard](./assets/dashboard.png)
+![Dashboard](./assets/dashboard%20new%20ui.png)
 
 ### AI Copilot & Suggested Actions
-![AI Copilot](./assets/copilot.png)
+![AI Copilot](./assets/chatbot%20new%20ui.png)
 
 ---
 
