@@ -47,7 +47,10 @@ export async function apiRequest(path, { accessToken, method = "GET", body } = {
 
   if (!res.ok) {
     const data = await res.json().catch(() => ({ message: res.statusText }));
-    throw new ApiError(data.message || "Request failed", res.status);
+    const error = new ApiError(data.message || "Request failed", res.status);
+    error.data = data;
+    error.url = `${API_BASE}${path}`;
+    throw error;
   }
 
   return res.json();

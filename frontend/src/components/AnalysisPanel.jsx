@@ -61,8 +61,10 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
         body: JSON.stringify({ repositoryFullName: repository.fullName })
       });
       console.log("[AnalysisPanel] Response from /simulate:", response);
+      console.log("[AnalysisPanel] Response keys:", Object.keys(response || {}));
       const { jobId } = response;
       console.log("[AnalysisPanel] Extracted jobId:", jobId);
+
 
       if (!jobId) {
         // Prevent polling /status/undefined
