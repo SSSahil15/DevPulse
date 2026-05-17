@@ -35,10 +35,13 @@ RUN apk add --no-cache ca-certificates git libstdc++ tar wget curl
 # Install Trivy (stable for Docker/CI): use the official install script
 RUN set -eux; \
   apk add --no-cache --virtual .trivy-deps ca-certificates wget tar; \
-  wget -qO /tmp/install-trivy.sh "https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh"; \
+  wget -O /tmp/install-trivy.sh "https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh"; \
+  echo "[Trivy] install.sh downloaded (first 5 lines):"; \
+  head -n 5 /tmp/install-trivy.sh || true; \
   chmod +x /tmp/install-trivy.sh; \
-  /tmp/install-trivy.sh --version "${TRIVY_VERSION}" --install-dir /usr/local/bin; \
-  trivy --version; \
+  sh -x /tmp/install-trivy.sh --version "${TRIVY_VERSION}" --install-dir /usr/local/bin; \
+  test -x /usr/local/bin/trivy; \
+  /usr/local/bin/trivy --version; \
   apk del .trivy-deps; \
   rm -f /tmp/install-trivy.sh
 
