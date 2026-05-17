@@ -63,11 +63,15 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
       console.log("[AnalysisPanel] Response from /simulate:", response);
       const { jobId } = response;
       console.log("[AnalysisPanel] Extracted jobId:", jobId);
-      
+
       if (!jobId) {
-        throw new Error("No jobId returned from server");
+        // Prevent polling /status/undefined
+        console.error("[AnalysisPanel] Missing jobId in /simulate response:", response);
+        throw new Error(
+          "Simulate failed to return jobId. Check VITE_API_URL / backend URL configuration in production."
+        );
       }
-      
+
       setSimulateJobStatus("processing");
       const job = await pollScanJob(jobId, accessToken);
       if (job.status === "done") {
