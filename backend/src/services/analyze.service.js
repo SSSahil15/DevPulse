@@ -48,13 +48,20 @@ function buildSuggestions(repository, failureProbability) {
 
 async function buildInitialAnalysis(repository, githubAccessToken) {
   try {
-    // 1. Run Security Scan (Parallel with metadata if we wanted, but let's keep it sequential for now)
-    const securityScan = await runTrivyScan(repository.fullName, githubAccessToken);
+    // Skip Trivy here — security scan is handled by the async scan job separately.
+    // Calling Trivy here would block the request for minutes (git clone + scan).
+    // The FastAPI AI service uses repository metadata for failure prediction.
+    const emptyScan = {
+      status: "handled_by_pipeline",
+      severityScore: 0,
+      summary: { critical: 0, high: 0, medium: 0, low: 0, unknown: 0 },
+      vulnerabilities: [],
+    };
 
-    // 2. Call AI Service with metadata AND security findings
+    // Call Python AI microservice with repo metadata
     const response = await axios.post(`${config.aiServiceUrl}/analyze`, {
       repository,
-      securityScan
+      securityScan: emptyScan,
     });
 
     return response.data;

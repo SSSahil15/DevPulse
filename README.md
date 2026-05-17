@@ -5,7 +5,7 @@
   
   <p>
     <img src="https://img.shields.io/badge/react-18.x-blue.svg" alt="React" />
-    <img src="https://img.shields.io/badge/node.js-24.x-green.svg" alt="Node" />
+    <img src="https://img.shields.io/badge/node.js-20%2B-green.svg" alt="Node" />
     <img src="https://img.shields.io/badge/python-3.11-yellow.svg" alt="Python" />
     <img src="https://img.shields.io/badge/ai-Groq-orange.svg" alt="Groq" />
   </p>
@@ -60,7 +60,7 @@ devpulse/
 ├── ai/                     # Python FastAPI Predictive ML microservice
 ├── backend/                # Node.js/Express API & Orchestration Server
 ├── frontend/               # React / Vite Web Dashboard
-├── docker/                 # Production Docker configuration
+├── render.yaml             # Render blueprint for backend and AI services
 └── .github/workflows/      # GitHub Actions CI/CD pipelines
 ```
 
@@ -79,7 +79,7 @@ devpulse/
 ## 🚀 Local Setup & Installation
 
 ### Prerequisites
-- Node.js (v24+)
+- Node.js (v20+)
 - Python (v3.11+)
 - Groq API Key
 - GitHub OAuth App (created via Developer Settings in your GitHub account)
@@ -91,7 +91,7 @@ You will need to set up environment variables in **two** places.
 **Backend (`backend/.env`):**
 ```env
 PORT=4000
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:5174
 BACKEND_URL=http://localhost:4000
 
 # GitHub OAuth App credentials
@@ -143,13 +143,13 @@ npm install
 npm run dev
 ```
 
-> **The application will now be running at [http://localhost:5173](http://localhost:5173)**
+> **The application will now be running at [http://localhost:5174](http://localhost:5174)**
 
 ---
 
 ## 🕹️ Usage Workflow
 
-1. Navigate to `http://localhost:5173` and log in via GitHub.
+1. Navigate to `http://localhost:5174` and log in via GitHub.
 2. The dashboard will automatically fetch your GitHub repositories.
 3. Click on a repository to initiate an analysis.
 4. The system will simulate a CI/CD run, fetch a Trivy security scan, and request predictive failure metrics from the Python microservice.
@@ -159,24 +159,38 @@ npm run dev
 
 ---
 
-## ☁️ Next Up: Cloud Docker Deployment
+## ☁️ Cloud Deployment
 
-The upcoming phase of DevPulse involves containerizing the entire platform and deploying it to the cloud.
+DevPulse is ready for a split deployment:
 
-### Deployment Architecture
-- **Docker Compose**: Orchestrating the Frontend, Backend, and AI Microservice into a unified network.
-- **Reverse Proxy (Nginx/Traefik)**: To handle SSL termination and routing requests between the React frontend and the Express/FastAPI backends.
-- **Cloud Provider**: Target deployment on AWS ECS or a DigitalOcean Droplet.
+- **Backend API**: Render Docker service using `backend/Dockerfile`
+- **AI service**: Render Docker service using `ai/Dockerfile`
+- **Frontend**: Vercel Vite app using `frontend/vercel.json`
 
-### Planned Docker Commands
-Once the `docker-compose.yml` is finalized in the next release, running the entire stack will be as simple as:
+The Render blueprint in `render.yaml` defines the backend and AI services. The backend uses a 1 GB persistent disk at `/app/.data` so SQLite-backed sessions, scan jobs, and reports survive redeploys. Configure the backend environment variables in Render, then set `VITE_API_URL` in Vercel to the deployed backend URL.
 
-```bash
-# Build and start all services in detached mode
-docker-compose up -d --build
+> Render persistent disks require a paid web service plan; the backend blueprint uses `starter` for that reason.
 
-# View unified logs
-docker-compose logs -f
+Required backend variables:
+
+```env
+NODE_ENV=production
+BACKEND_URL=https://your-backend.onrender.com
+FRONTEND_URL=https://your-frontend.vercel.app
+AI_SERVICE_URL=https://your-ai-service.onrender.com
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+TOKEN_ENCRYPTION_SECRET=generate-a-64-char-secret
+JWT_SECRET=generate-a-secure-random-string-min-32-chars
+DATABASE_PATH=/app/.data/devpulse.db
+GITHUB_REPO_PAGE_LIMIT=10
+GROQ_API_KEY=your-groq-api-key
+```
+
+In the GitHub OAuth App, set the production callback URL to:
+
+```text
+https://your-backend.onrender.com/auth/github/callback
 ```
 
 ---

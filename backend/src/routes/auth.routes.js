@@ -57,7 +57,7 @@ router.get(
         userId: String(githubUser.id),
       });
 
-      const devpulseToken = issueDevPulseJWT(githubUser, githubToken);
+      const devpulseToken = issueDevPulseJWT(githubUser);
 
       // Redirect to frontend with the token in the URL
       return res.redirect(

@@ -44,7 +44,7 @@ function LoginPage({ sessionError }) {
 
   function handleLoginWithGitHub() {
     setIsLoading(true);
-    // Redirect directly to backend — no Supabase
+    // Redirect directly to the backend GitHub OAuth flow.
     window.location.href = `${BACKEND_URL}/auth/github`;
   }
 
@@ -60,12 +60,12 @@ function LoginPage({ sessionError }) {
         style={{ backgroundImage: "linear-gradient(rgba(148,163,184,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.04) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
 
       {/* Nav */}
-      <nav className="relative z-10 flex items-center justify-between px-8 py-6 border-b border-white/5">
+      <nav className="relative z-10 flex items-center justify-between px-8 py-5 border-b border-white/5">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/30">
-            <Zap className="w-5 h-5 text-white fill-white" />
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden shrink-0">
+            <img src="/Logo.png" alt="DevPulse" className="w-full h-full object-cover" />
           </div>
-          <span className="text-lg font-bold tracking-tight">DevPulse</span>
+          <span className="text-xl font-black tracking-tight text-white">DevPulse</span>
         </div>
 
         <div className="flex items-center gap-8">
@@ -85,15 +85,23 @@ function LoginPage({ sessionError }) {
       {/* Hero */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-20">
         <div className="max-w-4xl w-full mx-auto text-center space-y-8">
-          <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold px-4 py-2 rounded-full uppercase tracking-widest">
-            <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+
+          {/* Hero Logo */}
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl flex items-center justify-center overflow-hidden shrink-0 shadow-2xl ring-2 ring-white/10">
+              <img src="/Logo.png" alt="DevPulse" className="w-full h-full object-cover" />
+            </div>
+          </div>
+
+          <div className="inline-flex items-center gap-2 bg-[#00BFFF]/10 border border-[#00BFFF]/20 text-[#00BFFF] text-xs font-semibold px-4 py-2 rounded-full uppercase tracking-widest">
+            <span className="w-1.5 h-1.5 bg-[#00BFFF] rounded-full animate-pulse" />
             Live Intelligence Platform
           </div>
 
           <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-none">
             <span className="text-white">Confidence for</span>
             <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">
+            <span style={{ background: "linear-gradient(90deg, #00BFFF, #FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
               every merge.
             </span>
           </h1>
@@ -105,19 +113,25 @@ function LoginPage({ sessionError }) {
           {/* CTA */}
           <div className="flex flex-col items-center gap-4">
             <button
+              id="github-login-btn"
               onClick={handleLoginWithGitHub}
               disabled={isLoading}
-              className="group flex items-center gap-3 bg-white text-[#080b14] font-bold text-sm px-8 py-4 rounded-2xl hover:bg-blue-50 transition-all active:scale-95 shadow-xl shadow-white/10 disabled:opacity-60"
+              className="group relative flex items-center gap-3 font-bold text-sm px-8 py-4 rounded-2xl transition-all active:scale-95 disabled:opacity-60 text-white overflow-hidden"
+              style={{ background: "linear-gradient(135deg, #00BFFF 0%, #FF6A00 100%)", boxShadow: "0 0 30px rgba(0,191,255,0.3), 0 0 60px rgba(255,106,0,0.15)" }}
             >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-                </svg>
-              )}
-              {isLoading ? "Redirecting to GitHub..." : "Continue with GitHub"}
-              {!isLoading && <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
+              {/* Hover shimmer overlay */}
+              <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: "linear-gradient(135deg, #00BFFF 0%, #FF6A00 100%)", filter: "brightness(1.2)" }} />
+              <span className="relative flex items-center gap-3">
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+                  </svg>
+                )}
+                {isLoading ? "Redirecting to GitHub..." : "Continue with GitHub"}
+                {!isLoading && <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
+              </span>
             </button>
             <p className="text-xs text-slate-600">Direct GitHub OAuth · No passwords · No third-party middlemen</p>
           </div>

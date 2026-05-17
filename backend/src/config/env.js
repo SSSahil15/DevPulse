@@ -11,10 +11,7 @@ const envSchema = z.object({
   TOKEN_ENCRYPTION_SECRET: z
     .string()
     .min(32, "TOKEN_ENCRYPTION_SECRET must be at least 32 characters long."),
-  GITHUB_TOKEN_STORE_FILE_PATH: z
-    .string()
-    .min(1)
-    .default("./.data/github-provider-tokens.json"),
+  DATABASE_PATH: z.string().min(1).default("./.data/devpulse.db"),
   GITHUB_REPO_PAGE_LIMIT: z.coerce.number().int().positive().max(50).default(10),
   AI_SERVICE_URL: z.string().url().default("http://localhost:8000"),
   GITHUB_CLIENT_ID: z.string().min(1, "GITHUB_CLIENT_ID is required."),
@@ -43,8 +40,8 @@ module.exports = {
   frontendUrl: env.FRONTEND_URL,
   githubClientId: env.GITHUB_CLIENT_ID,
   githubClientSecret: env.GITHUB_CLIENT_SECRET,
+  databasePath: env.DATABASE_PATH,
   githubRepoPageLimit: env.GITHUB_REPO_PAGE_LIMIT,
-  githubTokenStoreFilePath: env.GITHUB_TOKEN_STORE_FILE_PATH,
   isProduction: env.NODE_ENV === "production",
   jwtSecret: env.JWT_SECRET,
   nodeEnv: env.NODE_ENV,

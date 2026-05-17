@@ -57,6 +57,11 @@ async def health():
         "timestamp": datetime.utcnow().isoformat()
     }
 
+@app.get("/model-info")
+async def model_info():
+    """Returns metadata about the predictor for transparency and debugging."""
+    return predictor.model_info()
+
 @app.post("/analyze", response_model=AnalysisResponse)
 async def analyze(request: AnalysisRequest):
     try:

@@ -9,8 +9,12 @@ services:
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    plan: free
+    plan: starter
     healthCheckPath: /health
+    disk:
+      name: devpulse-data
+      mountPath: /app/.data
+      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
@@ -30,8 +34,8 @@ services:
         generateValue: true
       - key: JWT_SECRET
         generateValue: true
-      - key: GITHUB_TOKEN_STORE_FILE_PATH
-        value: /app/.data/github-provider-tokens.json
+      - key: DATABASE_PATH
+        value: /app/.data/devpulse.db
       - key: GITHUB_REPO_PAGE_LIMIT
         value: 10
       - key: GROQ_API_KEY

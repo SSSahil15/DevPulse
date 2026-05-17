@@ -1,28 +1,5 @@
 const crypto = require("crypto");
-const fs = require("fs");
-const path = require("path");
-
-// ─── File-based Report Storage ───────────────────────────────────────────────
-const REPORTS_FILE = path.join(__dirname, "../..", ".data", "reports.json");
-
-const dataDir = path.dirname(REPORTS_FILE);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-let reportsDatabase = [];
-if (fs.existsSync(REPORTS_FILE)) {
-  try {
-    reportsDatabase = JSON.parse(fs.readFileSync(REPORTS_FILE, "utf-8"));
-  } catch (err) {
-    console.error("[Reports DB] Failed to parse reports file, starting fresh.");
-    reportsDatabase = [];
-  }
-}
-
-function saveReportsDatabase() {
-  fs.writeFileSync(REPORTS_FILE, JSON.stringify(reportsDatabase, null, 2), "utf-8");
-}
+const { reportDB } = require("../db/database");
 
 /**
  * Generate a cryptographically secure share token.
@@ -32,16 +9,7 @@ function generateShareToken() {
 }
 
 /**
- * Create a shareable report snapshot.
- *
- * @param {Object} params
- * @param {string} params.repository - Full repo name (e.g. "SSSahil15/DevPulse")
- * @param {Object} params.repoMeta - Stars, forks, description, language, etc.
- * @param {Object} params.devpulseScore - Full score object with factors
- * @param {Object} params.stages - Pipeline stage results
- * @param {Object} params.insights - AI insights object
- * @param {string} params.createdBy - GitHub username of the creator
- * @returns {Object} The created report record
+ * Create a shareable report snapshot (persisted to SQLite).
  */
 function createReport({ repository, repoMeta, devpulseScore, stages, insights, createdBy }) {
   const token = generateShareToken();
@@ -67,22 +35,19 @@ function createReport({ repository, repoMeta, devpulseScore, stages, insights, c
     expiresAt: expiresAt.toISOString(),
   };
 
-  reportsDatabase.push(report);
-  saveReportsDatabase();
-
-  console.log(`[Reports] Created shareable report for ${repository} (token: ${token})`);
+  reportDB.insert(report);
+  console.log(`[Reports] Created shareable report for ${repository} (token: ${token}), expires ${expiresAt.toDateString()}`);
   return report;
 }
 
 /**
  * Retrieve a report by its share token.
- * Returns null if not found or expired.
+ * Checks expiry and returns { expired: true } if past TTL.
  */
 function getReportByToken(token) {
-  const report = reportsDatabase.find(r => r.token === token);
+  const report = reportDB.getByToken(token);
   if (!report) return null;
 
-  // Check expiration
   if (new Date(report.expiresAt) < new Date()) {
     return { expired: true, repository: report.repository, expiresAt: report.expiresAt };
   }
@@ -90,7 +55,4 @@ function getReportByToken(token) {
   return report;
 }
 
-module.exports = {
-  createReport,
-  getReportByToken,
-};
+module.exports = { createReport, getReportByToken };

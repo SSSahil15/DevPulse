@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, AlertCircle, Zap } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { storeToken, decodeJWTPayload } from "../api";
 
 function AuthCallbackPage() {
@@ -32,9 +32,9 @@ function AuthCallbackPage() {
 
   return (
     <div className="min-h-screen bg-[#080b14] flex flex-col items-center justify-center gap-6">
-      <div className="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center animate-pulse-glow">
-        <Zap className="w-8 h-8 text-blue-400 fill-blue-400" />
-      </div>
+        <div className="animate-pulse w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden shrink-0">
+          <img src="/Logo.png" alt="DevPulse" className="w-full h-full object-cover" />
+        </div>
       {errorMessage ? (
         <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-2xl px-6 py-4 max-w-md">
           <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />

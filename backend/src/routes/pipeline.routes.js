@@ -1,4 +1,5 @@
 const express = require("express");
+const { z } = require("zod");
 const asyncHandler = require("../utils/asyncHandler");
 const {
   calculateDevPulseScore,
@@ -6,71 +7,89 @@ const {
 } = require("../services/devpulseScore.service");
 const ensureAuthenticated = require("../middleware/ensureAuthenticated");
 const ensureGitHubTokenSynced = require("../middleware/ensureGitHubTokenSynced");
-const { runTrivyScan } = require("../services/security.service");
-const { fetchRepoHealth } = require("../services/github.service");
+const { simulateLimiter } = require("../middleware/rateLimiter");
+const { pipelineDB } = require("../db/database");
+const { createAndDispatchJob, getJobStatus } = require("../services/scanJob.service");
 
 const router = express.Router();
 
-/**
- * In-memory pipeline results store.
- * In production, replace this with a database (Postgres, Supabase, etc.)
- */
-const pipelineResults = [];
-const MAX_RESULTS = 200;
+// ─── Zod Schemas ──────────────────────────────────────────────────────────────
+
+const ingestSchema = z.object({
+  repository: z.string().min(1),
+  commitSha: z.string().min(1),
+  runId: z.string().min(1),
+  commitMessage: z.string().max(200).optional(),
+  branch: z.string().optional(),
+  triggeredBy: z.string().optional(),
+  runUrl: z.string().url().optional().nullable(),
+  event: z.string().optional(),
+  timestamp: z.string().optional(),
+  overallStatus: z.string().optional(),
+  stages: z.object({
+    backend: z.object({ tests: z.string() }).optional(),
+    frontend: z.object({ build: z.string(), tests: z.string() }).optional(),
+    security: z.object({
+      critical: z.number().int().min(0),
+      high: z.number().int().min(0),
+      medium: z.number().int().min(0),
+      vulnerabilities: z.array(z.any()).optional(),
+    }).optional(),
+    docker: z.object({
+      build: z.string(),
+      imageSize: z.string().optional(),
+      imageVulnerabilities: z.number().int().min(0).optional(),
+    }).optional(),
+  }).optional(),
+});
+
+const simulateSchema = z.object({
+  repositoryFullName: z.string().min(3).regex(/^[\w.-]+\/[\w.-]+$/, "Must be in owner/repo format"),
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/pipeline/results
 // Receives pipeline results from GitHub Actions. Calculates DevPulse Score
-// and AI insights on ingestion, stores the enriched record.
+// and AI insights on ingestion, stores the enriched record in SQLite.
 // ─────────────────────────────────────────────────────────────────────────────
 router.post(
   "/results",
   asyncHandler(async (req, res) => {
-    const {
-      repository,
-      commitSha,
-      commitMessage,
-      branch,
-      triggeredBy,
-      runId,
-      runUrl,
-      event,
-      timestamp,
-      stages,
-      overallStatus,
-    } = req.body;
-
-    if (!repository || !commitSha || !runId) {
+    const parsed = ingestSchema.safeParse(req.body);
+    if (!parsed.success) {
       return res.status(400).json({
-        message:
-          "Missing required fields: repository, commitSha, and runId are required.",
+        message: "Invalid request body.",
+        errors: parsed.error.flatten().fieldErrors,
       });
     }
 
+    const {
+      repository, commitSha, commitMessage, branch, triggeredBy,
+      runId, runUrl, event, timestamp, stages: rawStages, overallStatus,
+    } = parsed.data;
+
     const normalizedStages = {
-      backend: {
-        tests: stages?.backend?.tests || "skipped",
-      },
+      backend: { tests: rawStages?.backend?.tests || "skipped" },
       frontend: {
-        build: stages?.frontend?.build || "skipped",
-        tests: stages?.frontend?.tests || "skipped",
+        build: rawStages?.frontend?.build || "skipped",
+        tests: rawStages?.frontend?.tests || "skipped",
       },
       security: {
-        critical: Number(stages?.security?.critical) || 0,
-        high: Number(stages?.security?.high) || 0,
-        medium: Number(stages?.security?.medium) || 0,
-        vulnerabilities: Array.isArray(stages?.security?.vulnerabilities) ? stages.security.vulnerabilities : [],
+        critical: Number(rawStages?.security?.critical) || 0,
+        high: Number(rawStages?.security?.high) || 0,
+        medium: Number(rawStages?.security?.medium) || 0,
+        vulnerabilities: Array.isArray(rawStages?.security?.vulnerabilities)
+          ? rawStages.security.vulnerabilities
+          : [],
       },
       docker: {
-        build: stages?.docker?.build || "skipped",
-        imageSize: stages?.docker?.imageSize || "N/A",
-        imageVulnerabilities: Number(stages?.docker?.imageVulnerabilities) || 0,
+        build: rawStages?.docker?.build || "skipped",
+        imageSize: rawStages?.docker?.imageSize || "N/A",
+        imageVulnerabilities: Number(rawStages?.docker?.imageVulnerabilities) || 0,
       },
     };
 
-    // ── DevPulse Score + AI Insights ─────────────────────────
-    // Get pipeline history for this repo (for historical failure rate)
-    const repoHistory = pipelineResults.filter(r => r.repository === repository);
+    const repoHistory = pipelineDB.findFiltered({ repository, limit: 50 });
     const devpulseScore = calculateDevPulseScore(normalizedStages, null, repoHistory);
     const insights = generatePipelineInsights(normalizedStages, devpulseScore);
 
@@ -92,24 +111,17 @@ router.post(
       insights,
     };
 
-    console.log(
-      JSON.stringify({
-        event: "pipeline_result_received",
-        repository: record.repository,
-        commit: record.commitSha,
-        branch: record.branch,
-        status: record.overallStatus,
-        score: devpulseScore.score,
-        scoreStatus: devpulseScore.status,
-        security: normalizedStages.security,
-        timestamp: record.receivedAt,
-      })
-    );
+    pipelineDB.insert(record);
 
-    pipelineResults.unshift(record);
-    if (pipelineResults.length > MAX_RESULTS) {
-      pipelineResults.length = MAX_RESULTS;
-    }
+    console.log(JSON.stringify({
+      event: "pipeline_result_received",
+      repository: record.repository,
+      commit: record.commitSha,
+      branch: record.branch,
+      status: record.overallStatus,
+      score: devpulseScore.score,
+      timestamp: record.receivedAt,
+    }));
 
     return res.status(201).json({
       message: "Pipeline results stored successfully.",
@@ -124,70 +136,74 @@ router.post(
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/pipeline/simulate
-// Simulates a pipeline run for demo purposes
+// Creates an async scan job and returns a jobId immediately (HTTP 202).
+// The heavy Trivy + GitHub work runs in the background.
+// Poll GET /simulate/status/:jobId for results.
 // ─────────────────────────────────────────────────────────────────────────────
 router.post(
   "/simulate",
+  simulateLimiter,
   ensureAuthenticated,
   ensureGitHubTokenSynced,
   asyncHandler(async (req, res) => {
-    const { repositoryFullName } = req.body;
-    
-    if (!repositoryFullName) {
-      return res.status(400).json({ message: "repositoryFullName is required." });
+    const parsed = simulateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: "Invalid request body.",
+        errors: parsed.error.flatten().fieldErrors,
+      });
     }
 
-    // Run real Trivy scan + GitHub health metrics in parallel for speed
-    const [securityScan, repoHealth] = await Promise.all([
-      runTrivyScan(repositoryFullName, req.githubAccessToken),
-      fetchRepoHealth(req.githubAccessToken, repositoryFullName),
-    ]);
+    const { repositoryFullName } = parsed.data;
+    const jobId = createAndDispatchJob(repositoryFullName, req.githubAccessToken);
 
-    const runId = Math.floor(Math.random() * 10000000).toString();
+    return res.status(202).json({
+      message: "Scan job accepted. Poll the status endpoint for results.",
+      jobId,
+      statusUrl: `/api/pipeline/simulate/status/${jobId}`,
+    });
+  })
+);
 
-    const stages = {
-      backend: { tests: "success" },
-      frontend: { build: "success", tests: "success" },
-      docker: { build: "success", imageSize: "450MB", imageVulnerabilities: securityScan.summary?.unknown || 0 },
-      security: {
-        critical: securityScan.summary?.critical || 0,
-        high: securityScan.summary?.high || 0,
-        medium: securityScan.summary?.medium || 0,
-        vulnerabilities: securityScan.vulnerabilities || []
-      }
-    };
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/pipeline/simulate/status/:jobId
+// Poll for the result of an async simulate job.
+// ─────────────────────────────────────────────────────────────────────────────
+router.get(
+  "/simulate/status/:jobId",
+  ensureAuthenticated,
+  asyncHandler(async (req, res) => {
+    const { jobId } = req.params;
+    const job = getJobStatus(jobId);
 
-    const overallStatus = stages.security.critical > 0 ? "failure" : "success";
+    if (!job) {
+      return res.status(404).json({ message: `Scan job not found: ${jobId}` });
+    }
 
-    // Get pipeline history for this repo (for historical failure rate factor)
-    const repoHistory = pipelineResults.filter(r => r.repository === repositoryFullName);
-    const devpulseScore = calculateDevPulseScore(stages, repoHealth, repoHistory);
-    const insights = generatePipelineInsights(stages, devpulseScore, repoHealth);
+    if (job.status === "pending" || job.status === "processing") {
+      return res.status(200).json({
+        jobId,
+        status: job.status,
+        repository: job.repository,
+        createdAt: job.createdAt,
+      });
+    }
 
-    const record = {
-      id: `sim-${runId}-${Date.now()}`,
-      repository: repositoryFullName,
-      commitSha: Math.random().toString(16).slice(2, 14),
-      commitMessage: `Simulated commit ${Math.random().toString(36).substring(7)}`,
-      branch: "main",
-      triggeredBy: "DevPulse Simulator",
-      runId,
-      runUrl: null, // intentionally null for simulation
-      event: "push",
-      timestamp: new Date().toISOString(),
-      receivedAt: new Date().toISOString(),
-      overallStatus,
-      stages,
-      devpulseScore,
-      insights,
-    };
+    if (job.status === "failed") {
+      return res.status(200).json({
+        jobId,
+        status: "failed",
+        repository: job.repository,
+        error: job.error,
+      });
+    }
 
-    pipelineResults.unshift(record);
-    if (pipelineResults.length > MAX_RESULTS) pipelineResults.length = MAX_RESULTS;
-
-    return res.status(201).json({
-      message: "Pipeline simulated successfully",
-      record
+    // Done — return the full record
+    return res.status(200).json({
+      jobId,
+      status: "done",
+      repository: job.repository,
+      record: job.result?.record || null,
     });
   })
 );
@@ -202,13 +218,11 @@ router.get(
     const { repository, branch, limit: rawLimit } = req.query;
     const limit = Math.min(Math.max(Number(rawLimit) || 20, 1), 100);
 
-    let filtered = pipelineResults;
-    if (repository) filtered = filtered.filter((r) => r.repository === repository);
-    if (branch) filtered = filtered.filter((r) => r.branch === branch);
+    const results = pipelineDB.findFiltered({ repository, branch, limit });
 
     return res.status(200).json({
-      total: filtered.length,
-      results: filtered.slice(0, limit),
+      total: results.length,
+      results,
     });
   })
 );
@@ -220,7 +234,8 @@ router.get(
   "/results/:runId",
   asyncHandler(async (req, res) => {
     const { runId } = req.params;
-    const result = pipelineResults.find((r) => r.runId === runId);
+    const result = pipelineDB.findByRunId(runId);
+
     if (!result) {
       return res.status(404).json({
         message: `No pipeline result found for run ID: ${runId}`,
@@ -232,7 +247,6 @@ router.get(
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/pipeline/score/:repository/history
-// Returns score history (up to 20 runs) for trending.
 // ─────────────────────────────────────────────────────────────────────────────
 router.get(
   "/score/:repository(*)/history",
@@ -240,34 +254,25 @@ router.get(
     const repository = req.params.repository;
     const limit = Math.min(Number(req.query.limit) || 20, 50);
 
-    const filtered = pipelineResults
-      .filter((r) => r.repository === repository)
-      .slice(0, limit)
-      .map((r) => ({
-        runId: r.runId,
-        commitSha: r.commitSha,
-        branch: r.branch,
-        score: r.devpulseScore?.score ?? null,
-        status: r.devpulseScore?.status ?? null,
-        overallStatus: r.overallStatus,
-        timestamp: r.timestamp,
-        commitMessage: r.commitMessage,
-        event: r.event,
-      }));
+    const results = pipelineDB.findFiltered({ repository, limit });
+    const history = results.map((r) => ({
+      runId: r.runId,
+      commitSha: r.commitSha,
+      branch: r.branch,
+      score: r.devpulseScore?.score ?? null,
+      status: r.devpulseScore?.status ?? null,
+      overallStatus: r.overallStatus,
+      timestamp: r.timestamp,
+      commitMessage: r.commitMessage,
+      event: r.event,
+    }));
 
-    return res.status(200).json({
-      repository,
-      count: filtered.length,
-      history: filtered,
-    });
+    return res.status(200).json({ repository, count: history.length, history });
   })
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/pipeline/score/:repository
-// Returns the latest DevPulse Score for a given repository.
-// Supports ?branch= filter.
-// Used by the dashboard for real-time score display.
 // ─────────────────────────────────────────────────────────────────────────────
 router.get(
   "/score/:repository(*)",
@@ -275,8 +280,7 @@ router.get(
     const repository = req.params.repository;
     const { branch } = req.query;
 
-    let filtered = pipelineResults.filter((r) => r.repository === repository);
-    if (branch) filtered = filtered.filter((r) => r.branch === branch);
+    const filtered = pipelineDB.findFiltered({ repository, branch, limit: 50 });
 
     if (filtered.length === 0) {
       return res.status(404).json({
@@ -299,7 +303,6 @@ router.get(
       timestamp: latest.timestamp,
       receivedAt: latest.receivedAt,
       historyCount: filtered.length,
-      // Trend: compare latest vs previous run score
       trend: filtered.length >= 2
         ? latest.devpulseScore.score - filtered[1].devpulseScore.score
         : null,
@@ -307,51 +310,61 @@ router.get(
   })
 );
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/pipeline/health
 // ─────────────────────────────────────────────────────────────────────────────
 router.get(
   "/health",
   asyncHandler(async (req, res) => {
-    const latest = pipelineResults[0] || null;
-    const successCount = pipelineResults.filter(
-      (r) => r.overallStatus === "success"
-    ).length;
-
-    const avgScore =
-      pipelineResults.length > 0
-        ? Math.round(
-            pipelineResults
-              .map((r) => r.devpulseScore?.score ?? 100)
-              .reduce((a, b) => a + b, 0) / pipelineResults.length
-          )
-        : null;
+    const { total, successes, avgScore, latest } = pipelineDB.getHealth();
 
     return res.status(200).json({
       service: "devpulse-pipeline",
       status: "ok",
-      totalRuns: pipelineResults.length,
-      successRate:
-        pipelineResults.length > 0
-          ? `${Math.round((successCount / pipelineResults.length) * 100)}%`
-          : "N/A",
+      totalRuns: total,
+      successRate: total > 0 ? `${Math.round((successes / total) * 100)}%` : "N/A",
       averageScore: avgScore,
-      latestRun: latest
-        ? {
-            repository: latest.repository,
-            commit: latest.commitSha,
-            status: latest.overallStatus,
-            devpulseScore: latest.devpulseScore?.score ?? null,
-            scoreStatus: latest.devpulseScore?.status ?? null,
-            timestamp: latest.timestamp,
-          }
-        : null,
+      latestRun: latest ? {
+        repository: latest.repository,
+        commit: latest.commitSha,
+        status: latest.overallStatus,
+        devpulseScore: latest.devpulseScore?.score ?? null,
+        scoreStatus: latest.devpulseScore?.status ?? null,
+        timestamp: latest.timestamp,
+      } : null,
     });
   })
 );
 
-// Expose pipeline results for cross-module access (e.g. report generation)
-router._pipelineResults = pipelineResults;
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE /api/pipeline/results/:id  — delete a single scan record
+// ─────────────────────────────────────────────────────────────────────────────
+router.delete(
+  "/results/:id",
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const result = pipelineDB.deleteById(id);
+    if (result.changes === 0) {
+      return res.status(404).json({ message: `Record ${id} not found` });
+    }
+    return res.status(200).json({ deleted: 1, id });
+  })
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE /api/pipeline/results  — bulk delete by list of ids
+// Body: { ids: ["id1", "id2", ...] }
+// ─────────────────────────────────────────────────────────────────────────────
+router.delete(
+  "/results",
+  asyncHandler(async (req, res) => {
+    const { ids } = req.body || {};
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: "Provide a non-empty ids array in the request body" });
+    }
+    pipelineDB.deleteByIds(ids);
+    return res.status(200).json({ deleted: ids.length, ids });
+  })
+);
 
 module.exports = router;

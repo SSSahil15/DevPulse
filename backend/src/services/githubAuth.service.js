@@ -40,10 +40,11 @@ async function fetchGitHubUser(accessToken) {
 }
 
 /**
- * Issue a signed DevPulse JWT containing user identity + GitHub token.
- * The GitHub token is embedded so the backend can call the GitHub API directly.
+ * Issue a signed DevPulse JWT containing ONLY user identity metadata.
+ * The GitHub access token is intentionally excluded — it lives server-side
+ * in the encrypted SQLite provider_tokens table.
  */
-function issueDevPulseJWT(githubUser, githubAccessToken) {
+function issueDevPulseJWT(githubUser) {
   const payload = {
     sub: String(githubUser.id),
     username: githubUser.login,
@@ -55,7 +56,6 @@ function issueDevPulseJWT(githubUser, githubAccessToken) {
     following: githubUser.following || 0,
     publicRepos: githubUser.public_repos || 0,
     privateRepos: githubUser.total_private_repos || 0,
-    githubToken: githubAccessToken,
   };
 
   return jwt.sign(payload, config.jwtSecret, {

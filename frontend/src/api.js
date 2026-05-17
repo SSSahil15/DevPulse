@@ -52,3 +52,17 @@ export async function apiRequest(path, { accessToken, method = "GET", body } = {
 
   return res.json();
 }
+
+/**
+ * Poll a scan job until it's done or failed.
+ * Resolves with the final job object.
+ * Rejects after maxAttempts.
+ */
+export async function pollScanJob(jobId, accessToken, { intervalMs = 2000, maxAttempts = 60 } = {}) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    await new Promise((r) => setTimeout(r, intervalMs));
+    const job = await apiRequest(`/api/pipeline/simulate/status/${jobId}`, { accessToken });
+    if (job.status === "done" || job.status === "failed") return job;
+  }
+  throw new ApiError("Scan job timed out after 2 minutes.", 504);
+}

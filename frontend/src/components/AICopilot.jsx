@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2, Sparkles, AlertTriangle, CheckCircle2, ShieldAlert, Activity } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, AlertTriangle, CheckCircle2, Activity } from "lucide-react";
 import { apiRequest } from "../api";
+
+// Brand gradient helper
+const BRAND_GRAD = "linear-gradient(135deg, #00BFFF 0%, #FF6A00 100%)";
+const BRAND_GLOW = "0 0 24px rgba(0,191,255,0.35), 0 0 48px rgba(255,106,0,0.15)";
 
 export default function AICopilot({ pipelineData, analysisResult, accessToken }) {
   const [messages, setMessages] = useState([
@@ -67,7 +71,7 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
         return <strong key={i} className="text-white font-bold">{part.slice(2, -2)}</strong>;
       }
       if (part.startsWith("`") && part.endsWith("`")) {
-        return <code key={i} className="text-blue-300 bg-blue-500/10 px-1 py-0.5 rounded font-mono text-xs">{part.slice(1, -1)}</code>;
+        return <code key={i} style={{ color: "#00BFFF" }} className="bg-[#00BFFF]/10 px-1 py-0.5 rounded font-mono text-xs">{part.slice(1, -1)}</code>;
       }
       return <span key={i}>{part}</span>;
     });
@@ -83,7 +87,6 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
     if (!data) return null;
     return (
       <div className="space-y-4 w-full">
-        {/* We no longer use 'summary' as a main text block, if it's there randomly, we can render it, but we rely on issue/fix/explanation */}
         {data.summary && (
           <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">
             {formatText(data.summary)}
@@ -125,12 +128,12 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
         )}
 
         {data.explanation && (
-          <div className="bg-blue-500/10 ring-1 ring-blue-500/20 rounded-lg p-3">
-            <div className="flex items-center gap-1.5 mb-1 text-blue-400">
+          <div className="rounded-lg p-3" style={{ background: "rgba(0,191,255,0.06)", boxShadow: "inset 0 0 0 1px rgba(0,191,255,0.18)" }}>
+            <div className="flex items-center gap-1.5 mb-1" style={{ color: "#00BFFF" }}>
               <Activity className="w-3.5 h-3.5" />
               <span className="text-[10px] font-bold uppercase tracking-widest">Why it matters</span>
             </div>
-            <p className="text-xs text-blue-200 leading-relaxed">{formatText(data.explanation)}</p>
+            <p className="text-xs leading-relaxed" style={{ color: "rgba(0,191,255,0.85)" }}>{formatText(data.explanation)}</p>
           </div>
         )}
 
@@ -147,7 +150,7 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
         {/* Confidence Badge */}
         {data.confidence && (
           <div className="flex justify-between items-center pt-2 border-t border-white/5">
-            <span 
+            <span
               className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ring-1 cursor-help ${
                 data.confidence === "HIGH" ? "bg-emerald-500/10 text-emerald-400 ring-emerald-500/20" :
                 data.confidence === "MEDIUM" ? "bg-amber-500/10 text-amber-400 ring-amber-500/20" :
@@ -160,7 +163,7 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
           </div>
         )}
 
-        {/* Interactive Action Buttons */}
+        {/* Interactive Action Buttons — brand gradient chips */}
         {data.suggestedActions && data.suggestedActions.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2">
             {data.suggestedActions.map((action, idx) => (
@@ -168,7 +171,12 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
                 key={idx}
                 onClick={() => handleSend(null, action)}
                 disabled={isTyping}
-                className="text-[10px] font-medium px-3 py-1.5 rounded-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 ring-1 ring-blue-500/30 transition-colors disabled:opacity-50"
+                className="text-[10px] font-semibold px-3 py-1.5 rounded-full transition-all disabled:opacity-50 text-white"
+                style={{
+                  background: BRAND_GRAD,
+                  opacity: isTyping ? 0.5 : 1,
+                  boxShadow: "0 0 10px rgba(0,191,255,0.2)"
+                }}
               >
                 {action}
               </button>
@@ -181,10 +189,11 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
 
   return (
     <>
-      {/* Floating Action Button */}
+      {/* Floating Action Button — brand gradient with glow */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-full flex items-center justify-center shadow-2xl shadow-blue-500/30 transition-all hover:scale-105 active:scale-95 z-50 ring-4 ring-[#080b14]"
+        className="fixed bottom-8 right-8 w-14 h-14 text-white rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-110 active:scale-95 z-50 ring-4 ring-[#080b14]"
+        style={{ background: BRAND_GRAD, boxShadow: BRAND_GLOW }}
       >
         <Sparkles className="w-6 h-6" />
       </button>
@@ -196,15 +205,18 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
         {/* Header */}
         <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between bg-white/[0.02] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/20 ring-1 ring-blue-500/30 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-blue-400" />
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center"
+              style={{ background: BRAND_GRAD, boxShadow: "0 0 12px rgba(0,191,255,0.3)" }}
+            >
+              <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-white">AI Copilot</h3>
               <p className="text-[10px] text-slate-500 font-medium">Production Architecture Enabled</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setIsOpen(false)}
             className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-slate-400 transition-colors"
           >
@@ -217,18 +229,31 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
           {messages.map(msg => (
             <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
               {/* Avatar */}
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 ${
-                msg.role === "user" ? "bg-indigo-500/20 text-indigo-400 ring-1 ring-indigo-500/30" : "bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20"
-              }`}>
-                {msg.role === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1"
+                style={
+                  msg.role === "user"
+                    ? { background: "rgba(0,191,255,0.12)", boxShadow: "inset 0 0 0 1px rgba(0,191,255,0.25)" }
+                    : { background: BRAND_GRAD, boxShadow: "0 0 12px rgba(0,191,255,0.25)" }
+                }
+              >
+                {msg.role === "user"
+                  ? <User className="w-4 h-4" style={{ color: "#00BFFF" }} />
+                  : <Bot className="w-4 h-4 text-white" />
+                }
               </div>
 
               {/* Bubble */}
               <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-indigo-500/10 ring-1 ring-indigo-500/20 text-indigo-100 rounded-tr-sm"
+                  ? "rounded-tr-sm text-white"
                   : "bg-white/5 ring-1 ring-white/10 text-slate-300 rounded-tl-sm w-full"
-              }`}>
+              }`}
+                style={msg.role === "user" ? {
+                  background: "rgba(0,191,255,0.1)",
+                  boxShadow: "inset 0 0 0 1px rgba(0,191,255,0.2)"
+                } : {}}
+              >
                 {msg.isStructured ? renderStructuredMessage(msg.data) : formatText(msg.text)}
               </div>
             </div>
@@ -237,13 +262,16 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
           {/* Typing Indicator */}
           {isTyping && (
             <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20 flex items-center justify-center shrink-0 mt-1">
+              <div
+                className="w-8 h-8 rounded-full text-white flex items-center justify-center shrink-0 mt-1"
+                style={{ background: BRAND_GRAD }}
+              >
                 <Bot className="w-4 h-4" />
               </div>
               <div className="bg-white/5 ring-1 ring-white/10 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5 h-10">
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></div>
+                <div className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ background: "#00BFFF" }} />
+                <div className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]" style={{ background: "#60A8FF" }} />
+                <div className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: "#FF6A00" }} />
               </div>
             </div>
           )}
@@ -258,12 +286,16 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
               onChange={e => setInput(e.target.value)}
               disabled={isTyping}
               placeholder="Ask Copilot..."
-              className="w-full bg-white/5 ring-1 ring-white/10 focus:ring-blue-500/40 rounded-xl pl-4 pr-12 py-3 text-sm text-white placeholder:text-slate-500 outline-none transition-all disabled:opacity-50"
+              className="w-full bg-white/5 ring-1 ring-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white placeholder:text-slate-500 outline-none transition-all disabled:opacity-50"
+              style={{ "--tw-ring-color": "rgba(0,191,255,0.3)" }}
+              onFocus={e => e.target.style.boxShadow = "0 0 0 2px rgba(0,191,255,0.3)"}
+              onBlur={e => e.target.style.boxShadow = ""}
             />
             <button
               type="submit"
               disabled={!input.trim() || isTyping}
-              className="absolute right-2 p-2 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 disabled:hover:bg-blue-500 text-white rounded-lg transition-colors"
+              className="absolute right-2 p-2 text-white rounded-lg transition-all disabled:opacity-50 active:scale-90"
+              style={{ background: BRAND_GRAD, boxShadow: input.trim() && !isTyping ? "0 0 10px rgba(0,191,255,0.3)" : "none" }}
             >
               {isTyping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
