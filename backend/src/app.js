@@ -27,7 +27,14 @@ app.set("trust proxy", 1);
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || origin === config.frontendUrl) {
+      const allowedOrigins = [
+        config.frontendUrl,
+        "http://localhost:5173",
+        "http://localhost:3000",
+      ];
+      // Allow requests with no origin (like mobile apps, curl)
+      // or if origin is in allowed list or is a vercel preview deployment
+      if (!origin || allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
         return callback(null, true);
       }
       return callback(new Error("Origin is not allowed by CORS."));

@@ -4,41 +4,20 @@ const { buildInitialAnalysis } = require("../services/analyze.service");
 
 const router = express.Router();
 
-// Mock store for CI runs (in a real app, this would be in a DB)
-const ciRuns = [];
+// In a full implementation, you might process raw GitHub webhooks here.
+// For DevPulse, the primary pipeline results ingest is handled by POST /api/pipeline/results.
 
 router.post(
   "/github",
   asyncHandler(async (req, res) => {
-    const { repository, runId, status, conclusion, results } = req.body;
+    const { repository, runId, conclusion } = req.body;
 
-    console.log(`Received CI result for ${repository}: ${conclusion}`);
-
-    const runRecord = {
-      id: runId,
-      repository,
-      status,
-      conclusion,
-      results,
-      receivedAt: new Date().toISOString()
-    };
-
-    ciRuns.unshift(runRecord);
-    if (ciRuns.length > 50) ciRuns.pop();
+    console.log(`[Webhook] Received generic CI ping for ${repository || 'unknown'}: ${conclusion || 'unknown'}`);
 
     return res.status(200).json({
-      message: "Webhook processed successfully",
+      message: "Webhook acknowledged",
       runId
     });
-  })
-);
-
-router.get(
-  "/runs/:repository",
-  asyncHandler(async (req, res) => {
-    const { repository } = req.params;
-    const repoRuns = ciRuns.filter(r => r.repository === repository);
-    return res.status(200).json(repoRuns);
   })
 );
 
