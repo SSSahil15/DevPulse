@@ -26,7 +26,7 @@ FROM node:20-alpine AS production
 # Security: run as non-root
 RUN addgroup -S devpulse && adduser -S devpulse -G devpulse
 
-ARG TRIVY_VERSION=0.51.0
+ARG TRIVY_VERSION=0.52.0
 
 # git is required for repository cloning; Trivy performs the vulnerability scan.
 # Install basic tools first
