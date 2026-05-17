@@ -36,9 +36,12 @@ RUN apk add --no-cache ca-certificates git libstdc++ tar wget curl
 RUN set -eux; \
   apk add --no-cache --virtual .trivy-deps jq; \
   release_json="$(wget -qO- "https://api.github.com/repos/aquasecurity/trivy/releases/tags/v${TRIVY_VERSION}" -U "Docker" )"; \
-  asset_url="$(printf "%s" "$release_json" | jq -r '.assets[] | select(.name|test("Linux-64bit")) | .browser_download_url' | head -n 1)"; \
-  if [ -z "$asset_url" ] || [ "$asset_url" = "null" ]; then echo "Trivy asset not found for v${TRIVY_VERSION}" >&2; exit 1; fi; \
+  echo "[Trivy] Release API response size: $(printf "%s" "$release_json" | wc -c)"; \
+  asset_url="$(printf "%s" "$release_json" | jq -r '.assets[]? | select(.name|test("Linux-64bit")) | .browser_download_url' | head -n 1)"; \
+  echo "[Trivy] Resolved asset url: $asset_url"; \
+  if [ -z "$asset_url" ] || [ "$asset_url" = "null" ]; then echo "Trivy asset not found for v${TRIVY_VERSION}. Assets: $(printf "%s" "$release_json" | jq -r '.assets[].name' 2>/dev/null || true)" >&2; exit 2; fi; \
   wget -qO /tmp/trivy.tar.gz "$asset_url"; \
+
   tar -xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy; \
   chmod +x /usr/local/bin/trivy; \
   rm -f /tmp/trivy.tar.gz; \
