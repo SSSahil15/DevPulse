@@ -146,8 +146,10 @@ router.post(
   ensureAuthenticated,
   ensureGitHubTokenSynced,
   asyncHandler(async (req, res) => {
+    console.log("[Pipeline] POST /simulate received:", req.body);
     const parsed = simulateSchema.safeParse(req.body);
     if (!parsed.success) {
+      console.error("[Pipeline] Invalid request body:", parsed.error.flatten().fieldErrors);
       return res.status(400).json({
         message: "Invalid request body.",
         errors: parsed.error.flatten().fieldErrors,
@@ -155,13 +157,17 @@ router.post(
     }
 
     const { repositoryFullName } = parsed.data;
+    console.log("[Pipeline] Creating scan job for:", repositoryFullName);
     const jobId = createAndDispatchJob(repositoryFullName, req.githubAccessToken);
+    console.log("[Pipeline] Created jobId:", jobId);
 
-    return res.status(202).json({
+    const response = {
       message: "Scan job accepted. Poll the status endpoint for results.",
       jobId,
       statusUrl: `/api/pipeline/simulate/status/${jobId}`,
-    });
+    };
+    console.log("[Pipeline] Sending response:", response);
+    return res.status(202).json(response);
   })
 );
 

@@ -54,11 +54,20 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
     setSimulateJobStatus("pending");
     setSessionData(null); // clear previous result — fresh scan starting
     try {
-      const { jobId } = await apiRequest("/api/pipeline/simulate", {
+      console.log("[AnalysisPanel] Calling /api/pipeline/simulate with:", { repositoryFullName: repository.fullName });
+      const response = await apiRequest("/api/pipeline/simulate", {
         method: "POST",
         accessToken,
         body: JSON.stringify({ repositoryFullName: repository.fullName })
       });
+      console.log("[AnalysisPanel] Response from /simulate:", response);
+      const { jobId } = response;
+      console.log("[AnalysisPanel] Extracted jobId:", jobId);
+      
+      if (!jobId) {
+        throw new Error("No jobId returned from server");
+      }
+      
       setSimulateJobStatus("processing");
       const job = await pollScanJob(jobId, accessToken);
       if (job.status === "done") {
