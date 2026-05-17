@@ -32,16 +32,14 @@ ARG TRIVY_VERSION=0.51.0
 # Install basic tools first
 RUN apk add --no-cache ca-certificates git libstdc++ tar wget curl
 
-# Try to install Trivy with retries, but don't fail if it doesn't work
-RUN for i in 1 2 3; do \
-  wget -qO /tmp/trivy.tar.gz "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" && \
-  tar -xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy && \
-  chmod +x /usr/local/bin/trivy && \
-  rm /tmp/trivy.tar.gz && \
-  echo "✓ Trivy installed successfully" && \
-  break || \
-  (echo "⚠ Trivy download attempt $i failed, retrying..."; sleep 2); \
-done || echo "⚠ Warning: Could not install Trivy, security scans will return empty results"
+# Install Trivy (fail build if download/extract fails)
+RUN wget -qO /tmp/trivy.tar.gz \
+    "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" \
+  && tar -xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy \
+  && chmod +x /usr/local/bin/trivy \
+  && rm /tmp/trivy.tar.gz \
+  && trivy --version
+
 
 WORKDIR /app
 
