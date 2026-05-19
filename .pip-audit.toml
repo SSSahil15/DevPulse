@@ -1,0 +1,14 @@
+# pip-audit Configuration
+# Documentation: https://pypi.org/project/pip-audit/
+#
+# This file allows you to configure pip-audit behavior including
+# ignoring specific vulnerabilities (false positives or accepted risks).
+#
+# IMPORTANT: Every ignored vulnerability MUST have a documented reason.
+# Remove this example block and add real exceptions as needed.
+
+# [ignore-vulns]
+# EXAMPLE IGNORE BLOCK (uncomment and customize):
+# [[ignore-vulns]]
+# id = "GHSA-xxxx-yyyy-zzzz"
+# reason = "This vulnerability affects feature X which is not used in our codebase. Reviewed on 2026-01-01 by [name]. Review due: 2026-04-01."

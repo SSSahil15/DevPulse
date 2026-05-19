@@ -1,0 +1,97 @@
+name: "🔍 CodeQL SAST Analysis"
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: "0 3 * * 1" # Monday 3am UTC — staggered from security scan
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  analyze:
+    name: "🔍 CodeQL — ${{ matrix.language }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, python]
+        # ─── Add 'java' or 'go' here if those are ever introduced ───
+
+    steps:
+      - name: "📥 Checkout"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history improves analysis depth
+
+      # ── For JS/TS: ensure deps are available for autobuild ──
+      - name: "⚙️ Setup Node.js (JS analysis)"
+        if: matrix.language == 'javascript-typescript'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: "📦 Install Node deps (Backend)"
+        if: matrix.language == 'javascript-typescript'
+        run: |
+          cd backend && npm ci
+          cd ../frontend && npm ci
+
+      # ── For Python: ensure deps are available ──
+      - name: "🐍 Setup Python (Python analysis)"
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: "📦 Install Python deps (AI Service)"
+        if: matrix.language == 'python'
+        run: |
+          pip install -r ai/requirements.txt
+
+      # ── CodeQL core steps ──
+      - name: "🔧 Initialize CodeQL"
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # Custom CodeQL query packs for deeper security coverage
+          queries: +security-and-quality
+          # config-file: .github/codeql/codeql-config.yml  # Uncomment for custom config
+
+      - name: "🏗️ Autobuild"
+        uses: github/codeql-action/autobuild@v3
+
+      - name: "🔍 Perform CodeQL Analysis"
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+          output: codeql-results
+          upload: true  # Uploads SARIF to GitHub Security tab
+
+      - name: "📤 Upload CodeQL SARIF (explicit)"
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true
+        with:
+          sarif_file: codeql-results
+          category: codeql-${{ matrix.language }}
+
+      - name: "📋 CodeQL summary"
+        if: always()
+        run: |
+          echo "## 🔍 CodeQL Analysis — ${{ matrix.language }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Analysis complete. View full results in the **Security → Code scanning** tab." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Language | \`${{ matrix.language }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Query suite | \`security-and-quality\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY

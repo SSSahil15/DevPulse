@@ -1,0 +1,19 @@
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  Trivy False Positive Overrides                              ║
+# ║  CVE IDs listed here are IGNORED during Trivy scans         ║
+# ║  Format: one CVE per line with a required comment explaining ║
+# ║  WHY it is a false positive or accepted risk                 ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+# EXAMPLE — remove this line and replace with real entries:
+# CVE-2023-XXXXX  # False positive: affects feature X which is not used in this codebase
+
+# HOW TO ADD AN EXCEPTION:
+# 1. Run: trivy image <image> --format json to get CVE IDs
+# 2. Research the CVE to confirm it's a false positive or accepted risk
+# 3. Add the CVE ID here with a comment explaining:
+#    - Why it's a false positive OR
+#    - Why it's an accepted risk (e.g., "not exploitable in our deployment config")
+#    - Date of review and reviewer name
+# 4. Schedule a review date no more than 90 days out
+# 5. Open a PR with the exception — it will be reviewed by the security team
