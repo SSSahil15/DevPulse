@@ -1,5 +1,6 @@
 const express = require("express");
-const config = require("../config/env");
+const config  = require("../config/env");
+const logger  = require("../utils/logger");
 const {
   exchangeCodeForGitHubToken,
   fetchGitHubUser,
@@ -11,7 +12,7 @@ const {
   saveGitHubProviderToken,
 } = require("../services/providerTokenStore.service");
 const ensureAuthenticated = require("../middleware/ensureAuthenticated");
-const asyncHandler = require("../utils/asyncHandler");
+const asyncHandler        = require("../utils/asyncHandler");
 
 const router = express.Router();
 
@@ -20,71 +21,89 @@ const router = express.Router();
  */
 router.get("/github", (req, res) => {
   const callbackUrl = `${config.backendUrl}/auth/github/callback`;
-  console.log("[OAuth] Starting GitHub OAuth flow");
-  console.log("[OAuth] Client ID:", config.githubClientId);
-  console.log("[OAuth] Redirect URI:", callbackUrl);
-  
-  const params = new URLSearchParams({
-    client_id: config.githubClientId,
-    redirect_uri: callbackUrl,
-    scope: "repo read:user user:email",
-    prompt: "consent", // Force GitHub to ask for permission every time
+
+  // NOTE: clientId is logged for debugging OAuth misconfiguration — it is public.
+  // The clientSecret is never logged anywhere.
+  logger.info("[Auth] Starting GitHub OAuth flow", {
+    requestId:   req.requestId,
+    clientId:    config.githubClientId,
+    redirectUri: callbackUrl,
   });
-  const authUrl = `https://github.com/login/oauth/authorize?${params}`;
-  console.log("[OAuth] Full auth URL:", authUrl);
-  res.redirect(authUrl);
+
+  const params = new URLSearchParams({
+    client_id:    config.githubClientId,
+    redirect_uri: callbackUrl,
+    scope:        "repo read:user user:email",
+    prompt:       "consent", // Force GitHub to ask for permission every time
+  });
+
+  res.redirect(`https://github.com/login/oauth/authorize?${params}`);
 });
 
 /**
  * Step 2: GitHub redirects here with a code. Exchange it for a token,
  * issue a DevPulse JWT, and redirect back to the frontend with it.
+ *
+ * IMPORTANT: The `code` query param is an OAuth authorization code — a secret.
+ * It is intentionally never logged. Only a "received" boolean is logged.
  */
 router.get(
   "/github/callback",
   asyncHandler(async (req, res) => {
-    const { code, error, state } = req.query;
+    const { error: oauthError, code } = req.query;
+    const log = logger.withContext(req);
 
-    console.log("[OAuth Callback] Received callback");
-    console.log("[OAuth Callback] Code:", code ? code.substring(0, 10) + "..." : "missing");
-    console.log("[OAuth Callback] Error:", error || "none");
-    console.log("[OAuth Callback] State:", state || "none");
+    log.info("[Auth] GitHub OAuth callback received", {
+      codeReceived: !!code,   // Never log the code value itself
+      oauthError:   oauthError || null,
+    });
 
-    if (error || !code) {
-      console.error("[OAuth Callback] Auth denied or no code:", error);
+    if (oauthError || !code) {
+      log.warn("[Auth] OAuth denied or code missing", {
+        reason: oauthError || "no_code",
+      });
       return res.redirect(`${config.frontendUrl}/login?error=github_denied`);
     }
 
     try {
-      console.log("[OAuth Callback] Exchanging code for token...");
+      log.info("[Auth] Exchanging OAuth code for GitHub access token");
       const githubToken = await exchangeCodeForGitHubToken(code);
-      console.log("[OAuth Callback] Token received successfully");
-      
-      console.log("[OAuth Callback] Fetching GitHub user...");
-      const githubUser = await fetchGitHubUser(githubToken);
-      console.log("[OAuth Callback] GitHub user fetched:", githubUser.login);
+      // Token value is never logged — maskSensitive covers it as a precaution
+      log.info("[Auth] GitHub access token obtained successfully");
 
-      // Save the GitHub token using the GitHub user ID as the key
+      log.info("[Auth] Fetching GitHub user profile");
+      const githubUser = await fetchGitHubUser(githubToken);
+      log.info("[Auth] GitHub user profile fetched", {
+        userId:   String(githubUser.id),
+        username: githubUser.login,
+      });
+
+      // Store the encrypted GitHub provider token server-side
       await saveGitHubProviderToken({
         githubViewer: {
-          id: String(githubUser.id),
-          login: githubUser.login,
+          id:        String(githubUser.id),
+          login:     githubUser.login,
           avatarUrl: githubUser.avatar_url,
           profileUrl: githubUser.html_url,
         },
         providerToken: githubToken,
-        userId: String(githubUser.id),
+        userId:        String(githubUser.id),
       });
 
       const devpulseToken = issueDevPulseJWT(githubUser);
 
-      const redirectUrl = `${config.frontendUrl}/auth/callback?token=${devpulseToken}`;
-      console.log("[OAuth Callback] Redirecting to:", redirectUrl.split("?")[0]);
-      
-      // Redirect to frontend with the token in the URL
-      return res.redirect(redirectUrl);
+      log.info("[Auth] DevPulse JWT issued — redirecting to frontend", {
+        userId:   String(githubUser.id),
+        username: githubUser.login,
+      });
+
+      // Token is embedded in redirect URL — only the path prefix is logged
+      return res.redirect(`${config.frontendUrl}/auth/callback?token=${devpulseToken}`);
     } catch (err) {
-      console.error("[OAuth Callback] Error during auth flow:", err.message);
-      console.error("[OAuth Callback] Full error:", err);
+      log.error("[Auth] OAuth callback failed", {
+        error:     err.message,
+        requestId: req.requestId,
+      });
       return res.redirect(`${config.frontendUrl}/login?error=auth_failed`);
     }
   })
@@ -98,6 +117,11 @@ router.get(
   ensureAuthenticated,
   asyncHandler(async (req, res) => {
     const githubTokenSynced = await getGitHubProviderTokenStatus(req.user.id);
+
+    logger.withContext(req).debug("[Auth] /me called", {
+      githubTokenSynced,
+    });
+
     return res.status(200).json({
       authenticated: true,
       githubTokenSynced,
@@ -114,6 +138,11 @@ router.delete(
   ensureAuthenticated,
   asyncHandler(async (req, res) => {
     await deleteGitHubProviderToken(req.user.id);
+
+    logger.withContext(req).info("[Auth] GitHub provider token deleted (logout)", {
+      userId: req.user.id,
+    });
+
     return res.status(200).json({ message: "GitHub token removed." });
   })
 );

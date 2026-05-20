@@ -25,12 +25,20 @@ const pipelineRoutes = require("./routes/pipeline.routes");
 const feedbackRoutes = require("./routes/feedback.routes");
 const reportRoutes   = require("./routes/report.routes");
 const aiChatRoutes   = require("./routes/aiChat.routes");
-const { generalApiLimiter, authLimiter } = require("./middleware/rateLimiter");
-const { requestTiming, getMetrics }      = require("./middleware/requestTiming");
+const { generalApiLimiter, authLimiter }    = require("./middleware/rateLimiter");
+const { requestTiming, getMetrics }          = require("./middleware/requestTiming");
+const requestId                              = require("./middleware/requestId");
+const { isHttpError }                        = require("./utils/httpError");
+
 
 const app = express();
 
 const logger = require("./utils/logger");
+
+// ─── Request ID ──────────────────────────────────────────────────────────────
+// Mount FIRST — before CORS, helmet, morgan, and all routes.
+// Stamps req.requestId on every request and sets X-Request-ID response header.
+app.use(requestId);
 
 // ─── Swagger Documentation ────────────────────────────────────────────────────
 if (!config.isProduction) {
@@ -191,28 +199,91 @@ app.use((req, res) => {
   });
 });
 
-// ─── Global Error Handler ─────────────────────────────────────────────────────
+// ─── Global Error Handler ──────────────────────────────────────────────────────────────
 Sentry.setupExpressErrorHandler(app);
 
 app.use((error, req, res, next) => {
   if (res.headersSent) return next(error);
 
+  // ── GitHub API error (axios 4xx/5xx pass-through) ───────────────────────────
   if (error.response?.data?.message) {
+    logger.warn("[ErrorHandler] GitHub API error", {
+      requestId:  req.requestId,
+      userId:     req.user?.id,
+      path:       req.path,
+      status:     error.response.status,
+      detail:     error.response.data.message,
+    });
     return res.status(error.response.status || 502).json({
       message: "GitHub API request failed.",
       details: error.response.data.message,
     });
   }
 
+  // ── CORS rejection ──────────────────────────────────────────────────────────
   if (error.message === "Origin is not allowed by CORS.") {
+    logger.warn("[ErrorHandler] CORS rejection", {
+      requestId: req.requestId,
+      origin:    req.headers.origin,
+    });
     return res.status(403).json({ message: error.message });
   }
 
-  console.error(error);
+  // ── Determine if this is an expected operational error or an unexpected bug ──
+  const statusCode    = error.statusCode || 500;
+  const isOperational = isHttpError(error) || statusCode < 500;
 
-  return res.status(error.statusCode || 500).json({
-    message: error.message || "Internal server error.",
+  // Build a structured log payload (no sensitive data — logger masks it)
+  const logPayload = {
+    requestId:  req.requestId,
+    userId:     req.user?.id || "anonymous",
+    method:     req.method,
+    path:       req.path,
+    statusCode,
+    message:    error.message,
+    stack:      error.stack,
+  };
+
+  if (isOperational) {
+    // Expected error (e.g. 401, 404, validation failure) — log at WARN
+    logger.warn("[ErrorHandler] Operational error", logPayload);
+  } else {
+    // Unexpected bug — log at ERROR so it triggers alerts, and Sentry already
+    // captured it via setupExpressErrorHandler above
+    logger.error("[ErrorHandler] Unexpected server error", logPayload);
+  }
+
+  return res.status(statusCode).json({
+    message:   error.message || "Internal server error.",
+    requestId: req.requestId, // Return ID so users can quote it in bug reports
   });
 });
 
 module.exports = app;
+
+// ─── Process-level Safety Net ──────────────────────────────────────────────────────────────
+// These handlers ensure crashes and unhandled Promise rejections are always
+// logged to structured output (and thus to Sentry/Render logs) before exit.
+// Without these, a mis-handled Promise rejection kills the process silently.
+
+process.on("unhandledRejection", (reason, promise) => {
+  logger.error("[Process] Unhandled Promise rejection — SHUTTING DOWN", {
+    reason: reason instanceof Error ? reason.message : String(reason),
+    stack:  reason instanceof Error ? reason.stack : undefined,
+  });
+  Sentry.captureException(
+    reason instanceof Error ? reason : new Error(String(reason)),
+    { extra: { type: "unhandledRejection" } }
+  );
+  // Give Sentry time to flush before killing the process
+  setTimeout(() => process.exit(1), 1000).unref();
+});
+
+process.on("uncaughtException", (err) => {
+  logger.error("[Process] Uncaught exception — SHUTTING DOWN", {
+    message: err.message,
+    stack:   err.stack,
+  });
+  Sentry.captureException(err, { extra: { type: "uncaughtException" } });
+  setTimeout(() => process.exit(1), 1000).unref();
+});
