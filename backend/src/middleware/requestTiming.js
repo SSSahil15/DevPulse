@@ -107,8 +107,10 @@ function requestTiming(req, res, next) {
     }
 
     // Attach timing header for debugging (dev only)
-    if (process.env.NODE_ENV !== "production") {
-      res.setHeader("X-Response-Time", `${durationMs.toFixed(2)}ms`);
+    // Guard against headers-already-sent — can happen in tests or when
+    // a response is piped/streamed and finish fires after headers close.
+    if (process.env.NODE_ENV !== "production" && !res.headersSent) {
+      try { res.setHeader("X-Response-Time", `${durationMs.toFixed(2)}ms`); } catch (_) {}
     }
   });
 

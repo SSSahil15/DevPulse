@@ -18,6 +18,14 @@ module.exports = {
     '**/__tests__/**/*.test.js',
     '**/test/**/*.test.js',
   ],
+  // Exclude the legacy test/ directory — those files use node:test runner
+  // (require('node:test')) which conflicts with Jest's module environment.
+  // Run them separately: node --test test/app.test.js test/analyze.service.test.js
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/test/', // excludes backend/test/ — those files use node:test runner, not Jest
+  ],
+
   // Allow slow async DB operations without Jest's default 5s timeout
   testTimeout: 15000,
   setupFiles: ['./src/__tests__/setup.js'],

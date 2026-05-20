@@ -724,7 +724,8 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
             <div className="flex items-center gap-5">
               <div className="text-right">
                 <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Session Info</p>
-                <p className="text-xs text-slate-400">Synced {repositories.length} repos at {new Date().toLocaleTimeString([], {hour: "2-digit", minute:"2-digit"})}</p>
+                <p className="text-xs text-slate-400">Synced {repoState.data?.length ?? 0} repos at {new Date().toLocaleTimeString([], {hour: "2-digit", minute:"2-digit"})}</p>
+
               </div>
               <button
                 onClick={handleLogout}
