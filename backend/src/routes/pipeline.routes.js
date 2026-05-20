@@ -6,41 +6,72 @@ const ensureGitHubTokenSynced = require("../middleware/ensureGitHubTokenSynced")
 const { simulateLimiter } = require("../middleware/rateLimiter");
 const validate = require("../middleware/validate");
 const pipelineController = require("../controllers/pipeline.controller");
+const {
+  githubFullNameSchema,
+  paginationSchema,
+  commitShaSchema,
+} = require("../validation/schemas");
 
 const router = express.Router();
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
 const ingestSchema = z.object({
-  repository: z.string().min(1),
-  commitSha: z.string().min(1),
-  runId: z.string().min(1),
-  commitMessage: z.string().max(200).optional(),
-  branch: z.string().optional(),
-  triggeredBy: z.string().optional(),
-  runUrl: z.string().url().optional().nullable(),
-  event: z.string().optional(),
-  timestamp: z.string().optional(),
-  overallStatus: z.string().optional(),
+  repository:    z.string().trim().min(1).max(200),
+  commitSha:     commitShaSchema,
+  runId:         z.string().trim().min(1).max(50),
+  commitMessage: z.string().trim().max(500).optional(),
+  branch:        z.string().trim().max(255).optional(),
+  triggeredBy:   z.string().trim().max(100).optional(),
+  runUrl:        z.string().url().optional().nullable(),
+  event:         z.string().trim().max(50).optional(),
+  timestamp:     z.string().optional(),
+  overallStatus: z.enum(["success", "failure", "cancelled", "skipped"]).optional(),
   stages: z.object({
-    backend: z.object({ tests: z.string() }).optional(),
-    frontend: z.object({ build: z.string(), tests: z.string() }).optional(),
+    backend:  z.object({ tests: z.string().max(20) }).optional(),
+    frontend: z.object({
+      build: z.string().max(20),
+      tests: z.string().max(20),
+    }).optional(),
     security: z.object({
-      critical: z.number().int().min(0),
-      high: z.number().int().min(0),
-      medium: z.number().int().min(0),
-      vulnerabilities: z.array(z.any()).optional(),
+      critical:        z.number().int().min(0),
+      high:            z.number().int().min(0),
+      medium:          z.number().int().min(0),
+      low:             z.number().int().min(0).optional(),
+      vulnerabilities: z.array(z.any()).max(500).optional(),
     }).optional(),
     docker: z.object({
-      build: z.string(),
-      imageSize: z.string().optional(),
+      build:                z.string().max(20),
+      imageSize:            z.string().max(50).optional(),
       imageVulnerabilities: z.number().int().min(0).optional(),
     }).optional(),
   }).optional(),
 });
 
 const simulateSchema = z.object({
-  repositoryFullName: z.string().min(3).regex(/^[\w.-]+\/[\w.-]+$/, "Must be in owner/repo format"),
+  repositoryFullName: githubFullNameSchema,
+});
+
+// ─── Param schemas ────────────────────────────────────────────────────────────
+
+// Scan job IDs: "job_" prefix + 16 lowercase hex chars
+const jobIdParamSchema = z.object({
+  jobId: z.string().trim().regex(/^job_[a-z0-9]{16}$/, "Invalid job ID format."),
+});
+
+// Pipeline result IDs are UUIDs stored in DB
+const resultIdParamSchema = z.object({
+  id: z.string().trim().uuid("Result ID must be a valid UUID."),
+});
+
+// GitHub Actions run IDs are numeric strings
+const runIdParamSchema = z.object({
+  runId: z.string().trim().regex(/^\d{1,20}$/, "Run ID must be a numeric string."),
+});
+
+// Repo path wildcard param
+const repoPathParamSchema = z.object({
+  repository: z.string().trim().min(3).max(200),
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -65,16 +96,19 @@ router.post(
 router.get(
   "/simulate/status/:jobId",
   ensureAuthenticated,
+  validate(jobIdParamSchema, "params"),
   asyncHandler(pipelineController.getSimulationStatus)
 );
 
 router.get(
   "/results",
+  validate(paginationSchema, "query"),
   asyncHandler(pipelineController.getResultsList)
 );
 
 router.get(
   "/results/:runId",
+  validate(runIdParamSchema, "params"),
   asyncHandler(pipelineController.getResultById)
 );
 
@@ -95,6 +129,7 @@ router.get(
 
 router.delete(
   "/results/:id",
+  validate(resultIdParamSchema, "params"),
   asyncHandler(pipelineController.deleteResultById)
 );
 
@@ -104,3 +139,4 @@ router.delete(
 );
 
 module.exports = router;
+

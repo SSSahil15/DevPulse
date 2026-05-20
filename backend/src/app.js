@@ -97,8 +97,10 @@ app.use(helmet({
   }
 }));
 app.use(morgan(config.isProduction ? "combined" : "dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// 50 KB body cap — prevents large-payload DoS before validation runs.
+// Webhooks send compact JSON payloads; nothing legitimate needs more than this.
+app.use(express.json({ limit: "50kb" }));
+app.use(express.urlencoded({ extended: true, limit: "50kb" }));
 
 // ─── Request Timing (p50/p95/p99 histogram) ─────────────────────────────────────
 // Mount early so ALL routes are timed including health checks
