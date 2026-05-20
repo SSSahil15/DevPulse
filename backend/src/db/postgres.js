@@ -6,7 +6,11 @@ const logger  = require("../utils/logger");
 const SLOW_THRESHOLD_MS = config.slowQueryThresholdMs || 100;
 
 const pool = new Pool({
-  connectionString: config.databaseUrl || "postgresql://devpulse:devpulse@localhost:5432/devpulse",
+  connectionString:      config.databaseUrl || "postgresql://devpulse:devpulse@localhost:5432/devpulse",
+  // Explicit pool tuning — safe defaults for Render's free tier (1 CPU)
+  max:                   10,    // max concurrent connections
+  idleTimeoutMillis:     30000, // release idle connections after 30s
+  connectionTimeoutMillis: 2000, // fail fast if no connection available in 2s
 });
 
 // ─── Slow Query Instrumentation ───────────────────────────────────────────────
@@ -62,9 +66,19 @@ async function migrate() {
       );
     `);
 
+    // ── Existing indexes (kept for backwards compatibility) ──────────────────
     await client.query(`CREATE INDEX IF NOT EXISTS idx_pipeline_repository ON pipeline_results(repository);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_pipeline_branch ON pipeline_results(branch);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_pipeline_received ON pipeline_results(received_at DESC);`);
+
+    // ── New indexes (v2 — fixes full table scans) ─────────────────────────────
+    // Fixes findByRunId() which previously did a full seq-scan on every webhook
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_pipeline_run_id ON pipeline_results(run_id);`);
+    // Composite index: covers all filtered+sorted queries (repo+branch+received_at)
+    // Supersedes separate idx_pipeline_repository for queries that also ORDER BY received_at
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_pipeline_repo_received ON pipeline_results(repository, received_at DESC);`);
+    // Covers the COUNT(*) FILTER (WHERE overall_status = 'success') in getHealth()
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_pipeline_overall_status ON pipeline_results(overall_status);`);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS scan_jobs (
@@ -109,18 +123,18 @@ async function migrate() {
     `);
 
     await client.query("COMMIT");
-    console.log("[DB] PostgreSQL database ready and migrated.");
+    logger.info("[DB] PostgreSQL database ready and migrated.");
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error("[DB] PostgreSQL migration failed", err);
+    logger.error("[DB] PostgreSQL migration failed", { error: err.message });
     throw err;
   } finally {
     client.release();
   }
 }
 
-pool.on("error", (err, client) => {
-  console.error("[DB] Unexpected error on idle client", err);
+pool.on("error", (err) => {
+  logger.error("[DB] Unexpected error on idle client", { error: err.message, stack: err.stack });
   process.exit(-1);
 });
 

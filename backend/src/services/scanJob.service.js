@@ -1,12 +1,14 @@
 const crypto = require("crypto");
 const { scanJobDB, pipelineDB } = require("../db/database");
-const { runTrivyScan } = require("./security.service");
-const { fetchRepoHealth } = require("./github.service");
-const redis = require("./redis.service");
+const { runTrivyScan }           = require("./security.service");
+const { fetchRepoHealth }        = require("./github.service");
+const redis                      = require("./redis.service");
+const logger                     = require("../utils/logger");
 const {
   calculateDevPulseScore,
   generatePipelineInsights,
 } = require("./devpulseScore.service");
+
 
 /**
  * Scan Job Service — Async Trivy scanning with SQLite job tracking.
@@ -31,7 +33,7 @@ async function createAndDispatchJob(repositoryFullName, githubAccessToken) {
 
   // Fire and forget — run in background
   _processJob(jobId, repositoryFullName, githubAccessToken).catch(async (err) => {
-    console.error(`[ScanJob] Unhandled error in job ${jobId}:`, err.message);
+    logger.error(`[ScanJob] Unhandled error in job ${jobId}`, { error: err.message });
     await scanJobDB.markFailed(jobId, err.message);
   });
 
@@ -75,8 +77,14 @@ async function _processJob(jobId, repositoryFullName, githubAccessToken) {
 
     const overallStatus = stages.security.critical > 0 ? "failure" : "success";
 
-    // Pull repo's existing history for failure-rate factor
-    const repoHistory = await pipelineDB.findFiltered({ repository: repositoryFullName, limit: 50 });
+    // Pull repo's existing history for failure-rate factor.
+    // 'summary' columns: omits stages+insights JSONB — only overallStatus needed.
+    // limit:20 is enough for a statistically meaningful failure-rate sample.
+    const repoHistory = await pipelineDB.findFiltered({
+      repository: repositoryFullName,
+      limit:      20,
+      columns:    "summary",
+    });
     const devpulseScore = calculateDevPulseScore(stages, repoHealth, repoHistory);
     const insights = generatePipelineInsights(stages, devpulseScore, repoHealth);
 
@@ -101,18 +109,23 @@ async function _processJob(jobId, repositoryFullName, githubAccessToken) {
     await pipelineDB.insert(record);
     await scanJobDB.markDone(jobId, { record });
 
-    console.log(`[ScanJob] ${jobId} completed — score: ${devpulseScore.score} (${devpulseScore.status})`);
+    logger.info(`[ScanJob] ${jobId} completed`, { score: devpulseScore.score, status: devpulseScore.status });
   } catch (err) {
-    console.error(`[ScanJob] ${jobId} failed:`, err.message);
+    logger.error(`[ScanJob] ${jobId} failed`, { error: err.message });
     await scanJobDB.markFailed(jobId, err.message);
   }
 }
 
 /**
  * Returns the current status of a scan job.
+ *
+ * @param {string} jobId
+ * @param {object} [opts]
+ * @param {boolean} [opts.lite=false] - Pass true to skip loading the result JSONB
+ *   (faster for status-polling; use false when you need the full result payload).
  */
-async function getJobStatus(jobId) {
-  return await scanJobDB.getById(jobId);
+async function getJobStatus(jobId, { lite = false } = {}) {
+  return await scanJobDB.getById(jobId, { lite });
 }
 
 module.exports = { createAndDispatchJob, getJobStatus };

@@ -30,7 +30,10 @@ const ingestResult = async (req, res) => {
     },
   };
 
-  const repoHistory = await pipelineDB.findFiltered({ repository, limit: 50 });
+  // Fetch recent history for failure-rate scoring.
+  // 'summary' mode omits stages+insights JSONB — only overallStatus is needed here.
+  // limit:20 is sufficient for a statistically meaningful failure-rate sample.
+  const repoHistory = await pipelineDB.findFiltered({ repository, limit: 20, columns: "summary" });
   const devpulseScore = calculateDevPulseScore(normalizedStages, null, repoHistory);
   const insights = generatePipelineInsights(normalizedStages, devpulseScore);
 
@@ -90,7 +93,9 @@ const simulateScan = async (req, res) => {
 
 const getSimulationStatus = async (req, res) => {
   const { jobId } = req.params;
-  const job = await getJobStatus(jobId);
+
+  // Use lite mode (no result JSONB) while the job is still running — faster poll
+  const job = await getJobStatus(jobId, { lite: true });
 
   if (!job) {
     return res.status(404).json({ message: `Scan job not found: ${jobId}` });
@@ -114,11 +119,13 @@ const getSimulationStatus = async (req, res) => {
     });
   }
 
+  // Job done — fetch again with full result payload
+  const fullJob = await getJobStatus(jobId, { lite: false });
   return res.status(200).json({
     jobId,
     status: "done",
-    repository: job.repository,
-    record: job.result?.record || null,
+    repository: fullJob.repository,
+    record: fullJob.result?.record || null,
   });
 };
 
@@ -151,7 +158,8 @@ const getScoreHistory = async (req, res) => {
   const repository = req.params.repository;
   const limit = Math.min(Number(req.query.limit) || 20, 50);
 
-  const results = await pipelineDB.findFiltered({ repository, limit });
+  // 'summary' mode: omits stages+insights JSONB — history view only needs score metadata
+  const results = await pipelineDB.findFiltered({ repository, limit, columns: "summary" });
   const history = results.map((r) => ({
     runId: r.runId,
     commitSha: r.commitSha,
@@ -171,7 +179,11 @@ const getLatestScore = async (req, res) => {
   const repository = req.params.repository;
   const { branch } = req.query;
 
-  const filtered = await pipelineDB.findFiltered({ repository, branch, limit: 50 });
+  // Only need the 2 most recent rows:
+  //   filtered[0] — latest (returned in full)
+  //   filtered[1] — previous (for score trend diff only)
+  // Previously loaded 50 full rows including heavy JSONB on every call.
+  const filtered = await pipelineDB.findFiltered({ repository, branch, limit: 2, columns: "full" });
 
   if (filtered.length === 0) {
     return res.status(404).json({
