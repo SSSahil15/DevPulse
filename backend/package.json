@@ -27,6 +27,7 @@
     "morgan": "^1.10.0",
     "nodemailer": "^8.0.6",
     "pg": "^8.21.0",
+    "rate-limit-redis": "^5.0.0",
     "redis": "^5.12.1",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.19.0",

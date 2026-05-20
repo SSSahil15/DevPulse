@@ -9,6 +9,7 @@ const config = require("../config/env");
 const redis = require("../services/redis.service");
 
 const router = express.Router();
+const validate = require("../middleware/validate");
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
@@ -22,6 +23,10 @@ const createReportSchema = z.object({
     defaultBranch: z.string().optional(),
     htmlUrl: z.string().url().nullable().optional(),
   }).optional(),
+});
+
+const reportParamSchema = z.object({
+  token: z.string().trim().regex(/^dp_rpt_[a-f0-9]{24}$/, "Invalid report token format.")
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -77,12 +82,9 @@ router.post(
 // ─────────────────────────────────────────────────────────────────────────────
 router.get(
   "/:token",
+  validate(reportParamSchema, "params"),
   asyncHandler(async (req, res) => {
     const { token } = req.params;
-
-    if (!/^dp_rpt_[a-f0-9]{24}$/.test(token)) {
-      return res.status(400).json({ message: "Invalid report token format." });
-    }
 
     const cacheKey = `report:${token}`;
     let report = await redis.get(cacheKey);

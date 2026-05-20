@@ -3,6 +3,7 @@ const { z } = require("zod");
 const asyncHandler = require("../utils/asyncHandler");
 const ensureAuthenticated = require("../middleware/ensureAuthenticated");
 const { aiChatLimiter } = require("../middleware/rateLimiter");
+const validate = require("../middleware/validate");
 const { generateHybridChatResponse } = require("../services/aiChat.service");
 
 const router = express.Router();
@@ -10,7 +11,11 @@ const router = express.Router();
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
 const chatSchema = z.object({
-  query: z.string().min(1, "Query cannot be empty.").max(500, "Query too long (max 500 chars)."),
+  query: z.string()
+    .trim()
+    .min(1, "Query cannot be empty.")
+    .max(1000, "Query too long (max 1000 chars).")
+    .refine(val => !/<[^>]*>/g.test(val), "HTML tags are not allowed"),
   context: z.any().optional(),
   history: z.array(z.any()).max(20, "History is limited to 20 messages.").optional(),
 });
@@ -22,16 +27,9 @@ router.post(
   "/chat",
   aiChatLimiter,
   ensureAuthenticated,
+  validate(chatSchema, "body"),
   asyncHandler(async (req, res) => {
-    const parsed = chatSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({
-        message: "Invalid request.",
-        errors: parsed.error.flatten().fieldErrors,
-      });
-    }
-
-    const { query, context, history } = parsed.data;
+    const { query, context, history } = req.body;
 
     const responsePayload = await generateHybridChatResponse(query, context, history);
 

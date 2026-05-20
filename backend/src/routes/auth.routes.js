@@ -12,9 +12,17 @@ const {
   saveGitHubProviderToken,
 } = require("../services/providerTokenStore.service");
 const ensureAuthenticated = require("../middleware/ensureAuthenticated");
-const asyncHandler        = require("../utils/asyncHandler");
+const asyncHandler = require("../utils/asyncHandler");
+const validate     = require("../middleware/validate");
+const { z }        = require("zod");
 
 const router = express.Router();
+
+const githubCallbackSchema = z.object({
+  code: z.string().trim().min(1, "Code is required").optional(),
+  error: z.string().trim().optional(),
+  state: z.string().trim().optional(),
+});
 
 /**
  * Step 1: Redirect user to GitHub OAuth authorization page.
@@ -49,6 +57,7 @@ router.get("/github", (req, res) => {
  */
 router.get(
   "/github/callback",
+  validate(githubCallbackSchema, "query"),
   asyncHandler(async (req, res) => {
     const { error: oauthError, code } = req.query;
     const log = logger.withContext(req);

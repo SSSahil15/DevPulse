@@ -28,6 +28,7 @@ const envSchema = z.object({
   SLOW_QUERY_THRESHOLD_MS:   z.coerce.number().int().positive().default(100),
   SLOW_REQUEST_THRESHOLD_MS: z.coerce.number().int().positive().default(1000),
   GROQ_API_KEY: z.string().optional(),
+  INTERNAL_SERVICE_SECRET: z.string().optional(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -87,4 +88,5 @@ module.exports = {
   slowQueryThresholdMs:   env.SLOW_QUERY_THRESHOLD_MS,
   slowRequestThresholdMs: env.SLOW_REQUEST_THRESHOLD_MS,
   groqApiKey: env.GROQ_API_KEY,
+  internalServiceSecret: env.INTERNAL_SERVICE_SECRET,
 };
