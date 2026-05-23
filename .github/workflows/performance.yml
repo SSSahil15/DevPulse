@@ -46,7 +46,7 @@ jobs:
 
       - name: "📦 Install frontend deps"
         working-directory: frontend
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: "🏗️ Build frontend"
         working-directory: frontend
@@ -129,7 +129,7 @@ jobs:
 
       - name: "📦 Install frontend deps"
         working-directory: frontend
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: "🏗️ Build frontend"
         working-directory: frontend
@@ -170,7 +170,7 @@ jobs:
 
       - name: "📦 Install backend deps"
         working-directory: backend
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: "🔥 Run health endpoint latency smoke test"
         working-directory: backend

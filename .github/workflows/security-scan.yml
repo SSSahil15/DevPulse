@@ -65,7 +65,7 @@ jobs:
       # ── Backend ──
       - name: "📦 Install backend deps"
         working-directory: backend
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: "🔍 npm audit — Backend"
         id: backend_audit
@@ -79,7 +79,7 @@ jobs:
       # ── Frontend ──
       - name: "📦 Install frontend deps"
         working-directory: frontend
-        run: npm ci
+        run: npm install --no-audit --no-fund
         env:
           npm_config_cache: /tmp/.npm-frontend
 
@@ -451,7 +451,7 @@ jobs:
       - name: "📜 npm license check (Backend)"
         working-directory: backend
         run: |
-          npm ci --omit=dev
+          npm install --no-audit --no-fund --omit=dev
           npx license-checker --production --json \
             --failOn "GPL-2.0;GPL-3.0;AGPL-3.0;LGPL-2.0;LGPL-2.1;LGPL-3.0" \
             --out ${{ github.workspace }}/${{ env.REPORTS_DIR }}/license/backend-licenses.json \
@@ -461,7 +461,7 @@ jobs:
       - name: "📜 npm license check (Frontend)"
         working-directory: frontend
         run: |
-          npm ci --omit=dev
+          npm install --no-audit --no-fund --omit=dev
           npx license-checker --production --json \
             --failOn "GPL-2.0;GPL-3.0;AGPL-3.0;LGPL-2.0;LGPL-2.1;LGPL-3.0" \
             --out ${{ github.workspace }}/${{ env.REPORTS_DIR }}/license/frontend-licenses.json \

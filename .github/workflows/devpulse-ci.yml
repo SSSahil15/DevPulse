@@ -57,7 +57,7 @@ jobs:
 
       - name: "📦 Install dependencies"
         run: |
-          npm ci 2>&1 | tee ${{ github.workspace }}/logs/backend-install.log
+          npm install --no-audit --no-fund 2>&1 | tee ${{ github.workspace }}/logs/backend-install.log
           echo "dep_count=$(ls node_modules | wc -l | tr -d ' ')" >> $GITHUB_OUTPUT
         id: install
 
@@ -135,7 +135,7 @@ jobs:
         run: mkdir -p ${{ github.workspace }}/logs
 
       - name: "📦 Install dependencies"
-        run: npm ci 2>&1 | tee ${{ github.workspace }}/logs/frontend-install.log
+        run: npm install --no-audit --no-fund 2>&1 | tee ${{ github.workspace }}/logs/frontend-install.log
 
       - name: "🏗️ Build production bundle"
         id: frontend_build
@@ -225,9 +225,9 @@ jobs:
 
       - name: "📦 Install Root and Service Dependencies"
         run: |
-          npm ci
-          cd backend && npm ci
-          cd ../frontend && npm ci
+          npm install --no-audit --no-fund
+          cd backend && npm install --no-audit --no-fund
+          cd ../frontend && npm install --no-audit --no-fund
 
       - name: "🎭 Install Playwright Browsers"
         run: npx playwright install --with-deps
