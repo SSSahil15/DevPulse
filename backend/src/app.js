@@ -210,17 +210,16 @@ app.use(helmet({
       objectSrc:             ["'none'"],          // No Flash / plugins
       baseUri:               ["'self'"],
       formAction:            ["'self'"],
-      upgradeInsecureRequests: [],               // Upgrade HTTP → HTTPS automatically
+      upgradeInsecureRequests: config.isProduction ? [] : null, // Upgrade HTTP → HTTPS automatically in production only
     },
   },
 
-  // HSTS — 1 year, include subdomains, eligible for browser preload list
-  hsts: {
+  // HSTS — 1 year, include subdomains, eligible for browser preload list (production only)
+  hsts: config.isProduction ? {
     maxAge:            31536000,
     includeSubDomains: true,
     preload:           true,
-  },
-
+  } : false,
   // Prevent browsers from MIME-sniffing responses
   noSniff: true,
 
