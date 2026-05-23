@@ -16,6 +16,15 @@ const router = express.Router();
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
+// Extended pagination schema for GET /results — preserves repository + branch
+// filter params that paginationSchema would otherwise strip (Zod strips unknown
+// keys by default). Offset is coerced from string query params.
+const resultsQuerySchema = paginationSchema.extend({
+  repository: z.string().trim().max(200).optional(),
+  branch:     z.string().trim().max(255).optional(),
+  offset:     z.coerce.number().int().min(0).default(0),
+});
+
 const ingestSchema = z.object({
   repository:    z.string().trim().min(1).max(200),
   commitSha:     commitShaSchema,
@@ -102,7 +111,7 @@ router.get(
 
 router.get(
   "/results",
-  validate(paginationSchema, "query"),
+  validate(resultsQuerySchema, "query"),
   asyncHandler(pipelineController.getResultsList)
 );
 

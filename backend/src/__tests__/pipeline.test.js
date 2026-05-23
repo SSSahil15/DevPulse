@@ -13,12 +13,15 @@ const database = require("../db/database");
 // ─── Mock the database layer ──────────────────────────────────────────────────
 jest.mock("../db/database", () => ({
   pipelineDB: {
-    insert:       jest.fn(),
-    findFiltered: jest.fn(),
-    findByRunId:  jest.fn(),
-    getHealth:    jest.fn(),
-    deleteById:   jest.fn(),
-    deleteByIds:  jest.fn(),
+    insert:                jest.fn(),
+    findFiltered:          jest.fn(),
+    // Bug fix: getResultsList was updated to call findFilteredWithCount
+    // (COUNT(*) OVER window fn). Must be in mock or controller throws TypeError → 500.
+    findFilteredWithCount: jest.fn(),
+    findByRunId:           jest.fn(),
+    getHealth:             jest.fn(),
+    deleteById:            jest.fn(),
+    deleteByIds:           jest.fn(),
   },
   scanJobDB: {
     create:         jest.fn(),
@@ -55,10 +58,13 @@ beforeEach(() => {
 });
 
 // ─── Minimal valid ingest payload ─────────────────────────────────────────────
+// 40-char hex SHA required by commitShaSchema (/^[0-9a-f]{40}$/i)
+const VALID_SHA = "a".repeat(40);
+
 function validIngestPayload(overrides = {}) {
   return {
     repository:  "octocat/hello-world",
-    commitSha:   "abc123def456",
+    commitSha:   VALID_SHA,
     runId:       "9876543210",
     commitMessage: "feat: add tests",
     branch:      "main",
@@ -75,10 +81,12 @@ function validIngestPayload(overrides = {}) {
 
 // ─── GET /api/pipeline/results ────────────────────────────────────────────────
 describe("GET /api/pipeline/results", () => {
+  // findFilteredWithCount returns { rows, total } — mock the correct shape.
   it("returns 200 with results array", async () => {
-    database.pipelineDB.findFiltered.mockResolvedValue([
-      { id: "run1", repository: "octocat/hello-world", overallStatus: "success" },
-    ]);
+    database.pipelineDB.findFilteredWithCount.mockResolvedValue({
+      rows:  [{ id: "run1", repository: "octocat/hello-world", overallStatus: "success" }],
+      total: 1,
+    });
 
     const res = await request(app)
       .get("/api/pipeline/results")
@@ -87,10 +95,12 @@ describe("GET /api/pipeline/results", () => {
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body.results)).toBe(true);
     expect(res.body.results).toHaveLength(1);
+    expect(res.body.total).toBe(1);
+    expect(res.body).toHaveProperty("hasMore");
   });
 
   it("returns empty array when no results exist", async () => {
-    database.pipelineDB.findFiltered.mockResolvedValue([]);
+    database.pipelineDB.findFilteredWithCount.mockResolvedValue({ rows: [], total: 0 });
 
     const res = await request(app)
       .get("/api/pipeline/results")
@@ -98,15 +108,17 @@ describe("GET /api/pipeline/results", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.results).toHaveLength(0);
+    expect(res.body.total).toBe(0);
   });
 
   it("passes repository query param to DB filter", async () => {
-    database.pipelineDB.findFiltered.mockResolvedValue([]);
+    database.pipelineDB.findFilteredWithCount.mockResolvedValue({ rows: [], total: 0 });
     await request(app)
       .get("/api/pipeline/results?repository=octocat/hello-world")
       .set("Authorization", `Bearer ${mockToken}`);
 
-    expect(database.pipelineDB.findFiltered).toHaveBeenCalledWith(
+    // Controller now calls findFilteredWithCount (not findFiltered)
+    expect(database.pipelineDB.findFilteredWithCount).toHaveBeenCalledWith(
       expect.objectContaining({ repository: "octocat/hello-world" })
     );
   });
@@ -178,7 +190,7 @@ describe("POST /api/pipeline/results", () => {
   it("still returns 201 with no stages (all optional)", async () => {
     const payload = {
       repository: "octocat/hello-world",
-      commitSha:  "abc123",
+      commitSha:  VALID_SHA,   // must be 40-char hex
       runId:      "123456",
     };
 
@@ -279,14 +291,15 @@ describe("GET /api/pipeline/health", () => {
 });
 
 // ─── GET /api/pipeline/results/:runId ─────────────────────────────────────────
+// Route uses validate(runIdParamSchema) — runId must match /^\d{1,20}$/ (numeric only).
 describe("GET /api/pipeline/results/:runId", () => {
   it("returns 200 when run is found", async () => {
     database.pipelineDB.findByRunId.mockResolvedValue({
-      id: "result-1", runId: "abc", repository: "owner/repo",
+      id: "result-1", runId: "9876543210", repository: "owner/repo",
     });
 
     const res = await request(app)
-      .get("/api/pipeline/results/abc")
+      .get("/api/pipeline/results/9876543210")   // numeric — passes runIdParamSchema
       .set("Authorization", `Bearer ${mockToken}`);
 
     expect(res.status).toBe(200);
@@ -297,9 +310,17 @@ describe("GET /api/pipeline/results/:runId", () => {
     database.pipelineDB.findByRunId.mockResolvedValue(null);
 
     const res = await request(app)
-      .get("/api/pipeline/results/nonexistent")
+      .get("/api/pipeline/results/1111111111")   // numeric — passes schema, returns 404
       .set("Authorization", `Bearer ${mockToken}`);
 
     expect(res.status).toBe(404);
+  });
+
+  it("returns 400 when runId is non-numeric", async () => {
+    const res = await request(app)
+      .get("/api/pipeline/results/not-a-number")
+      .set("Authorization", `Bearer ${mockToken}`);
+
+    expect(res.status).toBe(400);
   });
 });

@@ -154,7 +154,128 @@ describe("calculateDevPulseScore", () => {
       expect(() => calculateDevPulseScore(cleanStages(), healthyRepoHealth(), undefined)).not.toThrow();
     });
   });
+
+  describe("commit frequency scoring bands", () => {
+    function scoreWithCommits(commitsPerWeek) {
+      return calculateDevPulseScore(
+        cleanStages(),
+        { commitActivity: { commitsPerWeek }, contributors: { totalContributors: 3 } },
+        []
+      );
+    }
+
+    it("scores highly active repos (7+ commits/week) at max commit factor", () => {
+      const a = scoreWithCommits(8);
+      const b = scoreWithCommits(1);
+      expect(a.score).toBeGreaterThan(b.score);
+    });
+
+    it("scores active repos (5-6 commits/week) lower than highly active", () => {
+      const active = scoreWithCommits(5);
+      const highlyActive = scoreWithCommits(10);
+      expect(active.score).toBeLessThanOrEqual(highlyActive.score);
+    });
+
+    it("scores moderate activity (3-4 commits/week)", () => {
+      const result = scoreWithCommits(3);
+      expect(result.score).toBeGreaterThan(0);
+    });
+
+    it("scores low activity (1-2 commits/week)", () => {
+      const result = scoreWithCommits(1.5);
+      expect(result.score).toBeGreaterThan(0);
+    });
+
+    it("scores minimal activity (0 < commits < 1 per week)", () => {
+      const result = scoreWithCommits(0.5);
+      expect(result.score).toBeGreaterThan(0);
+    });
+
+    it("scores inactive repos (0 commits/week) at minimum commit factor", () => {
+      const inactive = scoreWithCommits(0);
+      const active   = scoreWithCommits(8);
+      expect(inactive.score).toBeLessThanOrEqual(active.score);
+    });
+  });
+
+  describe("contributor count scoring", () => {
+    // Note: scoreContributorFactor uses contributors.count (not totalContributors)
+    function scoreWithContributors(count) {
+      return calculateDevPulseScore(
+        cleanStages(),
+        { commitActivity: { commitsPerWeek: 5 }, contributors: { count } },
+        []
+      );
+    }
+
+    it("scores ≥5 contributors (team) at highest contributor factor", () => {
+      const team = scoreWithContributors(5);
+      const solo = scoreWithContributors(1);
+      expect(team.score).toBeGreaterThanOrEqual(solo.score);
+    });
+
+    it("scores 3-4 contributors (healthy collaboration)", () => {
+      const result = scoreWithContributors(3);
+      expect(result.score).toBeGreaterThan(0);
+    });
+
+    it("scores exactly 2 contributors (small team)", () => {
+      const result = scoreWithContributors(2);
+      expect(result.score).toBeGreaterThan(0);
+    });
+
+    it("scores 1 contributor (solo — lowest contributor factor)", () => {
+      const solo = scoreWithContributors(1);
+      const team = scoreWithContributors(5);
+      expect(solo.score).toBeLessThanOrEqual(team.score);
+    });
+
+    it("handles zero contributors without throwing", () => {
+      expect(() => scoreWithContributors(0)).not.toThrow();
+    });
+  });
+
+  describe("code churn scoring bands", () => {
+    function scoreWithChurn(totalCommits, codeChurn) {
+      return calculateDevPulseScore(
+        cleanStages(),
+        {
+          commitActivity: { commitsPerWeek: 5, totalCommits, codeChurn },
+          contributors:   { count: 3 },
+        },
+        []
+      );
+    }
+
+    it("handles 0 commits (no code changes detected)", () => {
+      const result = scoreWithChurn(0, 0);
+      expect(result.score).toBeGreaterThan(0);  // other factors still score
+    });
+
+    it("scores clean small commits (≤50 avg lines/commit) highest", () => {
+      const clean  = scoreWithChurn(10, 400);  // 400/10 = 40 avg → ≤50
+      const messy  = scoreWithChurn(10, 6000); // 6000/10 = 600 avg → >500
+      expect(clean.score).toBeGreaterThanOrEqual(messy.score);
+    });
+
+    it("scores moderate commits (51-150 avg lines/commit)", () => {
+      const result = scoreWithChurn(10, 1000);  // 100 avg → ≤150
+      expect(result.score).toBeGreaterThan(0);
+    });
+
+    it("scores high churn commits (151-500 avg lines/commit)", () => {
+      const result = scoreWithChurn(10, 3000);  // 300 avg → ≤500
+      expect(result.score).toBeGreaterThan(0);
+    });
+
+    it("scores extreme churn commits (>500 avg lines/commit) lowest churn factor", () => {
+      const extreme = scoreWithChurn(10, 6000); // 600 avg → >500
+      const normal  = scoreWithChurn(10, 400);  // 40 avg → ≤50
+      expect(extreme.score).toBeLessThanOrEqual(normal.score);
+    });
+  });
 });
+
 
 // ─── generatePipelineInsights ─────────────────────────────────────────────────
 

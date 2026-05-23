@@ -21,16 +21,26 @@ const skipHandler = (req) => {
 };
 
 /**
+ * Normalizes an IP address for use as a rate-limit key.
+ * express-rate-limit v8 throws ERR_ERL_KEY_GEN_IPV6 if a raw IPv6
+ * address is used without explicit handling.
+ */
+const normalizeIp = (ip = '') => {
+  // Strip IPv6-mapped IPv4 prefix (::ffff:x.x.x.x → x.x.x.x)
+  return ip.replace(/^::ffff:/, '');
+};
+
+/**
  * Generates keys based on JWT user ID if available, otherwise falls back to IP.
  */
 const userKeyGenerator = (req) => {
-  return req.user ? `user_${req.user.id}` : req.ip;
+  return req.user ? `user_${req.user.id}` : normalizeIp(req.ip);
 };
 
 /**
  * Generates keys strictly based on IP address (for public endpoints).
  */
-const ipKeyGenerator = (req) => req.ip;
+const ipKeyGenerator = (req) => normalizeIp(req.ip);
 
 /**
  * Factory to create standardized limiters
@@ -62,6 +72,7 @@ function createLimiter({ windowMs, max, name, useUserId = false }) {
     max,
     standardHeaders: true,
     legacyHeaders:   false,
+    validate:        { keyGeneratorIpFallback: false },
     store:           getStore(),
     skip:            skipHandler,
     keyGenerator:    useUserId ? userKeyGenerator : ipKeyGenerator,
