@@ -31,6 +31,32 @@ By merging CI/CD heuristics, Trivy container security scanning, and Predictive M
 
 ---
 
+## 🛡️ Hardening, Observability & Quality Engineering
+
+DevPulse has been audited and hardened with production-grade security, database optimizations, observability pipelines, and test coverage:
+
+### 🔒 Security & Input Validation
+- **Strict Input Validation**: Reusable Zod schemas enforce query validation across all API endpoints. Includes SSRF mitigation on repository targets, XSS/SQLi blocking via content sanitizers, and size constraints on request bodies (capped at 50 KB) to prevent pre-validation Denial of Service (DoS).
+- **Redis-Backed Rate Limiting**: Wired rate limiters to critical endpoints (e.g. analysis submissions, GitHub sync, public reports) using `express-rate-limit` and `rate-limit-redis` to guard against scraping and brute-force spikes.
+- **HTTP Security Headers**: Enforced using `helmet` with strict Content Security Policy (CSP) rules, referrer restrictions, clickjacking mitigation (`frameguard`), and feature permissions policies.
+- **CORS Lockdowns**: Dynamic origin checking using Sets and Regex validations to permit secure local testing, preview builds, and custom production domains.
+
+### 📊 Database & Performance Optimizations
+- **Composite Indexes**: Custom index layouts (including composite indexes on `(repository, branch, received_at DESC)`) optimize query latency.
+- **Windowed Pagination**: Employs `COUNT(*) OVER()` window functions to retrieve listings and total counts in a single database round-trip.
+- **Administrative Health Dashboard**: Built a detailed `GET /api/admin/db-stats` monitoring route to track database pool statistics, table sizes, cache hit ratios, and queries taking longer than 50ms.
+
+### 📝 Observability & Distributed Tracing
+- **Structured JSON Logging**: Wired Winston loggers for daily rotation and correlated incoming requests using dynamic request IDs (`X-Request-ID`) to simplify debugging across microservices.
+- **GDPR-Compliant Sentry Tracking**: Configured Sentry error tracing with automated PII filters (automatically redacts authorization headers, passwords, cookies, and tokens).
+- **Distributed tracing**: Spans propagate across the Frontend (React), Backend (Express), and the AI microservice (FastAPI/Uvicorn) to visualize full operation execution waterfalls.
+
+### ⚙️ CI/CD Performance & Quality Gates
+- **Automated Performance Audits**: Integrated Lighthouse audits (ensuring accessibility and performance >= 90) and build-time bundle analysis gates into the CI workflows.
+- **High Test Coverage**: Comprehensive testing suite with 363+ backend unit/integration tests and 175+ frontend tests, satisfying high coverage thresholds (>70% statement coverage on backend, >60% on frontend).
+
+---
+
 ## 🛠️ Tech Stack
 
 **Frontend**
