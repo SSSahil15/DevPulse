@@ -213,16 +213,17 @@ app.use(helmet({
       objectSrc:             ["'none'"],          // No Flash / plugins
       baseUri:               ["'self'"],
       formAction:            ["'self'"],
-      upgradeInsecureRequests: [],               // Upgrade HTTP → HTTPS automatically
+      // null disables upgrade-insecure-requests in dev; [] enables it in production
+      upgradeInsecureRequests: config.isProduction ? [] : null,
     },
   },
 
-  // HSTS — 1 year, include subdomains, eligible for browser preload list
-  hsts: {
-    maxAge:            31536000,
-    includeSubDomains: true,
-    preload:           true,
-  },
+  // HSTS — production only. Applying HSTS to localhost poisons the browser cache
+  // and breaks all subsequent plain-HTTP local API calls (browser upgrades them to HTTPS).
+  // HSTS is only meaningful on real HTTPS domains in production.
+  hsts: config.isProduction
+    ? { maxAge: 31536000, includeSubDomains: true, preload: true }
+    : false,
   // Prevent browsers from MIME-sniffing responses
   noSniff: true,
 
