@@ -181,8 +181,10 @@ app.use(
 );
 
 app.use(helmet({
-  // AI service serves JSON only — no need to restrict cross-origin resource loading
-  crossOriginResourcePolicy: { policy: "same-origin" },
+  // API server must allow cross-origin fetches — "same-origin" blocks all browser
+  // requests from a different port (e.g. localhost:5174 → localhost:4000) before
+  // CORS even runs. Use "cross-origin" to let the CORS middleware handle access control.
+  crossOriginResourcePolicy: { policy: "cross-origin" },
 
   /**
    * Content Security Policy
