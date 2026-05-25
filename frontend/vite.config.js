@@ -32,7 +32,14 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 5174,
-    strictPort: true
+    strictPort: true,
+    proxy: {
+      '/api': 'http://127.0.0.1:4000',
+      '/repos': 'http://127.0.0.1:4000',
+      '/analyze': 'http://127.0.0.1:4000',
+      '/auth': 'http://127.0.0.1:4000',
+      '/health': 'http://127.0.0.1:4000',
+    }
   },
   preview: {
     host: "0.0.0.0",

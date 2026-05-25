@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Loader2, GitBranch, Shield, Zap, AlertCircle, ChevronRight, MessageSquare, CheckCircle2 } from "lucide-react";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const BACKEND_URL = import.meta.env.VITE_API_URL ?? "";
 
 const STAT_CARDS = [
   { label: "Risk Score",           value: "72",  color: "text-red-400",    bg: "bg-red-500/10",    border: "border-red-500/20"    },
