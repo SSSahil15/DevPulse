@@ -213,16 +213,16 @@ app.use(helmet({
       objectSrc:             ["'none'"],          // No Flash / plugins
       baseUri:               ["'self'"],
       formAction:            ["'self'"],
-      upgradeInsecureRequests: config.isProduction ? [] : null, // Upgrade HTTP → HTTPS automatically in production only
+      upgradeInsecureRequests: [],               // Upgrade HTTP → HTTPS automatically
     },
   },
 
-  // HSTS — 1 year, include subdomains, eligible for browser preload list (production only)
-  hsts: config.isProduction ? {
+  // HSTS — 1 year, include subdomains, eligible for browser preload list
+  hsts: {
     maxAge:            31536000,
     includeSubDomains: true,
     preload:           true,
-  } : false,
+  },
   // Prevent browsers from MIME-sniffing responses
   noSniff: true,
 
@@ -330,6 +330,14 @@ app.get("/health/startup", (req, res) => {
   } else {
     res.status(503).json({ status: "starting" });
   }
+});
+
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    service: "devpulse-backend",
+    status: "ok",
+    timestamp: new Date().toISOString(),
+  });
 });
 
 app.get("/health/live", (req, res) => {
