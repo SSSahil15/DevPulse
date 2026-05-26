@@ -421,14 +421,16 @@ function VideoModal({ isOpen, onClose }) {
         
         {/* Video Player */}
         <div className="w-full aspect-video bg-black relative">
-          <iframe 
-            className="absolute inset-0 w-full h-full"
-            src="https://www.youtube.com/embed/ScMzIvxBSi4?autoplay=1" 
-            title="DevPulse Demo"
-            frameBorder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-            allowFullScreen
-          ></iframe>
+          <video 
+            className="absolute inset-0 w-full h-full outline-none"
+            src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+            controls
+            autoPlay
+            playsInline
+            controlsList="nodownload"
+          >
+            Your browser does not support the video tag.
+          </video>
         </div>
       </div>
     </div>
