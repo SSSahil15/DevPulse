@@ -9,6 +9,14 @@ const AuthCallbackPage = lazy(() => import("./pages/AuthCallbackPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const SharedReportPage = lazy(() => import("./pages/SharedReportPage"));
+const ChangelogPage = lazy(() => import("./pages/ChangelogPage"));
+const DocsPage = lazy(() => import("./pages/DocsPage"));
+const ApiPage = lazy(() => import("./pages/ApiPage"));
+const BlogPage = lazy(() => import("./pages/BlogPage"));
+const CommunityPage = lazy(() => import("./pages/CommunityPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
+const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
@@ -130,6 +138,14 @@ function App() {
               <SharedReportPage />
             </ErrorBoundary>
           } />
+          <Route path="/changelog" element={<ChangelogPage />} />
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/reference" element={<ApiPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/community" element={<CommunityPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsOfServicePage />} />
           <Route path="*" element={<Navigate replace to={session.status === "authenticated" ? "/dashboard" : "/login"} />} />
         </Routes>
       </Suspense>

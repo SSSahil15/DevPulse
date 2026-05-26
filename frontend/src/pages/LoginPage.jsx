@@ -1,41 +1,28 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Loader2, GitBranch, Shield, Zap, AlertCircle, ChevronRight, Activity, LineChart, Layers, Terminal, Server, Lock, Code2, PlayCircle, Star, Users, Database, Target, CheckCircle2, MessageSquare } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import CountUp from "../components/CountUp";
 import { WaveChart, BarChart, SecurityLineChart, ActivityGrid } from '../components/charts';
 import DemoVideoMockup from '../components/DemoVideoMockup';
 
+const Typewriter = ({ text }) => {
+  const [displayed, setDisplayed] = useState("");
+  useEffect(() => {
+    let i = 0;
+    setDisplayed("");
+    const int = setInterval(() => {
+      setDisplayed(text.substring(0, i));
+      i++;
+      if (i > text.length) clearInterval(int);
+    }, 30);
+    return () => clearInterval(int);
+  }, [text]);
+  return <span>{displayed}</span>;
+};
+
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-
-function GithubIcon(props) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/>
-      <path d="M9 18c-4.51 2-5-2-7-2"/>
-    </svg>
-  );
-}
-
-function TwitterIcon(props) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
-    </svg>
-  );
-}
-
-function DiscordIcon(props) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="12" r="1"/>
-      <circle cx="15" cy="12" r="1"/>
-      <path d="M7.5 7.5c3.5-1 5.5-1 9 0"/>
-      <path d="M7 16.5c3.5 1 6.5 1 10 0"/>
-      <path d="M15.5 17c0 1 1.5 3 2 3 1.5 0 2.833-1.667 3.5-3 .667-1.667.5-5.833-1.5-11.5-1.457-1.015-3-1.34-4.5-1.5l-1 2.5"/>
-      <path d="M8.5 17c0 1-1.5 3-2 3-1.5 0-2.833-1.667-3.5-3-.667-1.667-.5-5.833 1.5-11.5 1.457-1.015 3-1.34 4.5-1.5l1 2.5"/>
-    </svg>
-  );
-}
+import { GithubIcon, TwitterIcon, DiscordIcon } from '../components/icons';
 
 const STAT_CARDS = [
   { label: "Risk Score",           value: 72,  suffix: "", color: "text-red-400",    bg: "bg-red-500/10",    border: "border-red-500/20",    trend: "↑ +4 today", trendColor: "text-red-400" },
@@ -54,7 +41,6 @@ const FEATURES = [
 
 // --- Subcomponents ---
 
-// 1. Interactive AI Demo
 function InteractiveAIDemo() {
   const [step, setStep] = useState(0);
   
@@ -81,7 +67,7 @@ function InteractiveAIDemo() {
   }, [step === 0]); 
 
   return (
-    <div className="w-full bg-[#0d1117] border border-white/10 rounded-2xl overflow-hidden font-mono text-sm relative shadow-2xl">
+    <div className={`w-full bg-[#0d1117] border rounded-2xl overflow-hidden font-mono text-sm relative shadow-2xl transition-all duration-300 ${step === 1 ? 'border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.2)] scale-[1.01]' : 'border-white/10'}`}>
       <div className="flex items-center px-4 py-2 bg-white/5 border-b border-white/5">
         <div className="flex gap-1.5">
           <div className="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
@@ -94,34 +80,36 @@ function InteractiveAIDemo() {
       </div>
       <div className="p-5 h-[220px] flex flex-col gap-3">
         {step >= 0 && (
-          <div className="flex items-center gap-2 text-slate-400">
-            <span className="text-blue-400">❯</span> <span>Analyzing deployment pipeline...</span>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-slate-400">
+            <span className="text-blue-400">❯</span> 
+            <Typewriter text="Analyzing deployment pipeline..." />
             {step === 0 && <span className="w-2 h-4 bg-slate-400 animate-pulse inline-block ml-1" />}
-          </div>
+          </motion.div>
         )}
         {step >= 1 && (
-          <div className="flex items-start gap-2 text-red-400 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-2 text-red-400">
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
             <span>Found 3 Critical Vulnerabilities (CVE-2024-21334, CVE-2023-4527, CVE-2023-3333)</span>
-          </div>
+          </motion.div>
         )}
         {step >= 2 && (
-          <div className="flex items-center gap-2 text-slate-400 animate-in fade-in duration-300">
-            <span className="text-blue-400">❯</span> <span>AI Agent calculating remediation path...</span>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-slate-400">
+            <span className="text-blue-400">❯</span> 
+            <Typewriter text="AI Agent calculating remediation path..." />
             {step === 2 && <span className="w-2 h-4 bg-slate-400 animate-pulse inline-block ml-1" />}
-          </div>
+          </motion.div>
         )}
         {step >= 3 && (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded p-3 text-emerald-400 mt-2 animate-in fade-in zoom-in-95 duration-300">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-emerald-500/10 border border-emerald-500/20 rounded p-3 text-emerald-400 mt-2">
             <div className="font-bold mb-1 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Recommended Action</div>
             <div className="text-slate-300 text-xs">Upgrade <code className="bg-white/10 px-1 py-0.5 rounded text-emerald-300">express</code> from <code className="bg-white/10 px-1 py-0.5 rounded text-red-300">4.17.1</code> to <code className="bg-white/10 px-1 py-0.5 rounded text-emerald-300">4.19.2</code> to patch prototype pollution.</div>
             {step === 3 && <span className="w-2 h-4 bg-emerald-400 animate-pulse inline-block mt-2" />}
-          </div>
+          </motion.div>
         )}
         {step >= 4 && (
-          <div className="flex items-center gap-2 text-slate-400 mt-2 animate-in fade-in duration-300">
-            <span className="text-blue-400">❯</span> <span className="text-blue-400 font-semibold">Creating Pull Request... Done.</span>
-          </div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-slate-400 mt-2">
+            <span className="text-blue-400">❯</span> <span className="text-blue-400 font-semibold"><Typewriter text="Creating Pull Request... Done." /></span>
+          </motion.div>
         )}
       </div>
     </div>
@@ -350,6 +338,108 @@ function VideoModal({ isOpen, onClose }) {
   );
 }
 
+function SecuritySection() {
+  return (
+    <section id="security" className="w-full max-w-5xl mx-auto px-6 py-12 mb-12 scroll-mt-24">
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center gap-2 text-orange-400 text-xs font-bold uppercase tracking-widest mb-4">
+          <Shield className="w-4 h-4" /> Enterprise Security
+        </div>
+        <h2 className="text-3xl font-bold text-white mb-4">Uncompromising DevSecOps</h2>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-gradient-to-br from-[#0d1117] to-[#161b22] border border-white/10 rounded-2xl p-6 relative overflow-hidden group hover:border-orange-500/30 transition-all">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl group-hover:bg-orange-500/20 transition-colors" />
+          <h3 className="text-lg font-bold text-white mb-2">Compliance Ready</h3>
+          <p className="text-sm text-slate-400 mb-6">Built for scale with SOC2 Type II, HIPAA, and GDPR compliance standards built into our core scanning infrastructure.</p>
+          <div className="flex flex-wrap gap-4">
+            <div className="px-3 py-1.5 border border-white/10 rounded-lg text-xs font-bold text-slate-300 bg-white/5">SOC2 Type II</div>
+            <div className="px-3 py-1.5 border border-white/10 rounded-lg text-xs font-bold text-slate-300 bg-white/5">HIPAA</div>
+            <div className="px-3 py-1.5 border border-white/10 rounded-lg text-xs font-bold text-slate-300 bg-white/5">GDPR</div>
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-[#0d1117] to-[#161b22] border border-white/10 rounded-2xl p-6 relative overflow-hidden hover:border-orange-500/30 transition-all">
+          <h3 className="text-lg font-bold text-white mb-2">Attack Surface Map</h3>
+          <p className="text-sm text-slate-400 mb-4">Live dependency graph highlighting vulnerability blast radius.</p>
+          <div className="h-40 w-full border border-white/5 bg-white/[0.02] rounded-xl flex items-center justify-center relative overflow-hidden">
+             {/* Abstract graph */}
+             <div className="absolute w-2.5 h-2.5 bg-red-500 rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse shadow-[0_0_20px_rgba(239,68,68,1)]" />
+             <div className="absolute w-2 h-2 bg-slate-500 rounded-full top-[25%] left-[30%]" />
+             <div className="absolute w-2 h-2 bg-slate-500 rounded-full top-[75%] left-[65%]" />
+             <div className="absolute w-2 h-2 bg-slate-500 rounded-full top-[35%] left-[75%]" />
+             <div className="absolute w-2 h-2 bg-slate-500 rounded-full top-[80%] left-[20%]" />
+             <svg className="absolute inset-0 w-full h-full opacity-40" stroke="currentColor">
+               <line x1="50%" y1="50%" x2="30%" y2="25%" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3 3" className="animate-pulse" />
+               <line x1="50%" y1="50%" x2="65%" y2="75%" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3 3" className="animate-pulse" />
+               <line x1="50%" y1="50%" x2="75%" y2="35%" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3 3" className="animate-pulse" />
+               <line x1="30%" y1="25%" x2="20%" y2="80%" stroke="#475569" strokeWidth="1" />
+               <line x1="65%" y1="75%" x2="75%" y2="35%" stroke="#475569" strokeWidth="1" />
+             </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AgentNode({ icon: Icon, title, delay, color, border }) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay, duration: 0.5 }}
+      className={`flex flex-col items-center gap-3 w-32 shrink-0`}
+    >
+      <div className={`w-14 h-14 rounded-2xl bg-[#080b14] border ${border} flex items-center justify-center shadow-lg group hover:scale-110 transition-transform`}>
+        <Icon className={`w-6 h-6 ${color}`} />
+      </div>
+      <div className="text-xs font-bold text-slate-300 text-center">{title}</div>
+    </motion.div>
+  );
+}
+
+function FlowArrow({ delay }) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, scaleX: 0 }}
+      whileInView={{ opacity: 1, scaleX: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay, duration: 0.5 }}
+      className="hidden sm:flex w-8 h-px bg-white/20 relative origin-left"
+    >
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 border-r border-t border-white/20 rotate-45 transform translate-x-1/2" />
+    </motion.div>
+  );
+}
+
+function AIAgentVisualization() {
+  return (
+    <section className="w-full max-w-5xl mx-auto px-6 py-12 mb-12">
+      <div className="text-center mb-10">
+        <h2 className="text-3xl font-bold text-white mb-4">The DevPulse AI Pipeline</h2>
+        <p className="text-slate-400">Watch our autonomous agents secure your code from webhook to pull request.</p>
+      </div>
+      <div className="bg-[#0d1117] border border-white/10 rounded-3xl p-8 relative overflow-hidden flex flex-col items-center shadow-2xl">
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-purple-500/5 pointer-events-none" />
+        
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 relative z-10 w-full overflow-x-auto pb-4 sm:pb-0 pt-4">
+          <AgentNode icon={GithubIcon} title="GitHub Webhook" delay={0.1} color="text-white" border="border-white/20" />
+          <FlowArrow delay={0.4} />
+          <AgentNode icon={Activity} title="AI Scanner Agent" delay={0.7} color="text-blue-400" border="border-blue-500/30" />
+          <FlowArrow delay={1.0} />
+          <AgentNode icon={Zap} title="Risk Prediction Agent" delay={1.3} color="text-purple-400" border="border-purple-500/30" />
+          <FlowArrow delay={1.6} />
+          <AgentNode icon={Code2} title="Patch Generation Agent" delay={1.9} color="text-emerald-400" border="border-emerald-500/30" />
+          <FlowArrow delay={2.2} />
+          <AgentNode icon={GitBranch} title="PR Creation" delay={2.5} color="text-white" border="border-white/20" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
 export default function LoginPage({ sessionError }) {
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -383,7 +473,7 @@ export default function LoginPage({ sessionError }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#080b14] flex flex-col overflow-hidden relative font-sans text-slate-300">
+    <div className="min-h-screen bg-[#080b14] flex flex-col overflow-x-hidden relative font-sans text-slate-300">
       {/* Dynamic Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
@@ -403,8 +493,8 @@ export default function LoginPage({ sessionError }) {
         <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-300">
           <a href="#features" className="hover:text-white transition-colors">Features</a>
           <a href="#security" className="hover:text-white transition-colors">Security</a>
-          <a href="#docs" className="hover:text-white transition-colors">Docs</a>
-          <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
+          <a href="/docs" className="hover:text-white transition-colors">Docs</a>
+          <a href="/reference" className="hover:text-white transition-colors">API</a>
           <a href="https://github.com/SSSahil15/repo-for-testing" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-white transition-colors"><GithubIcon className="w-4 h-4"/> GitHub</a>
         </div>
 
@@ -454,6 +544,13 @@ export default function LoginPage({ sessionError }) {
             >
               <PlayCircle className="w-5 h-5" /> View Demo
             </button>
+          </div>
+
+          <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm font-semibold text-slate-400">
+            <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> GitHub Native</div>
+            <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Real-Time Analysis</div>
+            <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Autonomous Remediation</div>
+            <div className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> AI Failure Prediction</div>
           </div>
 
           {(authError || sessionError) && (
@@ -507,7 +604,7 @@ export default function LoginPage({ sessionError }) {
         </section>
 
         {/* Interactive AI Demo & About Split */}
-        <section id="features" className="w-full max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <section id="features" className="w-full max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center scroll-mt-24">
           <div>
             <div className="inline-flex items-center gap-2 text-blue-400 text-xs font-bold uppercase tracking-widest mb-4">
               <Code2 className="w-4 h-4" /> Autonomous Intelligence
@@ -539,6 +636,9 @@ export default function LoginPage({ sessionError }) {
           </div>
         </section>
 
+        <SecuritySection />
+        <AIAgentVisualization />
+
         {/* Features Grid */}
         <section className="w-full max-w-5xl mx-auto px-6 py-12 mb-12">
           <div className="text-center mb-10">
@@ -557,96 +657,7 @@ export default function LoginPage({ sessionError }) {
           </div>
         </section>
 
-        {/* About Us & Contact Us */}
-        <section className="relative z-10 w-full max-w-5xl mx-auto px-6 mb-12 grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-          {/* About Us */}
-          <div id="about" className="bg-white/[0.02] border border-white/5 rounded-2xl p-8 hover:bg-white/[0.05] transition-colors scroll-mt-24">
-            <h3 className="font-bold text-lg mb-3 text-slate-200">About Us</h3>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              DevPulse was engineered to solve the disconnect between CI/CD pipelines and security scanning. We believe developers deserve real-time, actionable intelligence directly inside their dashboard, turning noisy risk into a clear operational signal.
-            </p>
-          </div>
 
-          {/* Contact Us */}
-          <div id="contact" className="relative group bg-white/[0.02] border border-white/5 rounded-2xl p-8 hover:bg-white/[0.05] transition-colors flex flex-col justify-center scroll-mt-24 overflow-hidden">
-            <div className="absolute -inset-2 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-            <h3 className="relative z-10 font-bold text-lg mb-6 text-slate-200">Connect with the Creator</h3>
-            
-            <div className="relative z-10 flex flex-col gap-4">
-              <a href="mailto:ansarisahil3690@gmail.com" className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-blue-500/30 hover:bg-blue-500/[0.05] transition-all group/email shadow-lg shadow-black/20">
-                <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center group-hover/email:scale-110 transition-transform duration-300">
-                  <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                </div>
-                <div>
-                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Email Address</div>
-                  <div className="text-sm font-semibold text-slate-300 group-hover/email:text-blue-400 transition-colors">ansarisahil3690@gmail.com</div>
-                </div>
-              </a>
-
-              <a href="https://github.com/SSSahil15" target="_blank" rel="noreferrer" className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-purple-500/30 hover:bg-purple-500/[0.05] transition-all group/github shadow-lg shadow-black/20">
-                <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center group-hover/github:scale-110 transition-transform duration-300">
-                  <svg className="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" /></svg>
-                </div>
-                <div>
-                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">GitHub Profile</div>
-                  <div className="text-sm font-semibold text-slate-300 group-hover/github:text-purple-400 transition-colors">github.com/SSSahil15</div>
-                </div>
-              </a>
-
-              <a href="https://discord.gg/gGaqBAVrGq" target="_blank" rel="noreferrer" className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-indigo-500/30 hover:bg-indigo-500/[0.05] transition-all group/discord shadow-lg shadow-black/20">
-                <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center group-hover/discord:scale-110 transition-transform duration-300">
-                  <svg className="w-5 h-5 text-indigo-400" fill="currentColor" viewBox="0 0 127.14 96.36"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a67.55,67.55,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1,105.25,105.25,0,0,0,32.19-16.14c2.64-27.38-4.51-51.11-19.32-72.15ZM42.63,65.37c-5.36,0-9.83-4.9-9.83-10.94s4.39-10.94,9.83-10.94,9.88,4.9,9.83,10.94C52.46,60.47,48,65.37,42.63,65.37Zm41.9,0c-5.36,0-9.83-4.9-9.83-10.94s4.39-10.94,9.83-10.94,9.88,4.9,9.83,10.94C94.41,60.47,89.93,65.37,84.53,65.37Z"/></svg>
-                </div>
-                <div>
-                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Discord Support</div>
-                  <div className="text-sm font-semibold text-slate-300 group-hover/discord:text-indigo-400 transition-colors">Join our Server</div>
-                </div>
-              </a>
-            </div>
-          </div>
-        </section>
-
-        {/* Feedback Section */}
-        <section id="feedback" className="relative z-10 w-full max-w-5xl mx-auto px-6 mb-20 scroll-mt-24">
-          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-8 hover:bg-white/[0.05] transition-colors">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                <MessageSquare className="w-5 h-5 text-blue-400" />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg text-slate-200">Send Feedback</h3>
-                <p className="text-xs text-slate-500">We'd love to hear your thoughts on DevPulse</p>
-              </div>
-            </div>
-
-            {isFeedbackSent ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center animate-in fade-in zoom-in duration-300">
-                <CheckCircle2 className="w-12 h-12 text-emerald-400 mb-4" />
-                <h4 className="text-lg font-bold text-slate-200 mb-2">Thank you!</h4>
-                <p className="text-sm text-slate-400">Your feedback has been received. We appreciate your input.</p>
-              </div>
-            ) : (
-              <form onSubmit={handleFeedbackSubmit} className="space-y-4">
-                <textarea
-                  value={feedbackText}
-                  onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder="How can we improve DevPulse?"
-                  className="w-full bg-white/[0.03] border border-white/10 rounded-xl p-4 text-sm text-slate-300 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all min-h-[120px] resize-y"
-                  required
-                />
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={!feedbackText.trim()}
-                    className="disabled:opacity-50 text-white bg-blue-600 hover:bg-blue-500 font-semibold text-sm px-6 py-2.5 rounded-xl active:scale-95 transition-all shadow-lg shadow-blue-600/20"
-                  >
-                    Submit Feedback
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </section>
       </main>
 
       {/* SaaS Footer */}
@@ -661,39 +672,38 @@ export default function LoginPage({ sessionError }) {
               The AI-powered DevSecOps platform for modern engineering teams. Ship faster, securely.
             </p>
             <div className="flex gap-4">
-              <a href="#" className="text-slate-500 hover:text-white transition-colors"><TwitterIcon className="w-5 h-5" /></a>
-              <a href="#" className="text-slate-500 hover:text-white transition-colors"><GithubIcon className="w-5 h-5" /></a>
-              <a href="#" className="text-slate-500 hover:text-white transition-colors"><DiscordIcon className="w-5 h-5" /></a>
+              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-white transition-colors"><TwitterIcon className="w-5 h-5" /></a>
+              <a href="https://github.com/SSSahil15/repo-for-testing" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-white transition-colors"><GithubIcon className="w-5 h-5" /></a>
+              <a href="https://discord.com" target="_blank" rel="noreferrer" className="text-slate-500 hover:text-white transition-colors"><DiscordIcon className="w-5 h-5" /></a>
             </div>
           </div>
           
           <div>
             <h4 className="font-bold text-white mb-4">Product</h4>
             <ul className="space-y-3 text-sm text-slate-400">
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Features</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Security</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Pricing</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Changelog</a></li>
+              <li><a href="#features" className="hover:text-blue-400 transition-colors">Features</a></li>
+              <li><a href="#security" className="hover:text-blue-400 transition-colors">Security</a></li>
+              <li><a href="/changelog" className="hover:text-blue-400 transition-colors">Changelog</a></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-bold text-white mb-4">Resources</h4>
             <ul className="space-y-3 text-sm text-slate-400">
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Documentation</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">API Reference</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Blog</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Community</a></li>
+              <li><a href="/docs" className="hover:text-blue-400 transition-colors">Documentation</a></li>
+              <li><a href="/reference" className="hover:text-blue-400 transition-colors">API Reference</a></li>
+              <li><a href="/blog" className="hover:text-blue-400 transition-colors">Blog</a></li>
+              <li><a href="/community" className="hover:text-blue-400 transition-colors">Community</a></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-bold text-white mb-4">Company</h4>
             <ul className="space-y-3 text-sm text-slate-400">
-              <li><a href="#" className="hover:text-blue-400 transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Contact</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Terms of Service</a></li>
+              <li><a href="#about" className="hover:text-blue-400 transition-colors">About Us</a></li>
+              <li><a href="/contact" className="hover:text-blue-400 transition-colors">Contact</a></li>
+              <li><a href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</a></li>
+              <li><a href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</a></li>
             </ul>
           </div>
         </div>
