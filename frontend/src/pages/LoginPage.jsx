@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Loader2, GitBranch, Shield, Zap, AlertCircle, ChevronRight, MessageSquare, CheckCircle2 } from "lucide-react";
+import { Loader2, GitBranch, Shield, Zap, AlertCircle, ChevronRight, MessageSquare, CheckCircle2, Activity, LineChart, Layers } from "lucide-react";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL ?? "";
 
@@ -11,9 +11,12 @@ const STAT_CARDS = [
 ];
 
 const FEATURES = [
-  { icon: Zap,       title: "AI Risk Engine",   desc: "Predicts pipeline failures before they happen."   },
-  { icon: Shield,    title: "Trivy Security",   desc: "Deep CVE scanning across your dependencies."      },
-  { icon: GitBranch, title: "GitHub Actions",   desc: "Live CI webhook feed directly in your dashboard." },
+  { icon: Zap,       title: "AI Risk Engine",       desc: "Predicts pipeline failures before they happen."   },
+  { icon: Shield,    title: "Trivy Security",       desc: "Deep CVE scanning across your dependencies."      },
+  { icon: Activity,  title: "Real-Time Sync",       desc: "Instant scan progress updates via WebSockets."    },
+  { icon: Layers,    title: "Asynchronous Scans",   desc: "Heavy analysis offloaded to background workers."  },
+  { icon: LineChart, title: "Deep Observability",   desc: "Full telemetry with Grafana, Loki, and OTel."     },
+  { icon: GitBranch, title: "GitHub Integration",   desc: "Live CI webhook feed directly in your dashboard." },
 ];
 
 function LoginPage({ sessionError }) {
@@ -191,7 +194,7 @@ function LoginPage({ sessionError }) {
           <div id="about" className="bg-white/[0.02] border border-white/5 rounded-2xl p-8 hover:bg-white/[0.03] transition-colors scroll-mt-24">
             <h2 className="font-bold text-lg mb-3 text-slate-200">About Us</h2>
             <p className="text-sm text-slate-400 leading-relaxed">
-              DevPulse was engineered to solve the disconnect between CI/CD pipelines and security scanning. We believe developers deserve real-time, actionable intelligence directly inside their dashboard, turning noisy risk into a clear operational signal.
+              DevPulse was engineered to solve the disconnect between CI/CD pipelines and security scanning. With our new asynchronous worker architecture and real-time WebSocket syncing, developers get instant, actionable intelligence directly inside their dashboard, turning noisy risk into a clear operational signal.
             </p>
           </div>
 
@@ -283,7 +286,7 @@ function LoginPage({ sessionError }) {
       </main>
 
       <footer className="relative z-10 py-6 border-t border-white/5 text-center">
-        <p className="text-xs text-slate-600">Built with React, FastAPI &amp; Trivy · GitHub OAuth Direct</p>
+        <p className="text-xs text-slate-600">Built with React, Node.js, FastAPI &amp; Grafana · GitHub OAuth Direct</p>
       </footer>
     </div>
   );
