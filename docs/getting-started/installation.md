@@ -54,10 +54,10 @@ You can verify if all elements initialized successfully by querying their health
 
 ```bash
 # Check Backend API Server
-curl http://localhost:4000/api-docs/
+curl http://localhost:4000/health/live
 
 # Check AI Service Status
-curl http://localhost:8000/health
+curl http://localhost:8000/health/live
 ```
 
 > [!TIP]

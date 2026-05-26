@@ -12,7 +12,7 @@ The local `docker-compose.yml` configures 4 services communicating over a privat
                ┌──────────────────────┐
                │    Local Browser     │
                └──────────┬───────────┘
-                          │ (Port 5173 / 4000)
+                          │ (Port 5174 / 4000)
                           ▼
                ┌──────────────────────┐
                │   devpulse_backend   │

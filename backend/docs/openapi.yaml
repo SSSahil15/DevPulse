@@ -66,7 +66,7 @@ paths:
         '401':
           description: Unauthorized.
 
-  /api/repos:
+  /repos:
     get:
       summary: List Repositories
       description: Fetches a list of the user's GitHub repositories.
@@ -83,10 +83,10 @@ paths:
                     items:
                       type: object
 
-  /api/repos/analyze:
+  /analyze:
     post:
       summary: Analyze Repository
-      description: Triggers a security and quality scan on a specified repository.
+      description: Runs the fast AI repository metadata analysis for a specified repository.
       requestBody:
         required: true
         content:
@@ -94,17 +94,51 @@ paths:
             schema:
               type: object
               required:
-                - repository
+                - repositoryFullName
               properties:
-                repository:
+                repositoryFullName:
                   type: string
                   example: SSSahil15/DevPulse
-                branch:
+                repoUrl:
                   type: string
-                  example: main
+                  example: https://github.com/SSSahil15/DevPulse
+      responses:
+        '200':
+          description: Analysis returned.
+
+  /api/pipeline/simulate:
+    post:
+      summary: Simulate CI/CD Scan
+      description: Creates an async scan job that runs Trivy, calculates a DevPulse score, and stores a pipeline result.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - repositoryFullName
+              properties:
+                repositoryFullName:
+                  type: string
+                  example: SSSahil15/DevPulse
       responses:
         '202':
-          description: Scan job created.
+          description: Scan job accepted.
+
+  /api/pipeline/simulate/status/{jobId}:
+    get:
+      summary: Get Simulation Status
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: job_9a2f1c8e0b4d2a6f
+      responses:
+        '200':
+          description: Scan job status.
 
   /api/pipeline/results:
     get:
@@ -114,7 +148,7 @@ paths:
         '200':
           description: A list of pipeline results.
 
-  /api/ai/ask:
+  /api/ai/chat:
     post:
       summary: Ask AI Copilot
       description: Submit a natural language query to the AI Copilot regarding codebase health.
@@ -125,13 +159,17 @@ paths:
             schema:
               type: object
               required:
-                - message
+                - query
               properties:
-                message:
+                query:
                   type: string
                   example: "How do I fix the SQL injection vulnerability?"
-                contextData:
+                context:
                   type: object
+                history:
+                  type: array
+                  items:
+                    type: object
       responses:
         '200':
           description: AI response returned.

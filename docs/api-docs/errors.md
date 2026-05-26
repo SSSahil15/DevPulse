@@ -11,12 +11,11 @@ Every failed API query returns a corresponding HTTP status code alongside a stan
 ```json
 {
   "message": "Detailed description explaining what went wrong.",
-  "code": "ERROR_CLASSIFICATION_TAG",
-  "details": {
-    "field": "Optional contextual parameter mappings (e.g. validator failures)"
-  }
+  "requestId": "req-a1b2c3d4"
 }
 ```
+
+Validation failures additionally include an `errors` array with `field` and `message` entries.
 
 ---
 

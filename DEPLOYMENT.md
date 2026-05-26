@@ -17,9 +17,10 @@ These variables must be configured in your Render backend service settings:
 - `FRONTEND_URL` - Your Vercel frontend URL (e.g., `https://devpulse.vercel.app`)
 - `AI_SERVICE_URL` - Your Render AI service URL (e.g., `https://devpulse-ai-xxxxx.onrender.com`)
 
-#### Optional
+#### Database, Cache & Optional
 - `GROQ_API_KEY` - For AI copilot features (optional but recommended)
-- `DATABASE_PATH` - Default: `/app/.data/devpulse.db` (Render persistent disk)
+- `DATABASE_URL` - Managed PostgreSQL connection string
+- `REDIS_URL` - Redis connection string for cache/rate-limit sharing (optional but recommended)
 - `NODE_ENV` - Should be `production`
 - `PORT` - Should be `4000`
 
@@ -44,7 +45,7 @@ These variables must be configured in your Render backend service settings:
 2. `TOKEN_ENCRYPTION_SECRET` is at least 32 characters
 3. `JWT_SECRET` is at least 32 characters
 4. `BACKEND_URL`, `FRONTEND_URL`, `AI_SERVICE_URL` are valid URLs
-5. Disk is mounted at `/app/.data` with at least 1GB
+5. `DATABASE_URL` points to a reachable PostgreSQL instance
 
 ### Issue 4: GitHub OAuth Not Working
 **Checklist**:
@@ -88,15 +89,13 @@ In your Render backend service dashboard:
 1. Go to "Environment" tab
 2. Add all variables from "Required Environment Variables" section above
 3. Make sure `NODE_ENV=production`
-4. Make sure persistent disk is mounted
+4. Make sure `DATABASE_URL` points to the managed PostgreSQL instance
 
 ### 4. Verify Deployment
 After deployment:
-1. Open backend health check: `https://your-backend.onrender.com/health`
+1. Open backend health check: `https://your-backend.onrender.com/health/live`
 2. Check response includes:
-   - `"service": "devpulse-backend"`
-   - `"status": "ok"`
-   - `"tools": { "trivy": "available", "git": "available" }`
+   - `"status": "alive"`
 3. Check backend logs for any startup errors
 
 ### 5. Test Authentication Flow
@@ -122,7 +121,7 @@ After deployment:
 3. Click "Logs" tab
 4. Look for:
    - `[Config] ✓ Environment loaded successfully`
-   - `[DB] SQLite database ready`
+   - `[DB] PostgreSQL database ready and migrated.`
    - `DevPulse backend listening on`
    - Any `❌` or `ERROR` messages
 
@@ -135,7 +134,7 @@ After deployment:
 ### Test API Directly
 ```bash
 # Test health endpoint
-curl https://your-backend.onrender.com/health
+curl https://your-backend.onrender.com/health/live
 
 # Test GitHub OAuth (should redirect)
 curl -i https://your-backend.onrender.com/auth/github
@@ -151,8 +150,8 @@ NODE_ENV=production
 PORT=4000
 
 # GitHub OAuth
-GITHUB_CLIENT_ID=Ov23li35ecK9FY7hKS4j
-GITHUB_CLIENT_SECRET=4c081f3a90a9c796ae4db86b7e58faf9376d5c68
+GITHUB_CLIENT_ID=<your-github-client-id>
+GITHUB_CLIENT_SECRET=<your-github-client-secret>
 
 # Secrets (Generate fresh ones for each environment)
 TOKEN_ENCRYPTION_SECRET=<generate-a-32-char-secret>
@@ -163,8 +162,9 @@ BACKEND_URL=https://devpulse-backend-xxxxx.onrender.com
 FRONTEND_URL=https://devpulse.vercel.app
 AI_SERVICE_URL=https://devpulse-ai-xxxxx.onrender.com
 
-# Database
-DATABASE_PATH=/app/.data/devpulse.db
+# Database and cache
+DATABASE_URL=postgresql://<user>:<password>@<host>:5432/<database>
+REDIS_URL=redis://default:<password>@<host>:6379
 
 # Optional
 GROQ_API_KEY=<your-groq-api-key>

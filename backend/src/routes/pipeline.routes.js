@@ -68,9 +68,15 @@ const jobIdParamSchema = z.object({
   jobId: z.string().trim().regex(/^job_[a-z0-9]{16}$/, "Invalid job ID format."),
 });
 
-// Pipeline result IDs are UUIDs stored in DB
+// Pipeline result IDs are generated as "pr-<runId>-<timestamp>" or
+// "sim-<runId>-<timestamp>" by pipeline.controller.js.
 const resultIdParamSchema = z.object({
-  id: z.string().trim().uuid("Result ID must be a valid UUID."),
+  id: z
+    .string()
+    .trim()
+    .min(3, "Result ID is required.")
+    .max(255, "Result ID is too long.")
+    .regex(/^[a-zA-Z0-9_.:-]+$/, "Result ID contains invalid characters."),
 });
 
 // GitHub Actions run IDs are numeric strings
@@ -148,4 +154,3 @@ router.delete(
 );
 
 module.exports = router;
-

@@ -14,9 +14,8 @@ Below is the directory architecture detailing critical routing, components, and 
 │   └── workflows/
 │       └── devpulse-ci.yml  # Main parallel CI/CD matrix pipeline
 ├── ai/                      # Python FastAPI microservice
-│   ├── app/
-│   │   ├── main.py          # FastAPI server and health endpoints
-│   │   └── services/        # AI scoring & Groq LLM integration
+│   ├── app.py               # FastAPI server and health endpoints
+│   ├── services/            # AI scoring / failure prediction
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── backend/                 # Node/Express backend core

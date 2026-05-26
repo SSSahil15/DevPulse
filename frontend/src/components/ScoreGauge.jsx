@@ -1,7 +1,9 @@
+import CountUp from "./CountUp";
+
 /**
  * ScoreGauge — Circular SVG score display with color-coded risk status.
  */
-export default function ScoreGauge({ score, status, riskCategory, trend }) {
+export default function ScoreGauge({ score, status, riskCategory, trend, isSpinning = false }) {
   const numScore = typeof score === "number" ? score : 0;
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
@@ -13,14 +15,14 @@ export default function ScoreGauge({ score, status, riskCategory, trend }) {
     status === "WARNING"  ? "#f59e0b" :
     status === "RISKY"    ? "#f97316" :
     status === "CRITICAL" ? "#ef4444" :
-    "#00BFFF";
+    "#4F46E5";
 
   const bgColor =
     status === "SAFE"     ? "#10b98120" :
     status === "WARNING"  ? "#f59e0b20" :
     status === "RISKY"    ? "#f9731620" :
     status === "CRITICAL" ? "#ef444420" :
-    "#00BFFF20";
+    "#4F46E520";
 
   const trendLabel = trend != null
     ? (trend > 0 ? `▲ +${trend}` : trend < 0 ? `▼ ${trend}` : "━ No change")
@@ -45,12 +47,11 @@ export default function ScoreGauge({ score, status, riskCategory, trend }) {
             />
           )}
         </svg>
-        {/* Center text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-          <span className="text-3xl font-black text-white leading-none" style={{ color: noData ? "#374151" : color }}>
-            {noData ? "--" : numScore}
+          <span className="text-3xl font-black text-white leading-none" style={{ color: noData && !isSpinning ? "#374151" : color }}>
+            {noData && !isSpinning ? "--" : <CountUp value={numScore} isSpinning={isSpinning} />}
           </span>
-          {!noData && <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">/100</span>}
+          {(!noData || isSpinning) && <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">/100</span>}
         </div>
       </div>
 

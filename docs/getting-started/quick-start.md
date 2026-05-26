@@ -14,7 +14,7 @@ Then start the frontend development bundle:
 ```bash
 cd frontend && npm install && npm run dev
 ```
-Open your browser and navigate to: `http://localhost:5173`
+Open your browser and navigate to: `http://localhost:5174`
 
 ---
 
@@ -30,18 +30,18 @@ Open your browser and navigate to: `http://localhost:5173`
 
 1. Once on the dashboard, you will see a list of repositories you own or collaborate on.
 2. Select any repository from the sidebar or main table.
-3. Click the **Trigger Analysis** button in the header.
+3. Click **Analyze Repository (AI)** for a fast metadata risk profile.
 
 ---
 
 ## Step 4: Run a CI/CD Simulation
 
-1. Once the repo detail loads, click **Trigger Simulation**.
-2. Select a simulation preset (e.g. `Vulnerable Dependency`, `Standard PR Commit`).
-3. Click **Simulate**. The pipeline terminal will output live telemetry as it executes:
+1. Once the repo detail loads, click **Simulate CI/CD**.
+2. DevPulse queues a scan job and polls until the scan finishes.
+3. The progress indicator shows the main stages:
    - Clones Repository
-   - Audits Package Dependencies
    - Runs Static Code Security Analysis via Trivy
+   - Fetches GitHub health metrics
    - Estimates the DevPulse Health Score
 
 ---

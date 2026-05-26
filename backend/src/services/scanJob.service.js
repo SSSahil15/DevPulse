@@ -11,7 +11,7 @@ const {
 
 
 /**
- * Scan Job Service — Async Trivy scanning with SQLite job tracking.
+ * Scan Job Service — Async Trivy scanning with PostgreSQL job tracking.
  *
  * Flow:
  *   1. POST /simulate → createAndDispatchJob() → returns jobId immediately (202)

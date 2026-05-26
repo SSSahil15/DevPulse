@@ -23,7 +23,7 @@ export default function InsightsPanel({ insights }) {
               {allClear ? "All Clear" : "AI Pipeline Insights"}
             </span>
           </div>
-          <p className="text-sm text-slate-300 leading-relaxed" data-testid="insights-explanation">{explanation}</p>
+          <p className="text-sm text-slate-300 leading-[1.8] max-w-[62ch]" data-testid="insights-explanation">{explanation}</p>
         </div>
       )}
 
@@ -31,7 +31,7 @@ export default function InsightsPanel({ insights }) {
       {rootCause && !allClear && (
         <div className="bg-red-500/5 ring-1 ring-red-500/20 rounded-xl p-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-red-400 mb-2">Root Cause</p>
-          <p className="text-xs text-slate-300 leading-relaxed" data-testid="insights-rootcause">{rootCause}</p>
+          <p className="text-xs text-slate-300 leading-[1.8] max-w-[62ch]" data-testid="insights-rootcause">{rootCause}</p>
         </div>
       )}
 
@@ -46,7 +46,7 @@ export default function InsightsPanel({ insights }) {
             {suggestions.map((s, i) => (
               <li key={i} className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                <span className="text-xs text-slate-300 leading-relaxed">{s}</span>
+                <span className="text-xs text-slate-300 leading-[1.8] max-w-[62ch]">{s}</span>
               </li>
             ))}
           </ul>

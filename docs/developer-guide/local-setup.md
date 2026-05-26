@@ -40,7 +40,7 @@ This guide details how to set up each standalone component of DevPulse locally o
    ```bash
    npm run dev
    ```
-   *The frontend UI will boot on `http://localhost:5173`.*
+   *The frontend UI will boot on `http://localhost:5174`.*
 
 ---
 
@@ -61,7 +61,7 @@ This guide details how to set up each standalone component of DevPulse locally o
    ```
 4. Run the FastAPI development server:
    ```bash
-   uvicorn app.main:app --reload --port 8000
+   uvicorn app:app --reload --port 8000
    ```
    *The AI service will boot on `http://localhost:8000`.*
 

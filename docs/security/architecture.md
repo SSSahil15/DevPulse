@@ -8,11 +8,11 @@ DevPulse incorporates a robust security posture to guarantee absolute protection
 
 To protect sensitive GitHub API access tokens, DevPulse implements robust, symmetric encryption at the service layer (`providerTokenStore.service.js`):
 
-- **Algorithm**: `AES-256-CBC`
+- **Algorithm**: `AES-256-GCM`
 - **Key Generation**: Driven strictly by the `TOKEN_ENCRYPTION_SECRET` environment variable (must be at least 32 characters long).
 - **Execution Flow**:
-  - Before saving to PostgreSQL, raw tokens are encrypted and combined with a unique, cryptographically random **Initialization Vector (IV)**.
-  - When query operations request a token, the service decrypts the column using the stored IV, ensuring raw tokens are never saved or exposed in plain text in database tables.
+  - Before saving to PostgreSQL, raw tokens are encrypted with a unique, cryptographically random **Initialization Vector (IV)** and authentication tag.
+  - When query operations request a token, the service decrypts the column using the stored IV and tag, ensuring raw tokens are never saved or exposed in plain text in database tables.
 
 ---
 
@@ -28,4 +28,4 @@ We restrict malicious traffic and exploit paths using the following defensive sh
 ---
 
 > [!WARNING]
-> In production environments, never log raw headers, authorization tokens, or decrypted database columns. Check out [Secrets Management Guide](file:///Users/sssa15/DevPulse/docs/SECRETS.md) for environment parameters guidelines.
+> In production environments, never log raw headers, authorization tokens, or decrypted database columns. Keep credentials in the deployment provider's secret manager and out of source control.

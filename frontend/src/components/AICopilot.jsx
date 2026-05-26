@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Send, Bot, User, Loader2, Sparkles, AlertTriangle, CheckCircle2, Activity } from "lucide-react";
 import { apiRequest } from "../api";
 
 // Brand gradient helper
-const BRAND_GRAD = "linear-gradient(135deg, #00BFFF 0%, #FF6A00 100%)";
-const BRAND_GLOW = "0 0 24px rgba(0,191,255,0.35), 0 0 48px rgba(255,106,0,0.15)";
+const BRAND_GRAD = "linear-gradient(135deg,#38BDF8,#2563EB)";
+const BRAND_GLOW = "0 0 24px rgba(37,99,235,0.35), 0 0 48px rgba(56,189,248,0.15)";
 
 export default function AICopilot({ pipelineData, analysisResult, accessToken }) {
   const [messages, setMessages] = useState([
@@ -71,7 +72,7 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
         return <strong key={i} className="text-white font-bold">{part.slice(2, -2)}</strong>;
       }
       if (part.startsWith("`") && part.endsWith("`")) {
-        return <code key={i} style={{ color: "#00BFFF" }} className="bg-[#00BFFF]/10 px-1 py-0.5 rounded font-mono text-xs">{part.slice(1, -1)}</code>;
+        return <code key={i} style={{ color: "#4F46E5" }} className="bg-[#4F46E5]/10 px-1 py-0.5 rounded font-mono text-xs">{part.slice(1, -1)}</code>;
       }
       return <span key={i}>{part}</span>;
     });
@@ -128,12 +129,12 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
         )}
 
         {data.explanation && (
-          <div className="rounded-lg p-3" style={{ background: "rgba(0,191,255,0.06)", boxShadow: "inset 0 0 0 1px rgba(0,191,255,0.18)" }}>
-            <div className="flex items-center gap-1.5 mb-1" style={{ color: "#00BFFF" }}>
+          <div className="rounded-lg p-3" style={{ background: "rgba(37,99,235,0.06)", boxShadow: "inset 0 0 0 1px rgba(37,99,235,0.18)" }}>
+            <div className="flex items-center gap-1.5 mb-1" style={{ color: "#4F46E5" }}>
               <Activity className="w-3.5 h-3.5" />
               <span className="text-[10px] font-bold uppercase tracking-widest">Why it matters</span>
             </div>
-            <p className="text-xs leading-relaxed" style={{ color: "rgba(0,191,255,0.85)" }}>{formatText(data.explanation)}</p>
+            <p className="text-xs leading-relaxed" style={{ color: "rgba(37,99,235,0.85)" }}>{formatText(data.explanation)}</p>
           </div>
         )}
 
@@ -171,11 +172,11 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
                 key={idx}
                 onClick={() => handleSend(null, action)}
                 disabled={isTyping}
-                className="text-[10px] font-semibold px-3 py-1.5 rounded-full transition-all disabled:opacity-50 text-white"
+                className="text-[10px] font-semibold px-3 py-1.5 rounded-full premium-transition disabled:opacity-50 text-white"
                 style={{
                   background: BRAND_GRAD,
                   opacity: isTyping ? 0.5 : 1,
-                  boxShadow: "0 0 10px rgba(0,191,255,0.2)"
+                  boxShadow: "0 0 10px rgba(37,99,235,0.2)"
                 }}
               >
                 {action}
@@ -187,37 +188,49 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
     );
   }
 
-  return (
+  return createPortal(
     <>
-      {/* Floating Action Button — brand gradient with glow */}
-      <div className="fixed bottom-8 right-8 z-50">
-        <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ background: BRAND_GRAD }}></div>
-        <div className="absolute inset-0 rounded-full animate-pulse-glow opacity-50" style={{ background: BRAND_GRAD, filter: "blur(12px)" }}></div>
+      {/* Floating Action Button — Elegant breathable trigger */}
+      <div className="fixed bottom-8 right-8 z-50 animate-slow-breathe">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="relative w-14 h-14 text-white rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-110 active:scale-95 ring-4 ring-[#080b14]"
-          style={{ background: BRAND_GRAD, boxShadow: BRAND_GLOW }}
+          className="relative w-14 h-14 text-white rounded-full flex items-center justify-center ring-4 ring-[#080b14] copilot-btn"
         >
           <Sparkles className="w-6 h-6" />
         </button>
       </div>
 
       {/* Floating Chat Panel */}
-      <div className={`fixed bottom-28 right-8 w-[400px] h-[600px] max-h-[80vh] bg-[#0c101d]/85 backdrop-blur-3xl ring-1 ring-white/10 rounded-3xl flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all origin-bottom-right z-50 ${
-        isOpen ? "scale-100 opacity-100 pointer-events-auto shadow-[0_0_40px_rgba(0,191,255,0.15)]" : "scale-90 opacity-0 pointer-events-none"
-      }`}>
+      <div 
+        className={`fixed bottom-28 right-8 flex flex-col rounded-[24px] premium-transition origin-bottom-right z-50 overflow-hidden ${
+          isOpen ? "scale-100 opacity-100 pointer-events-auto" : "scale-95 opacity-0 pointer-events-none"
+        }`}
+        style={{
+          width: "380px",
+          height: "620px",
+          maxHeight: "80vh",
+          background: "linear-gradient(180deg, rgba(15,23,42,.88), rgba(2,6,23,.96))",
+          backdropFilter: "blur(22px)",
+          WebkitBackdropFilter: "blur(22px)",
+          border: "1px solid rgba(148,163,184,.08)",
+          boxShadow: isOpen ? "0 20px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.03), 0 0 40px rgba(37,99,235,0.15)" : "0 20px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.03)"
+        }}
+      >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between bg-white/[0.02] shrink-0">
+        <div className="px-5 py-4 border-b border-white/[0.04] flex items-center justify-between shrink-0" style={{ background: "rgba(15,23,42,0.4)" }}>
           <div className="flex items-center gap-3">
             <div
               className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: BRAND_GRAD, boxShadow: "0 0 12px rgba(0,191,255,0.3)" }}
+              style={{ background: BRAND_GRAD, boxShadow: "0 0 12px rgba(37,99,235,0.3)" }}
             >
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-white">AI Copilot</h3>
-              <p className="text-[10px] text-slate-500 font-medium">Production Architecture Enabled</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                <span className="text-[9px] text-cyan-400 font-mono tracking-widest uppercase font-semibold">AI Active</span>
+              </div>
             </div>
           </div>
           <button
@@ -229,7 +242,7 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
         </div>
 
         {/* Message List */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-6" ref={scrollRef}>
+        <div className="flex-1 overflow-y-auto p-5 space-y-7" ref={scrollRef}>
           {messages.map(msg => (
             <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
               {/* Avatar */}
@@ -237,52 +250,64 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
                 className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1"
                 style={
                   msg.role === "user"
-                    ? { background: "rgba(0,191,255,0.12)", boxShadow: "inset 0 0 0 1px rgba(0,191,255,0.25)" }
-                    : { background: BRAND_GRAD, boxShadow: "0 0 12px rgba(0,191,255,0.25)" }
+                    ? { background: "rgba(37,99,235,0.12)", boxShadow: "inset 0 0 0 1px rgba(37,99,235,0.25)" }
+                    : { background: BRAND_GRAD, boxShadow: "0 0 12px rgba(37,99,235,0.25)" }
                 }
               >
                 {msg.role === "user"
-                  ? <User className="w-4 h-4" style={{ color: "#00BFFF" }} />
+                  ? <User className="w-4 h-4" style={{ color: "#4F46E5" }} />
                   : <Bot className="w-4 h-4 text-white" />
                 }
               </div>
 
               {/* Bubble */}
-              <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+              <div className={`max-w-[85%] rounded-[18px] px-4 py-3.5 text-[13px] leading-[1.75] relative overflow-hidden ${
                 msg.role === "user"
-                  ? "rounded-tr-sm text-white"
-                  : "bg-white/5 ring-1 ring-white/10 text-slate-300 rounded-tl-sm w-full"
+                  ? "rounded-tr-md text-white/95"
+                  : "bg-white/[0.02] border border-white/[0.04] text-secondary max-w-[65ch] rounded-tl-md w-full"
               }`}
                 style={msg.role === "user" ? {
-                  background: "rgba(0,191,255,0.1)",
-                  boxShadow: "inset 0 0 0 1px rgba(0,191,255,0.2)"
-                } : {}}
+                  background: "linear-gradient(180deg, rgba(37,99,235,0.18), rgba(37,99,235,0.08))",
+                  border: "1px solid rgba(37,99,235,0.25)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 12px rgba(0,0,0,0.1)"
+                } : {
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                }}
               >
-                {msg.isStructured ? renderStructuredMessage(msg.data) : formatText(msg.text)}
+                {msg.role === "ai" && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent -translate-x-full animate-[shimmer_4s_infinite]" />
+                )}
+                <div className="relative z-10">
+                  {msg.isStructured ? renderStructuredMessage(msg.data) : formatText(msg.text)}
+                </div>
               </div>
             </div>
           ))}
 
           {/* Typing Indicator */}
           {isTyping && (
-            <div className="flex gap-3">
+            <div className="flex gap-3 animate-subtle-pulse">
               <div
-                className="w-8 h-8 rounded-full text-white flex items-center justify-center shrink-0 mt-1"
+                className="w-8 h-8 rounded-full text-white flex items-center justify-center shrink-0 mt-1 shadow-[0_0_15px_rgba(37,99,235,0.2)]"
                 style={{ background: BRAND_GRAD }}
               >
                 <Bot className="w-4 h-4" />
               </div>
-              <div className="bg-white/5 ring-1 ring-white/10 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5 h-10">
-                <div className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ background: "#00BFFF" }} />
-                <div className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s]" style={{ background: "#60A8FF" }} />
-                <div className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: "#FF6A00" }} />
+              <div className="bg-white/[0.02] border border-white/[0.05] rounded-[18px] rounded-tl-md px-4 py-3 flex items-center gap-3 relative overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent animate-sweep pointer-events-none" />
+                <div className="flex items-center gap-1">
+                  <span className="w-1 h-1 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1 h-1 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1 h-1 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+                <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest relative z-10">Synthesizing telemetry...</span>
               </div>
             </div>
           )}
         </div>
 
         {/* Input Form */}
-        <div className="p-4 border-t border-white/[0.06] bg-black/20 shrink-0">
+        <div className="p-4 border-t border-white/[0.04] shrink-0" style={{ background: "rgba(2,6,23,0.4)" }}>
           <form onSubmit={handleSend} className="relative flex items-center">
             <input
               type="text"
@@ -290,22 +315,23 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
               onChange={e => setInput(e.target.value)}
               disabled={isTyping}
               placeholder="Ask Copilot..."
-              className="w-full bg-white/5 ring-1 ring-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white placeholder:text-slate-500 outline-none transition-all disabled:opacity-50"
-              style={{ "--tw-ring-color": "rgba(0,191,255,0.3)" }}
-              onFocus={e => e.target.style.boxShadow = "0 0 0 2px rgba(0,191,255,0.3)"}
+              className="w-full bg-white/5 ring-1 ring-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white placeholder:text-slate-500 outline-none premium-transition disabled:opacity-50"
+              style={{ "--tw-ring-color": "rgba(37,99,235,0.3)" }}
+              onFocus={e => e.target.style.boxShadow = "0 0 0 2px rgba(37,99,235,0.3)"}
               onBlur={e => e.target.style.boxShadow = ""}
             />
             <button
               type="submit"
               disabled={!input.trim() || isTyping}
-              className="absolute right-2 p-2 text-white rounded-lg transition-all disabled:opacity-50 active:scale-90"
-              style={{ background: BRAND_GRAD, boxShadow: input.trim() && !isTyping ? "0 0 10px rgba(0,191,255,0.3)" : "none" }}
+              className="absolute right-2 p-2 text-white rounded-lg premium-transition disabled:opacity-50 active:scale-90"
+              style={{ background: BRAND_GRAD, boxShadow: input.trim() && !isTyping ? "0 0 10px rgba(37,99,235,0.3)" : "none" }}
             >
               {isTyping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
           </form>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

@@ -17,7 +17,7 @@
 
 **DevPulse** is a production-grade DevSecOps platform that analyzes your GitHub repositories, calculates a comprehensive "DevPulse Score," and provides an intelligent, action-oriented AI Copilot to help you fix vulnerabilities, improve test stability, and prevent deployment failures.
 
-By merging CI/CD heuristics, Trivy container security scanning, and Predictive ML modeling, DevPulse surfaces exactly what matters, when it matters.
+By merging CI/CD heuristics, Trivy security scanning, repository health signals, and AI-assisted guidance, DevPulse surfaces exactly what matters, when it matters.
 
 ---
 
@@ -74,7 +74,7 @@ DevPulse has been audited and hardened with production-grade security, database 
 
 **AI Microservice (Python)**
 - FastAPI & Uvicorn
-- Scikit-learn (RandomForestClassifier for predictive failure analysis)
+- Deterministic heuristic predictor for repository failure risk
 - Pandas & NumPy
 
 ---
@@ -193,9 +193,7 @@ DevPulse is ready for a split deployment:
 - **AI service**: Render Docker service using `ai/Dockerfile`
 - **Frontend**: Vercel Vite app using `frontend/vercel.json`
 
-The Render blueprint in `render.yaml` defines the backend and AI services. The backend uses a 1 GB persistent disk at `/app/.data` so SQLite-backed sessions, scan jobs, and reports survive redeploys. Configure the backend environment variables in Render, then set `VITE_API_URL` in Vercel to the deployed backend URL.
-
-> Render persistent disks require a paid web service plan; the backend blueprint uses `starter` for that reason.
+The Render blueprint in `render.yaml` defines the backend and AI services. Configure a managed PostgreSQL `DATABASE_URL`, optionally configure Redis with `REDIS_URL`, then set `VITE_API_URL` in Vercel to the deployed backend URL.
 
 Required backend variables:
 
@@ -204,11 +202,12 @@ NODE_ENV=production
 BACKEND_URL=https://your-backend.onrender.com
 FRONTEND_URL=https://your-frontend.vercel.app
 AI_SERVICE_URL=https://your-ai-service.onrender.com
+DATABASE_URL=postgresql://user:password@host:5432/devpulse
+REDIS_URL=redis://default:password@host:6379
 GITHUB_CLIENT_ID=your_github_client_id
 GITHUB_CLIENT_SECRET=your_github_client_secret
 TOKEN_ENCRYPTION_SECRET=generate-a-64-char-secret
 JWT_SECRET=generate-a-secure-random-string-min-32-chars
-DATABASE_PATH=/app/.data/devpulse.db
 GITHUB_REPO_PAGE_LIMIT=10
 GROQ_API_KEY=your-groq-api-key
 ```

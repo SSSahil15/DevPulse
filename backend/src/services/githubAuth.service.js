@@ -42,7 +42,7 @@ async function fetchGitHubUser(accessToken) {
 /**
  * Issue a signed DevPulse JWT containing ONLY user identity metadata.
  * The GitHub access token is intentionally excluded — it lives server-side
- * in the encrypted SQLite provider_tokens table.
+ * in the encrypted PostgreSQL provider_tokens table.
  */
 function issueDevPulseJWT(githubUser) {
   const payload = {

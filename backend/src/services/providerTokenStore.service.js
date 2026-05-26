@@ -4,7 +4,7 @@ const { decryptText, encryptText } = require("../utils/crypto");
 const redis = require("./redis.service");
 
 /**
- * Provider Token Store — SQLite-backed
+ * Provider Token Store — PostgreSQL-backed
  * Replaces the old JSON-file approach with a proper DB table.
  * All function signatures are identical to the previous implementation.
  */

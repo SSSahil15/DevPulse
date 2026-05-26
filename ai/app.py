@@ -242,6 +242,14 @@ async def health_startup():
         return {"status": "started"}
     raise HTTPException(status_code=503, detail="starting")
 
+@app.get("/health")
+async def health():
+    return {
+        "service": "devpulse-ai",
+        "status": "ok",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
 @app.get("/health/live")
 async def health_live():
     return {"status": "alive", "timestamp": datetime.utcnow().isoformat()}
@@ -290,4 +298,3 @@ async def analyze(request: AnalysisRequest, http_request: Request):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

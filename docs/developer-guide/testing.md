@@ -22,7 +22,7 @@ To run unit tests quickly without spinning up actual cluster containers:
 
 ### Jest Database Mocking (`backend/src/db/database.js`)
 - The startup migration block explicitly checks `process.env.NODE_ENV !== "test"`.
-- If running in tests, DevPulse skips connecting to physical PostgreSQL and safely loads a lightweight SQLite in-memory instance (`:memory:`) using isolated mocks, avoiding `ECONNREFUSED` exceptions.
+- If running in tests, DevPulse skips physical PostgreSQL migrations and uses Jest mocks around database operations where needed, avoiding `ECONNREFUSED` exceptions.
 
 ### Redis Mocking (`backend/src/services/redis.service.js`)
 - The Redis connection client skips initialization during unit tests (`process.env.NODE_ENV !== "test"`).
@@ -32,7 +32,7 @@ To run unit tests quickly without spinning up actual cluster containers:
 
 ## 3. Coverage Gates
 
-We require **>70%** code coverage across all modifications.
+We require focused coverage for new work and enforce the current Jest/Vitest coverage gates in CI.
 
 - **Check Coverage Locally**:
   ```bash

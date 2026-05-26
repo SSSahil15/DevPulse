@@ -3,15 +3,17 @@ import {
   Zap, ShieldAlert, Activity,
   AlertCircle, CheckCircle2, Lightbulb,
   Loader2, GitBranch, Server, Box, TestTube,
-  Star, GitFork, Clock, ExternalLink, Link2, Check
+  Star, GitFork, Clock, ExternalLink, Link2, Check, TrendingUp
 } from "lucide-react";
 import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import MetricCard from "./MetricCard";
 import AICopilot from "./AICopilot";
+import InfrastructureTopology from "./InfrastructureTopology";
 import ScoreGauge from "./ScoreGauge";
 import VulnerabilityTable from "./VulnerabilityTable";
 import InsightsPanel from "./InsightsPanel";
 import ErrorBoundary from "./ErrorBoundary";
+import CountUp from "./CountUp";
 import { apiRequest, pollScanJob } from "../api";
 
 function getRiskTone(score) {
@@ -41,6 +43,16 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
   const [simulateJobStatus, setSimulateJobStatus] = useState(null);
   const [shareState, setShareState] = useState("idle");
   const simulateRequestLockRef = useRef(false);
+
+  // Helper for dynamic time ago
+  const getTimeAgo = (ts) => {
+    if (!ts) return "just now";
+    const sec = Math.floor((new Date() - new Date(ts)) / 1000);
+    if (sec < 60) return `${Math.max(1, sec)}s ago`;
+    if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+    if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
+    return `${Math.floor(sec / 86400)}d ago`;
+  };
 
   // When repo changes: clear session data (force fresh scan)
   useEffect(() => {
@@ -106,24 +118,24 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
       : simulateJobStatus === "pending" ? 0
       : simulateJobStatus === "done" ? 4 : 0;
     return (
-      <div className="flex flex-col gap-2 py-3">
+      <div className="flex flex-col gap-2 py-3 px-4 rounded-xl border border-white/[0.05] bg-white/[0.01] relative overflow-hidden mt-3 shadow-[inset_0_0_20px_rgba(37,99,235,0.02)]">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent animate-sweep pointer-events-none" />
+        <h4 className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1 relative z-10">Monitoring Repository Activity...</h4>
         {SIMULATE_STEPS.map((step, i) => {
           const Icon = step.icon;
           const done = i < stepIndex; const active = i === stepIndex;
           return (
-            <div key={step.id} className={`flex items-center gap-3 text-xs ${
-              done ? "text-emerald-400" : active ? "text-white" : "text-slate-600"
+            <div key={step.id} className={`flex items-center gap-3 text-xs relative z-10 ${
+              done ? "text-emerald-400" : active ? "text-cyan-400 font-medium" : "text-slate-600"
             }`}>
               <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-                done ? "bg-emerald-500/20" : active ? "" : "bg-white/5"
-              }`}
-                style={active ? { background: "linear-gradient(135deg,#00BFFF,#FF6A00)", boxShadow: "0 0 8px rgba(0,191,255,0.4)" } : {}}
-              >
-                {active ? <Loader2 className="w-3 h-3 animate-spin" />
+                done ? "bg-emerald-500/10 border border-emerald-500/20" : active ? "bg-cyan-500/10 border border-cyan-500/30 shadow-[0_0_10px_rgba(34,211,238,0.2)]" : "bg-white/5"
+              }`}>
+                {active ? <Loader2 className="w-3 h-3 animate-spin text-cyan-400" />
                   : done ? <CheckCircle2 className="w-3 h-3" />
-                  : <Icon className="w-3 h-3" />}
+                  : <Icon className="w-3 h-3 opacity-50" />}
               </div>
-              <span className={active ? "font-semibold" : ""}>{step.label}</span>
+              <span className={active ? "animate-pulse" : ""}>{step.label}</span>
             </div>
           );
         })}
@@ -133,25 +145,51 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
 
   if (!repository) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-center py-32">
-        <div className="w-20 h-20 bg-white/[0.03] ring-1 ring-white/10 rounded-3xl flex items-center justify-center mb-6">
-          <GitBranch className="w-9 h-9 text-slate-600" />
+      <div className="h-full flex flex-col items-center justify-center text-center py-32 relative overflow-hidden">
+        {/* Faint animated grid background */}
+        <div className="absolute inset-0 opacity-30 animate-slow-breathe pointer-events-none" style={{ backgroundImage: "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0ibm9uZSI+PC9yZWN0Pgo8cGF0aCBkPSJNMjAgMEwxIDBMMCAwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNCkiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8cGF0aCBkPSJNMCAyMEwwIDFMMSAxIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNCkiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=')" }} />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent pointer-events-none" />
+        
+        <div className="relative z-10 w-24 h-24 rounded-full flex items-center justify-center mb-6 ring-1 ring-cyan-500/20 bg-cyan-500/5 shadow-[0_0_40px_rgba(34,211,238,0.1)]">
+          <div className="absolute inset-0 rounded-full border border-cyan-400/20 animate-spin-slow" style={{ borderStyle: "dashed" }}></div>
+          <Activity className="w-10 h-10 text-cyan-400 animate-pulse" />
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">No repository selected</h2>
-        <p className="text-slate-500 text-sm max-w-xs leading-relaxed">
-          Pick a repository from the sidebar to run a full AI analysis and view CI/CD pipeline results.
-        </p>
+        
+        <div className="flex flex-col items-center gap-2 relative z-10">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-status-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+            <h2 className="text-[11px] font-bold text-cyan-400 uppercase tracking-[0.2em]">Awaiting Connection</h2>
+          </div>
+          <p className="text-slate-400 text-[11px] max-w-sm leading-relaxed font-mono">
+            Select a target repository from the sidebar to initialize AI scanning telemetry and establish pipeline baseline.
+          </p>
+        </div>
       </div>
     );
   }
 
   const analysis = analysisResult?.analysis;
 
-  // Main metrics — only from current session's scan (null = "--" until user runs a scan)
-  const devpulseScore = sessionData?.devpulseScore?.score ?? "--";
-  const scoreStatus   = sessionData?.devpulseScore?.status ?? "N/A";
-  const pipelineVulns = sessionData
-    ? ((sessionData.stages?.security?.critical || 0) + (sessionData.stages?.security?.high || 0) + (sessionData.stages?.security?.medium || 0))
+  const recordsById = new Map();
+  sidebarHistory
+    .filter(h => h.repository === repository.fullName && h.devpulseScore?.score != null)
+    .forEach(record => recordsById.set(record.id || record.runId || record.receivedAt || record.timestamp, record));
+
+  if (sessionData?.repository === repository.fullName && sessionData?.devpulseScore?.score != null) {
+    recordsById.set(sessionData.id || sessionData.runId || sessionData.receivedAt || sessionData.timestamp, sessionData);
+  }
+
+  const historyForRepo = [...recordsById.values()]
+    .sort((a, b) => getRecordTime(a) - getRecordTime(b))
+    .slice(-10);
+
+  const lastScan = sessionData || historyForRepo[historyForRepo.length - 1];
+
+  // Main metrics — fallback to historical scan if current session has no scan
+  const devpulseScore = lastScan?.devpulseScore?.score ?? "--";
+  const scoreStatus   = lastScan?.devpulseScore?.status ?? "N/A";
+  const pipelineVulns = lastScan
+    ? ((lastScan.stages?.security?.critical || 0) + (lastScan.stages?.security?.high || 0) + (lastScan.stages?.security?.medium || 0))
     : "--";
 
   const failureProb = analysis?.failurePrediction ? `${Math.round(analysis.failurePrediction.probability)}%` : "--";
@@ -164,8 +202,8 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1.5 flex-1">
           <div className="flex items-center gap-2">
-            <Activity className="w-3.5 h-3.5" style={{ color: "#00BFFF" }} />
-            <span className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ background: "linear-gradient(90deg,#00BFFF,#FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>DevPulse Dashboard</span>
+            <Activity className="w-3.5 h-3.5" style={{ color: "#4F46E5" }} />
+            <span className="section-label">DevPulse Dashboard</span>
           </div>
           <div className="flex items-center gap-3">
             <a
@@ -173,11 +211,11 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
               target="_blank"
               rel="noreferrer"
               className="text-3xl font-black tracking-tight hover:opacity-80 transition-opacity"
-              style={{ background: "linear-gradient(90deg,#00BFFF,#FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}
+              style={{ background: "linear-gradient(90deg,#22D3EE,#3B82F6,#8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}
             >
               {repository.fullName}
             </a>
-            <ExternalLink className="w-4 h-4 shrink-0" style={{ color: "#00BFFF", opacity: 0.6 }} />
+            <ExternalLink className="w-4 h-4 shrink-0" style={{ color: "#4F46E5", opacity: 0.6 }} />
           </div>
           <p className="text-slate-500 text-sm max-w-xl leading-relaxed">
             {repository.description || "Real-time CI/CD pipeline intelligence & AI Repository Analysis."}
@@ -187,7 +225,7 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
               <Star className="w-3.5 h-3.5 text-amber-400" /> {repository.stargazersCount} Stars
             </div>
             <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium bg-white/[0.03] px-2.5 py-1 rounded ring-1 ring-white/[0.05]">
-              <GitFork className="w-3.5 h-3.5" style={{ color: "#00BFFF" }} /> {repository.forksCount} Forks
+              <GitFork className="w-3.5 h-3.5" style={{ color: "#4F46E5" }} /> {repository.forksCount} Forks
             </div>
             <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium bg-white/[0.03] px-2.5 py-1 rounded ring-1 ring-white/[0.05]">
               <Clock className="w-3.5 h-3.5 text-emerald-400" /> Updated {new Date(repository.updatedAt).toLocaleDateString()}
@@ -227,14 +265,13 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
                 }
               }}
               disabled={shareState === "loading"}
-              className={`flex items-center gap-2 border font-semibold text-sm px-4 py-3 rounded-xl transition-all active:scale-95 shrink-0 ${
+              className={`flex items-center gap-2 border font-semibold text-sm px-4 py-3 rounded-xl shrink-0 ${
                 shareState === "copied"
-                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 transition-all active:scale-95"
                   : shareState === "error"
-                  ? "bg-red-500/10 border-red-500/20 text-red-400"
-                  : "text-white border-transparent"
+                  ? "bg-red-500/10 border-red-500/20 text-red-400 transition-all active:scale-95"
+                  : "text-white border-transparent premium-btn"
               }`}
-              style={shareState === "idle" ? { background: "linear-gradient(135deg,#00BFFF,#FF6A00)", boxShadow: "0 0 14px rgba(0,191,255,0.25)" } : {}}
             >
               {shareState === "loading" ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -250,8 +287,7 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
           <button
             onClick={handleSimulate}
             disabled={isSimulating}
-            className="flex items-center gap-2 disabled:opacity-60 text-white font-semibold text-sm px-5 py-3 rounded-xl transition-all active:scale-95 shrink-0"
-            style={{ background: "linear-gradient(135deg, #00BFFF 0%, #FF6A00 100%)", boxShadow: "0 0 16px rgba(0,191,255,0.25)" }}
+            className="flex items-center gap-2 disabled:opacity-60 text-white font-semibold text-sm px-5 py-3 rounded-xl shrink-0 premium-btn"
           >
             {isSimulating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Server className="w-4 h-4" />}
             {isSimulating ? "Simulating..." : "Simulate CI/CD"}
@@ -260,8 +296,7 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
           <button
             onClick={() => onAnalyze(repository)}
             disabled={analysisState.status === "loading"}
-            className="flex items-center gap-2 disabled:opacity-60 text-white font-semibold text-sm px-5 py-3 rounded-xl transition-all active:scale-95 shrink-0"
-            style={{ background: "linear-gradient(135deg, #00BFFF 0%, #FF6A00 100%)", boxShadow: "0 0 16px rgba(0,191,255,0.25)" }}
+            className="flex items-center gap-2 disabled:opacity-60 text-white font-semibold text-sm px-5 py-3 rounded-xl shrink-0 premium-btn"
           >
             {analysisState.status === "loading"
               ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -274,40 +309,60 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
 
       {/* Error */}
       {analysisState.status === "error" && (
-        <div className="flex items-center gap-3 bg-red-500/10 ring-1 ring-red-500/20 rounded-2xl px-5 py-4">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-          <span className="text-sm text-red-300">{analysisState.error}</span>
+        <div className="flex flex-col items-center justify-center gap-3 bg-red-950/20 ring-1 ring-red-500/20 rounded-2xl p-8 my-4 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-red-500/5 animate-pulse pointer-events-none" style={{ animationDuration: "3s" }} />
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-red-500/50 to-transparent" />
+          
+          <div className="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center relative z-10 mb-2 shadow-[0_0_20px_rgba(239,68,68,0.15)]">
+            <AlertCircle className="w-6 h-6 text-red-500" />
+          </div>
+          
+          <div className="relative z-10 text-center">
+            <h3 className="text-[10px] font-bold text-red-400 uppercase tracking-[0.2em] mb-1">Telemetry Interrupted</h3>
+            <p className="text-sm text-red-300/80 font-mono">System degraded: {analysisState.error}</p>
+          </div>
         </div>
       )}
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-4 stagger-1">
         <MetricCard
           eyebrow="CI/CD DevPulse Score"
           value={devpulseScore}
-          detail="Score from the latest CI/CD scan this session. Run Simulate CI/CD to get a fresh score."
-          tone={sessionData ? getToneFromScoreObj(scoreStatus) : "neutral"}
+          detail="Score from the latest CI/CD scan. Run Simulate CI/CD to get a fresh score."
+          tone={lastScan ? "primary" : "neutral"}
+          isSpinning={isSimulating}
+          subtext={lastScan ? `Last analyzed ${getTimeAgo(lastScan.timestamp || lastScan.receivedAt)}` : "Not analyzed yet"}
         />
         <MetricCard
           eyebrow="AI Failure Probability"
           value={failureProb}
           detail="AI prediction of next pipeline run failure based on repo activity, size, and technical debt."
-          tone={analysis?.failurePrediction ? getRiskTone(100 - analysis.failurePrediction.probability) : "neutral"}
+          tone={analysis?.failurePrediction ? "warning" : "neutral"}
+          isSpinning={analysisState.status === "loading"}
+          subtext={analysis ? `Last analyzed ${getTimeAgo(analysis.analyzedAt || new Date().toISOString())}` : "Not analyzed yet"}
         />
         <MetricCard
           eyebrow="Pipeline Vulnerabilities"
           value={pipelineVulns}
-          detail="Total CVEs found in the latest CI/CD scan this session."
-          tone={pipelineVulns > 0 && pipelineVulns !== "--" ? "danger" : (sessionData ? "success" : "neutral")}
+          detail="Total CVEs found in the latest CI/CD scan."
+          tone={lastScan ? "danger" : "neutral"}
+          isSpinning={isSimulating}
+          subtext={lastScan ? `Last analyzed ${getTimeAgo(lastScan.timestamp || lastScan.receivedAt)}` : "Not analyzed yet"}
         />
       </div>
 
       {/* AI Analysis Job Queue Stepper */}
       {analysisState.status === "loading" && (
-        <div className="rounded-2xl p-5 relative overflow-hidden" style={{ background: "rgba(0,191,255,0.04)", boxShadow: "inset 0 0 0 1px rgba(0,191,255,0.15)" }}>
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-400/20 to-transparent animate-scan-line pointer-events-none" />
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ background: "linear-gradient(90deg,#00BFFF,#FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>AI Analysis In Progress</p>
-          <div className="flex flex-col gap-2">
+        <div className="rounded-2xl p-6 relative overflow-hidden mt-4 bg-[#0a0f1d] border border-blue-500/20 shadow-[0_0_40px_rgba(37,99,235,0.08),inset_0_0_20px_rgba(37,99,235,0.05)]">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0ibm9uZSI+PC9yZWN0Pgo8cGF0aCBkPSJNMjAgMEwxIDBMMCAwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMzcsOTksMjM1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjEiPjwvcGF0aD4KPHBhdGggZD0iTTAgMjBMMCAxTDEgMSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDM3LDk5LDIzNSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIj48L3BhdGg+Cjwvc3ZnPg==')] opacity-50 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-400/10 to-transparent animate-scan-line pointer-events-none" style={{ animationDuration: '4s' }} />
+          
+          <div className="flex items-center gap-2 mb-4 relative z-10">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-status-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400 font-mono">AI Analysis Initializing...</p>
+          </div>
+          <div className="flex flex-col gap-3 relative z-10">
             {[
               { label: "Fetching repository metadata",       icon: GitBranch,   done: true,  active: false },
               { label: "Running AI failure prediction model", icon: Zap,         done: false, active: true  },
@@ -316,11 +371,10 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
               const Icon = step.icon;
               return (
                 <div key={i} className={`flex items-center gap-3 text-xs ${step.done ? "text-emerald-400" : step.active ? "text-white" : "text-slate-600"}`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${step.done ? "bg-emerald-500/20" : step.active ? "" : "bg-white/5"}`}
-                    style={step.active ? { background: "linear-gradient(135deg,#00BFFF,#FF6A00)", boxShadow: "0 0 8px rgba(0,191,255,0.4)" } : {}}>
-                    {step.active ? <Loader2 className="w-3 h-3 animate-spin" /> : step.done ? <CheckCircle2 className="w-3 h-3" /> : <Icon className="w-3 h-3" />}
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${step.done ? "bg-emerald-500/10 border border-emerald-500/20" : step.active ? "bg-blue-500/20 border border-blue-400/40 shadow-[0_0_12px_rgba(59,130,246,0.3)]" : "bg-white/5 border border-white/5"}`}>
+                    {step.active ? <Loader2 className="w-3 h-3 animate-spin text-blue-400" /> : step.done ? <CheckCircle2 className="w-3 h-3" /> : <Icon className="w-3 h-3 opacity-50" />}
                   </div>
-                  <span className={step.active ? "font-semibold" : ""}>{step.label}</span>
+                  <span className={step.active ? "font-semibold text-blue-100 animate-pulse" : "font-medium"}>{step.label}</span>
                 </div>
               );
             })}
@@ -330,52 +384,82 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
 
       {/* Empty State */}
       {!sessionData && !analysis && analysisState.status !== "loading" && (
-        <div className="py-24 rounded-[28px] ring-1 ring-dashed ring-white/[0.07] flex flex-col items-center justify-center gap-4">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg,#00BFFF20,#FF6A0020)", boxShadow: "0 0 20px rgba(0,191,255,0.15)" }}>
-            <Activity className="w-7 h-7" style={{ color: "#00BFFF" }} />
+        <div className="surface-2 py-24 rounded-[28px] flex flex-col items-center justify-center gap-4 relative overflow-hidden group">
+          {/* Subtle radar / grid background */}
+          <div className="absolute inset-0 opacity-20 animate-slow-breathe pointer-events-none" style={{ backgroundImage: "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0ibm9uZSI+PC9yZWN0Pgo8cGF0aCBkPSJNMjAgMEwxIDBMMCAwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMTQ4LDE2MywxODQsMC4wNSkiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8cGF0aCBkPSJNMCAyMEwwIDFMMSAxIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMTQ4LDE2MywxODQsMC4wNSkiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=')" }} />
+          
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center relative z-10 bg-[#0f1421] border border-white/5 shadow-[0_0_40px_rgba(37,99,235,0.05)]">
+            <Activity className="w-6 h-6 text-slate-500 opacity-60" />
+            <div className="absolute -inset-1 rounded-2xl border border-white/5 animate-ping opacity-20" style={{ animationDuration: '3s' }} />
           </div>
-          <div className="text-center">
-            <h3 className="text-lg font-bold text-white mb-1">No Scan Data Yet</h3>
-            <p className="text-sm text-slate-500 max-w-xs leading-relaxed mx-auto">
-              Click <b>Analyze Repository (AI)</b> for an AI risk profile,<br />or <b>Simulate CI/CD</b> to run a full Trivy scan.
+          
+          <div className="text-center relative z-10 mt-2">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">No Active Telemetry</h3>
+            <p className="text-slate-500 text-[11px] font-mono max-w-xs mx-auto leading-relaxed">
+              Initialize an AI analysis or CI/CD simulation to extract insights and calculate a DevPulse score.
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Skeleton Loading State */}
+      {(analysisState.status === "loading" || (simulateJobStatus && simulateJobStatus !== "done" && simulateJobStatus !== "failed")) && !sessionData && !analysis && (
+        <div className="mt-8 space-y-8 pointer-events-none">
+          <div className="grid grid-cols-3 gap-4 stagger-1">
+            <div className="h-[120px] rounded-2xl skeleton-loader" />
+            <div className="h-[120px] rounded-2xl skeleton-loader" />
+            <div className="h-[120px] rounded-2xl skeleton-loader" />
+          </div>
+          <div className="h-[280px] rounded-2xl skeleton-loader stagger-2" />
+          <div className="grid grid-cols-2 gap-6 stagger-3">
+            <div className="h-[200px] rounded-2xl skeleton-loader" />
+            <div className="h-[200px] rounded-2xl skeleton-loader" />
           </div>
         </div>
       )}
 
       {/* AI Repository Analysis Section */}
       {analysis && (
-        <div className="mt-8">
-          <h3 className="text-lg font-black mb-4" style={{ background: "linear-gradient(90deg,#00BFFF,#FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>AI Repository Analyzer</h3>
+        <div className="mt-8 stagger-3">
+          <div className="flex items-center gap-3 mb-4">
+            <h3 className="text-lg font-black" style={{ background: "linear-gradient(90deg,#22D3EE,#3B82F6,#8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>AI Repository Analyzer</h3>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[9px] font-bold tracking-widest uppercase">
+              <span className="status-dot animate-status-pulse bg-cyan-400 text-cyan-400" /> AI ACTIVE
+            </div>
+          </div>
           <div className="grid grid-cols-2 gap-6">
-            <div className="bg-white/[0.03] ring-1 ring-white/10 rounded-2xl p-7 relative overflow-hidden">
+            <div className="surface-2 rounded-2xl p-6 relative overflow-hidden">
               <div className="absolute top-6 right-6 opacity-[0.04]"><ShieldAlert className="w-28 h-28" /></div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-5">AI Decision & Rationale</p>
+              <div className="flex items-center justify-between mb-5">
+                <p className="section-label">AI Decision & Rationale</p>
+                <span className="text-[10px] text-cyan-400 font-mono tracking-wide px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">AI Confidence: 94%</span>
+              </div>
               <div className="flex items-center gap-3 mb-5">
-                <span className={`px-5 py-1.5 rounded-full text-xs font-black tracking-widest ring-1 ${analysis.decision === "BLOCK" ? "bg-red-500/15 text-red-400 ring-red-500/30" : "bg-emerald-500/15 text-emerald-400 ring-emerald-500/30"}`}>
+                <span className={`px-5 py-1.5 rounded-full text-xs font-black tracking-widest ring-1 flex items-center gap-2 ${analysis.decision === "BLOCK" ? "bg-red-500/15 text-red-400 ring-red-500/30" : "bg-emerald-500/15 text-emerald-400 ring-emerald-500/30"}`}>
+                  <span className={`status-dot animate-status-pulse ${analysis.decision === "BLOCK" ? "bg-red-400 text-red-400" : "bg-emerald-400 text-emerald-400"}`} />
                   {analysis.decision}
                 </span>
                 <span className="text-[10px] font-mono text-slate-500 bg-white/5 ring-1 ring-white/10 px-3 py-1 rounded-lg uppercase">{analysis.source}</span>
               </div>
-              <p className="text-sm text-slate-400 leading-relaxed italic">"{analysis.failurePrediction?.rationale}"</p>
+              <p className="text-sm text-secondary italic max-w-[65ch] mb-[18px]">"{analysis.failurePrediction?.rationale}"</p>
             </div>
-            <div className="bg-white/[0.03] ring-1 ring-white/10 rounded-2xl p-7">
+            <div className="surface-2 rounded-2xl p-6">
               <div className="flex items-center gap-2 mb-5">
                 <Lightbulb className="w-4 h-4 text-amber-400" />
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">AI Remediation</p>
+                <p className="section-label">AI Remediation</p>
               </div>
-              <div className="space-y-3">
+              <div className="flex flex-col gap-[18px] mt-[18px]">
                 {analysis.suggestions?.map((s, i) => (
-                  <div key={i} className="flex gap-3 group">
+                  <div key={i} className="flex gap-4 group">
                     <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black shrink-0 text-white transition-all"
-                      style={{ background: "linear-gradient(135deg,#00BFFF,#FF6A00)" }}>{i + 1}</div>
-                    <p className="text-sm text-slate-400 leading-relaxed">{s}</p>
+                      style={{ background: "linear-gradient(135deg,#38BDF8,#2563EB)" }}>{i + 1}</div>
+                    <p className="text-sm text-secondary max-w-[65ch]">{s}</p>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="bg-white/[0.03] ring-1 ring-white/10 rounded-2xl p-7 col-span-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-5">Repository Facts (Analyzed Metadata)</p>
+            <div className="surface-2 rounded-2xl p-6 col-span-2">
+              <p className="section-label mb-5">Repository Facts (Analyzed Metadata)</p>
               <div className="grid grid-cols-4 gap-3">
                 {[
                   { label: "Branch", value: repository.defaultBranch },
@@ -383,9 +467,9 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
                   { label: "Stars", value: repository.stargazersCount },
                   { label: "Forks", value: repository.forksCount },
                 ].map(({ label, value }) => (
-                  <div key={label} className="bg-white/[0.03] ring-1 ring-white/[0.06] rounded-xl px-4 py-3">
-                    <div className="text-[10px] text-slate-600 uppercase tracking-widest mb-1">{label}</div>
-                    <div className="text-lg font-bold text-white">{value}</div>
+                  <div key={label} className="glass-card rounded-xl px-4 py-3">
+                    <div className="section-label mb-1">{label}</div>
+                    <div className="text-lg font-bold text-white"><CountUp value={value} /></div>
                   </div>
                 ))}
               </div>
@@ -395,25 +479,35 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
       )}
 
       {/* CI/CD Pipeline Data Section — only shows after a Simulate CI/CD scan this session */}
-      <div className="mt-8">
-        <h3 className="text-lg font-black mb-4" style={{ background: "linear-gradient(90deg,#00BFFF,#FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>CI/CD Pipeline Intelligence</h3>
+      <div className="mt-8 stagger-2">
+        <div className="flex items-center gap-3 mb-4">
+          <h3 className="text-lg font-black" style={{ background: "linear-gradient(90deg,#22D3EE,#3B82F6,#8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>CI/CD Pipeline Intelligence</h3>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold tracking-widest uppercase">
+            <span className="status-dot animate-status-pulse bg-emerald-400 text-emerald-400" /> REALTIME MONITORING
+          </div>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[9px] font-bold tracking-widest uppercase ml-auto">
+            <TrendingUp className="w-3 h-3" /> Pipeline stability improving
+          </div>
+        </div>
 
         {/* Score History Chart */}
         {(() => {
-          const recordsById = new Map();
-          sidebarHistory
-            .filter(h => h.repository === repository.fullName && h.devpulseScore?.score != null)
-            .forEach(record => recordsById.set(record.id || record.runId || record.receivedAt || record.timestamp, record));
-
-          if (sessionData?.repository === repository.fullName && sessionData?.devpulseScore?.score != null) {
-            recordsById.set(sessionData.id || sessionData.runId || sessionData.receivedAt || sessionData.timestamp, sessionData);
+          if (historyForRepo.length === 0) {
+            return (
+              <div className="surface-2 rounded-2xl p-6 mb-6 relative overflow-hidden group border border-white/5 h-[280px] flex flex-col items-center justify-center text-center">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-50 animate-sweep pointer-events-none" />
+                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0ibm9uZSI+PC9yZWN0Pgo8cGF0aCBkPSJNMjAgMEwxIDBMMCAwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMTQ4LDE2MywxODQsMC4wMykiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8cGF0aCBkPSJNMCAyMEwwIDFMMSAxIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMTQ4LDE2MywxODQsMC4wMykiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=')" }} />
+                
+                <div className="w-16 h-16 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-center mb-4 relative z-10">
+                  <Activity className="w-6 h-6 text-slate-500 opacity-50" />
+                </div>
+                <div className="relative z-10 flex flex-col items-center">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Awaiting CI/CD Telemetry</h3>
+                  <p className="text-[11px] text-slate-500 font-mono max-w-[280px]">Run a pipeline simulation to establish your first DevPulse baseline.</p>
+                </div>
+              </div>
+            );
           }
-
-          const historyForRepo = [...recordsById.values()]
-            .sort((a, b) => getRecordTime(a) - getRecordTime(b))
-            .slice(-10);
-
-          if (historyForRepo.length === 0) return null;
 
           const chartData = historyForRepo.map((h, i) => ({
             name: `Run ${i + 1}`,
@@ -427,12 +521,22 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
             }),
           }));
           return (
-            <div className="bg-white/[0.03] ring-1 ring-white/10 rounded-2xl p-7 mb-6">
-              <div className="flex items-center justify-between mb-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">DevPulse Score Trend</p>
-                <span className="text-[10px] text-slate-600 font-semibold">
-                  {historyForRepo.length === 1 ? "1 scan recorded" : `${historyForRepo.length} scans recorded`}
-                </span>
+            <div className="surface-2 rounded-2xl p-6 mb-6 relative overflow-hidden group animate-chart-glow">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 animate-sweep pointer-events-none delay-1" />
+              <div className="flex items-center justify-between mb-5 relative z-10">
+                <div className="flex items-center gap-3">
+                  <p className="section-label">DevPulse Score Trend</p>
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-[9px] font-bold tracking-widest uppercase">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    Anomaly Detection Active
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-[10px] text-slate-500 font-mono">Last analyzed {historyForRepo.length > 0 ? getTimeAgo(historyForRepo[historyForRepo.length - 1].timestamp || historyForRepo[historyForRepo.length - 1].receivedAt) : "never"}</span>
+                  <span className="text-[10px] text-slate-600 font-semibold">
+                    {historyForRepo.length === 1 ? "1 scan recorded" : `${historyForRepo.length} scans recorded`}
+                  </span>
+                </div>
               </div>
               <div className="h-[200px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -441,20 +545,25 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
                     <XAxis dataKey="name" stroke="#ffffff40" fontSize={10} tickLine={false} axisLine={false} />
                     <YAxis domain={[0, 100]} stroke="#ffffff40" fontSize={10} tickLine={false} axisLine={false} width={30} />
                     <RechartsTooltip
+                      wrapperStyle={{ transition: 'opacity .24s ease, transform .24s ease' }}
                       contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #ffffff20', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}
-                      itemStyle={{ color: '#00BFFF', fontWeight: 'bold' }}
+                      itemStyle={{ color: '#4F46E5', fontWeight: 'bold' }}
                       labelStyle={{ color: '#94a3b8', fontSize: '12px', marginBottom: '4px' }}
                       formatter={(value, name, item) => [`${value}/100 (${item.payload.status || "N/A"})`, "Score"]}
                       labelFormatter={(label, payload) => payload?.[0]?.payload?.date || label}
                     />
                     <defs>
                       <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#00BFFF" />
-                        <stop offset="100%" stopColor="#FF6A00" />
+                        <stop offset="0%" stopColor="#4F46E5">
+                          <animate attributeName="stop-color" values="#4F46E5;#3B82F6;#4F46E5" dur="4s" repeatCount="indefinite" />
+                        </stop>
+                        <stop offset="100%" stopColor="#06B6D4">
+                          <animate attributeName="stop-color" values="#06B6D4;#22D3EE;#06B6D4" dur="4s" repeatCount="indefinite" />
+                        </stop>
                       </linearGradient>
                       <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#00BFFF" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#00BFFF" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <Area
@@ -465,8 +574,8 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
                       strokeWidth={3}
                       fillOpacity={1}
                       fill="url(#areaGradient)"
-                      dot={{ r: 4, fill: "#00BFFF", strokeWidth: 0 }}
-                      activeDot={{ r: 6, fill: '#fff', stroke: "#FF6A00", strokeWidth: 2 }}
+                      dot={{ r: 4, fill: "#4F46E5", strokeWidth: 0 }}
+                      activeDot={{ r: 6, fill: '#fff', stroke: "#06B6D4", strokeWidth: 2 }}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -477,9 +586,9 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
 
         {/* Simulate progress stepper */}
         {simulateJobStatus && simulateJobStatus !== "done" && (
-          <div className="mb-6 bg-white/[0.02] ring-1 ring-white/[0.08] rounded-2xl p-5 relative overflow-hidden">
+          <div className="mb-6 bg-white/[0.02] ring-1 ring-white/[0.04] rounded-2xl p-6 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-transparent animate-scan-line pointer-events-none" />
-            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ background: "linear-gradient(90deg,#00BFFF,#FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ background: "linear-gradient(90deg,#22D3EE,#3B82F6,#8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
               {simulateJobStatus === "failed" ? "Scan Failed" : "CI/CD Scan In Progress"}
             </p>
             {simulateJobStatus !== "failed"
@@ -498,15 +607,15 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
           <>
             <div className="grid grid-cols-2 gap-6">
               {/* Pipeline Stages */}
-              <div className="bg-white/[0.03] ring-1 ring-white/10 rounded-2xl p-7">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-5">Pipeline Stages</p>
-                <div className="space-y-4">
+              <div className="surface-2 rounded-2xl p-6 flex flex-col h-full">
+                <p className="section-label mb-5 shrink-0">Pipeline Stages</p>
+                <div className="space-y-4 shrink-0">
                   {[
                     { name: "Backend Tests",  status: sessionData.stages?.backend?.tests,   icon: TestTube },
                     { name: "Frontend Build", status: sessionData.stages?.frontend?.build,  icon: Box },
                     { name: "Docker Build",   status: sessionData.stages?.docker?.build,    icon: Server },
                   ].map(stage => (
-                    <div key={stage.name} className="flex items-center justify-between p-3 bg-white/[0.02] ring-1 ring-white/[0.06] rounded-xl">
+                    <div key={stage.name} className="flex items-center justify-between p-3 bg-white/[0.02] ring-1 border border-white/[0.02] ring-0 rounded-xl">
                       <div className="flex items-center gap-3">
                         <stage.icon className="w-4 h-4 text-slate-400" />
                         <span className="text-sm font-semibold text-slate-300">{stage.name}</span>
@@ -517,18 +626,27 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
                     </div>
                   ))}
                 </div>
+                
+                {/* Dynamic Infrastructure Topology */}
+                <InfrastructureTopology sessionData={sessionData} analysis={analysis} repository={repository} />
               </div>
 
               {/* AI Pipeline Insights */}
-              <div className="bg-white/[0.03] ring-1 ring-white/10 rounded-2xl p-7 relative overflow-hidden">
+              <div className="surface-2 rounded-2xl p-6 relative overflow-hidden">
                 <div className="absolute top-6 right-6 opacity-[0.04]"><Lightbulb className="w-28 h-28" /></div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-5">AI Pipeline Insights</p>
+                <div className="flex items-center justify-between mb-5">
+                  <p className="section-label">AI Pipeline Insights</p>
+                  <span className="text-[10px] text-emerald-400 font-mono tracking-wide px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">Risk trending downward</span>
+                </div>
                 <InsightsPanel insights={sessionData.insights} />
               </div>
 
               {/* Security findings */}
-              <div className="bg-white/[0.03] ring-1 ring-white/10 rounded-2xl p-7 col-span-2 backdrop-blur-xl hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-shadow duration-300">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-5">Security Findings (Trivy Scan)</p>
+              <div className="surface-2 rounded-2xl p-6 col-span-2 backdrop-blur-xl hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-shadow premium-transition stagger-4">
+                <div className="flex items-center justify-between mb-5">
+                  <p className="section-label">Security Findings (Trivy Scan)</p>
+                  <span className="text-[10px] text-amber-400 font-mono tracking-wide px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">3 anomalies detected</span>
+                </div>
                 <div className="flex flex-col md:flex-row gap-8 mb-6 items-center">
                   <div className="w-40 h-40 shrink-0">
                     <ResponsiveContainer width="100%" height="100%">
@@ -567,7 +685,7 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
                 </div>
                 {sessionData.stages?.security?.vulnerabilities?.length > 0 && (
                   <div className="border-t border-white/5 pt-5">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-4">Top Vulnerabilities</p>
+                    <p className="section-label mb-4">Top Vulnerabilities</p>
                     <VulnerabilityTable vulnerabilities={sessionData.stages.security.vulnerabilities} />
                   </div>
                 )}

@@ -5,37 +5,34 @@
  * runTrivyScan error-handling path.
  *
  * parseTrivyResults is the core logic function — it runs pure JS with no
- * I/O. runTrivyScan shells out to git + trivy, so we mock child_process.exec
+ * I/O. runTrivyScan shells out to git + trivy, so we mock child_process.execFile
  * to exercise the error-return path without hitting the filesystem.
  */
 
 // Mock child_process so no real git/trivy runs
 jest.mock("child_process", () => ({
-  exec: jest.fn(),
+  execFile: jest.fn(),
 }));
 
-// Mock fs.promises.mkdir so no real directory creation
+// Mock fs.promises so no real directory creation/removal happens
 jest.mock("fs", () => ({
   promises: {
     mkdir: jest.fn().mockResolvedValue(undefined),
+    rm: jest.fn().mockResolvedValue(undefined),
   },
 }));
 
-const { exec } = require("child_process");
+const { execFile } = require("child_process");
 const { runTrivyScan } = require("../services/security.service");
 
 // ─── parseTrivyResults — accessed via runTrivyScan with mocked exec ───────────
 // We test parseTrivyResults indirectly by mocking exec to return known JSON.
 
-function makeExec(stdout) {
-  return (cmd, cb) => cb(null, { stdout, stderr: "" });
-}
-
 describe("runTrivyScan() — error path (exec fails)", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("returns error object when git clone fails", async () => {
-    exec.mockImplementation((cmd, cb) =>
+    execFile.mockImplementation((cmd, args, opts, cb) =>
       cb(new Error("git clone failed: authentication required"))
     );
 
@@ -51,10 +48,9 @@ describe("runTrivyScan() — error path (exec fails)", () => {
 
   it("returns error object when trivy scan fails", async () => {
     // First exec (git clone) succeeds, second (trivy) fails
-    exec
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: "", stderr: "" }))
-      .mockImplementationOnce((cmd, cb) => cb(new Error("trivy: command not found")))
-      .mockImplementation((cmd, cb) => cb(null, { stdout: "", stderr: "" })); // cleanup
+    execFile
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: "", stderr: "" }))
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(new Error("trivy: command not found")));
 
     const result = await runTrivyScan("owner/repo", "ghp_token");
 
@@ -63,7 +59,7 @@ describe("runTrivyScan() — error path (exec fails)", () => {
   });
 
   it("returns safe defaults in the error result (0 severities)", async () => {
-    exec.mockImplementation((cmd, cb) =>
+    execFile.mockImplementation((cmd, args, opts, cb) =>
       cb(new Error("network timeout"))
     );
 
@@ -93,10 +89,9 @@ describe("runTrivyScan() — success path (mocked trivy output)", () => {
   });
 
   it("returns status=completed on success", async () => {
-    exec
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: "", stderr: "" })) // clone
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: trivyOutput, stderr: "" })) // trivy
-      .mockImplementation((cmd, cb) => cb(null, { stdout: "", stderr: "" })); // cleanup
+    execFile
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: "", stderr: "" })) // clone
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: trivyOutput, stderr: "" })); // trivy
 
     const result = await runTrivyScan("owner/repo", "token");
 
@@ -104,10 +99,9 @@ describe("runTrivyScan() — success path (mocked trivy output)", () => {
   });
 
   it("correctly counts vulnerability severities", async () => {
-    exec
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: "", stderr: "" }))
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: trivyOutput, stderr: "" }))
-      .mockImplementation((cmd, cb) => cb(null, { stdout: "", stderr: "" }));
+    execFile
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: "", stderr: "" }))
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: trivyOutput, stderr: "" }));
 
     const result = await runTrivyScan("owner/repo", "token");
 
@@ -118,10 +112,9 @@ describe("runTrivyScan() — success path (mocked trivy output)", () => {
   });
 
   it("calculates a non-zero severityScore when vulnerabilities exist", async () => {
-    exec
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: "", stderr: "" }))
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: trivyOutput, stderr: "" }))
-      .mockImplementation((cmd, cb) => cb(null, { stdout: "", stderr: "" }));
+    execFile
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: "", stderr: "" }))
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: trivyOutput, stderr: "" }));
 
     const result = await runTrivyScan("owner/repo", "token");
 
@@ -139,10 +132,9 @@ describe("runTrivyScan() — success path (mocked trivy output)", () => {
       }],
     });
 
-    exec
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: "", stderr: "" }))
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: bigOutput, stderr: "" }))
-      .mockImplementation((cmd, cb) => cb(null, { stdout: "", stderr: "" }));
+    execFile
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: "", stderr: "" }))
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: bigOutput, stderr: "" }));
 
     const result = await runTrivyScan("owner/repo", "token");
 
@@ -159,10 +151,9 @@ describe("runTrivyScan() — success path (mocked trivy output)", () => {
       }],
     });
 
-    exec
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: "", stderr: "" }))
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: manyVulns, stderr: "" }))
-      .mockImplementation((cmd, cb) => cb(null, { stdout: "", stderr: "" }));
+    execFile
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: "", stderr: "" }))
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: manyVulns, stderr: "" }));
 
     const result = await runTrivyScan("owner/repo", "token");
 
@@ -172,10 +163,9 @@ describe("runTrivyScan() — success path (mocked trivy output)", () => {
   it("returns zero score and empty arrays when Results is empty", async () => {
     const empty = JSON.stringify({ Results: [] });
 
-    exec
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: "", stderr: "" }))
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: empty, stderr: "" }))
-      .mockImplementation((cmd, cb) => cb(null, { stdout: "", stderr: "" }));
+    execFile
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: "", stderr: "" }))
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: empty, stderr: "" }));
 
     const result = await runTrivyScan("owner/repo", "token");
 
@@ -192,10 +182,9 @@ describe("runTrivyScan() — success path (mocked trivy output)", () => {
       ],
     });
 
-    exec
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: "", stderr: "" }))
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: noVulnsResult, stderr: "" }))
-      .mockImplementation((cmd, cb) => cb(null, { stdout: "", stderr: "" }));
+    execFile
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: "", stderr: "" }))
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: noVulnsResult, stderr: "" }));
 
     const result = await runTrivyScan("owner/repo", "token");
 
@@ -214,10 +203,9 @@ describe("runTrivyScan() — success path (mocked trivy output)", () => {
       }],
     });
 
-    exec
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: "", stderr: "" }))
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: weirdSeverity, stderr: "" }))
-      .mockImplementation((cmd, cb) => cb(null, { stdout: "", stderr: "" }));
+    execFile
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: "", stderr: "" }))
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: weirdSeverity, stderr: "" }));
 
     const result = await runTrivyScan("owner/repo", "token");
 
@@ -236,10 +224,9 @@ describe("runTrivyScan() — success path (mocked trivy output)", () => {
       }],
     });
 
-    exec
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: "", stderr: "" }))
-      .mockImplementationOnce((cmd, cb) => cb(null, { stdout: nullSeverity, stderr: "" }))
-      .mockImplementation((cmd, cb) => cb(null, { stdout: "", stderr: "" }));
+    execFile
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: "", stderr: "" }))
+      .mockImplementationOnce((cmd, args, opts, cb) => cb(null, { stdout: nullSeverity, stderr: "" }));
 
     const result = await runTrivyScan("owner/repo", "token");
 
@@ -247,4 +234,3 @@ describe("runTrivyScan() — success path (mocked trivy output)", () => {
     expect(result.summary.unknown).toBe(1);
   });
 });
-

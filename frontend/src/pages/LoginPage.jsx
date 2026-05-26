@@ -93,15 +93,15 @@ function LoginPage({ sessionError }) {
             </div>
           </div>
 
-          <div className="inline-flex items-center gap-2 bg-[#00BFFF]/10 border border-[#00BFFF]/20 text-[#00BFFF] text-xs font-semibold px-4 py-2 rounded-full uppercase tracking-widest">
-            <span className="w-1.5 h-1.5 bg-[#00BFFF] rounded-full animate-pulse" />
+          <div className="inline-flex items-center gap-2 bg-[#4F46E5]/10 border border-[#4F46E5]/20 text-[#4F46E5] text-xs font-semibold px-4 py-2 rounded-full uppercase tracking-widest">
+            <span className="w-1.5 h-1.5 bg-[#4F46E5] rounded-full animate-pulse" />
             Live Intelligence Platform
           </div>
 
           <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-none">
             <span className="text-white">Confidence for</span>
             <br />
-            <span style={{ background: "linear-gradient(90deg, #00BFFF, #FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+            <span style={{ background: "linear-gradient(90deg,#22D3EE,#3B82F6,#8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
               every merge.
             </span>
           </h1>
@@ -116,11 +116,8 @@ function LoginPage({ sessionError }) {
               id="github-login-btn"
               onClick={handleLoginWithGitHub}
               disabled={isLoading}
-              className="group relative flex items-center gap-3 font-bold text-sm px-8 py-4 rounded-2xl transition-all active:scale-95 disabled:opacity-60 text-white overflow-hidden"
-              style={{ background: "linear-gradient(135deg, #00BFFF 0%, #FF6A00 100%)", boxShadow: "0 0 30px rgba(0,191,255,0.3), 0 0 60px rgba(255,106,0,0.15)" }}
+              className="group relative flex items-center gap-3 font-bold text-sm px-8 py-4 rounded-2xl active:scale-95 disabled:opacity-60 text-white overflow-hidden premium-btn"
             >
-              {/* Hover shimmer overlay */}
-              <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: "linear-gradient(135deg, #00BFFF 0%, #FF6A00 100%)", filter: "brightness(1.2)" }} />
               <span className="relative flex items-center gap-3">
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -264,7 +261,7 @@ function LoginPage({ sessionError }) {
                   <button
                     type="submit"
                     disabled={!feedbackText.trim()}
-                    className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 text-white font-semibold text-sm px-6 py-2.5 rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-600/20"
+                    className="disabled:opacity-50 text-white font-semibold text-sm px-6 py-2.5 rounded-xl active:scale-95 premium-btn"
                   >
                     Submit Feedback
                   </button>

@@ -1,9 +1,11 @@
 import { startTransition, useDeferredValue, useEffect, useState } from "react";
 import { Search, LogOut, ShieldCheck, Loader2, AlertCircle, CheckCircle2, Clock, ScanLine, History, FileDown, Trash2 } from "lucide-react";
+
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { ApiError, apiRequest } from "../api";
 import AnalysisPanel from "../components/AnalysisPanel";
 import RepositoryCard from "../components/RepositoryCard";
+import CountUp from "../components/CountUp";
 import { DashboardProvider } from "../context/DashboardContext";
 import { useDashboard } from "../hooks/useDashboard";
 
@@ -31,7 +33,7 @@ function ScanProgressIndicator({ status }) {
         return (
           <div key={step.id} className={`flex items-center gap-3 text-xs transition-colors ${done ? "text-emerald-400" : active ? "text-white" : "text-slate-600"}`}>
             <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${done ? "bg-emerald-500/20" : active ? "" : "bg-white/5"}`}
-              style={active ? { background: "linear-gradient(135deg,#00BFFF,#FF6A00)", boxShadow: "0 0 8px rgba(0,191,255,0.4)" } : {}}>
+              style={active ? { background: "linear-gradient(135deg,#38BDF8,#2563EB)", boxShadow: "0 0 8px rgba(37,99,235,0.4)" } : {}}>
               {active ? <Loader2 className="w-3 h-3 animate-spin" /> : <Icon className="w-3 h-3" />}
             </div>
             <span className={active ? "font-semibold" : ""}>{step.label}</span>
@@ -192,7 +194,42 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
   }
 
   return (
-    <div className="flex h-screen bg-[#080b14] overflow-hidden">
+    <div className="flex h-screen surface-3 overflow-hidden relative">
+      {/* Immersive Ambient Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        {/* Animated Radial Gradients */}
+        <div className="absolute inset-0 animate-ambient-glow"
+          style={{
+            background: "radial-gradient(circle at top right, rgba(59,130,246,.18), transparent 30%), radial-gradient(circle at center, rgba(99,102,241,.12), transparent 40%)"
+          }}
+        />
+        {/* Faint Infrastructure Grid with Breathing */}
+        <div className="absolute inset-0 animate-grid-breathe"
+          style={{
+            backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+            backgroundSize: "40px 40px"
+          }}
+        />
+        {/* Signal Lines */}
+        <div className="absolute top-[30%] left-0 right-0 h-[1px] bg-white/[0.015] overflow-hidden">
+          <div className="w-1/3 h-full bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent animate-signal-flow-x" />
+        </div>
+        <div className="absolute top-[65%] left-0 right-0 h-[1px] bg-white/[0.015] overflow-hidden">
+          <div className="w-1/3 h-full bg-gradient-to-r from-transparent via-blue-500/20 to-transparent animate-signal-flow-x" style={{ animationDelay: '3s', animationDuration: '12s' }} />
+        </div>
+        <div className="absolute left-[25%] top-0 bottom-0 w-[1px] bg-white/[0.015] overflow-hidden">
+          <div className="h-1/3 w-full bg-gradient-to-b from-transparent via-indigo-500/20 to-transparent animate-signal-flow-y" style={{ animationDelay: '1s' }} />
+        </div>
+        <div className="absolute left-[75%] top-0 bottom-0 w-[1px] bg-white/[0.015] overflow-hidden">
+          <div className="h-1/3 w-full bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent animate-signal-flow-y" style={{ animationDelay: '5s', animationDuration: '15s' }} />
+        </div>
+        {/* Connection Nodes */}
+        <div className="absolute top-[30%] left-[25%] w-1 h-1 bg-cyan-500/30 rounded-full -translate-x-1/2 -translate-y-1/2 shadow-[0_0_12px_rgba(34,211,238,0.5)] animate-subtle-pulse" />
+        <div className="absolute top-[30%] left-[75%] w-1 h-1 bg-blue-500/30 rounded-full -translate-x-1/2 -translate-y-1/2 shadow-[0_0_12px_rgba(59,130,246,0.5)] animate-subtle-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-[65%] left-[25%] w-1 h-1 bg-indigo-500/30 rounded-full -translate-x-1/2 -translate-y-1/2 shadow-[0_0_12px_rgba(99,102,241,0.5)] animate-subtle-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[65%] left-[75%] w-1 h-1 bg-cyan-500/30 rounded-full -translate-x-1/2 -translate-y-1/2 shadow-[0_0_12px_rgba(34,211,238,0.5)] animate-subtle-pulse" style={{ animationDelay: '3s' }} />
+      </div>
+
       {/* ─── In-Platform Report Modal ─────────────────────────────────────── */}
       {selectedHistoryRecord && (() => {
         const r = selectedHistoryRecord;
@@ -210,14 +247,14 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
             onClick={() => setSelectedHistoryRecord(null)}
           >
             <div
-              className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#0d1117] border border-white/[0.08] rounded-3xl shadow-2xl"
+              className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#0d1117]/70 backdrop-blur-2xl border border-white/[0.08] rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
               onClick={e => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="sticky top-0 z-10 bg-[#0d1117]/95 backdrop-blur-sm border-b border-white/[0.06] px-6 py-4 flex items-center justify-between">
+              <div className="sticky top-0 z-10 bg-[#0d1117]/40 backdrop-blur-md border-b border-white/[0.06] px-6 py-4 flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-0.5">Scan Report</p>
-                  <h2 className="text-base font-black text-white">{r.repository?.split("/")[1] || r.repository}</h2>
+                  <p className="section-label mb-0.5">Scan Report</p>
+                  <h2 className="text-base heading-primary">{r.repository?.split("/")[1] || r.repository}</h2>
                   <p className="text-[11px] text-slate-500 font-mono mt-0.5">
                     {r.repository} · {r.branch || "main"} · {new Date(r.timestamp||r.receivedAt).toLocaleString()}
                   </p>
@@ -225,8 +262,7 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => downloadPDF(r)}
-                    className="flex items-center gap-1.5 text-xs font-bold text-white px-3 py-2 rounded-xl transition-all"
-                    style={{ background: "linear-gradient(135deg, #00BFFF 0%, #FF6A00 100%)", boxShadow: "0 0 12px rgba(0,191,255,0.25)" }}
+                    className="flex items-center gap-1.5 text-xs font-bold text-white px-3 py-2 rounded-xl premium-btn"
                   >
                     <FileDown className="w-3.5 h-3.5" />
                     Download PDF
@@ -246,16 +282,17 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                     { label: "Pipeline Status", value: r.overallStatus?.toUpperCase() || "N/A", colorClass: r.overallStatus === "success" ? "text-emerald-400" : "text-red-400" },
                     { label: "Total CVEs", value: (r.stages?.security?.critical||0)+(r.stages?.security?.high||0)+(r.stages?.security?.medium||0), colorClass: "text-orange-400" },
                   ].map(({ label, value, colorClass }) => (
-                    <div key={label} className="bg-white/[0.03] ring-1 ring-white/[0.06] rounded-2xl p-4 text-center">
-                      <div className={`text-3xl font-black ${colorClass}`}>{value}</div>
-                      <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">{label}</div>
+                    <div key={label} className="surface-2 rounded-2xl p-4 text-center">
+                      <div className={`text-3xl font-black ${colorClass}`}><CountUp value={value} /></div>
+                      <div className="section-label mt-1">{label}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Status Badge */}
                 <div className="flex items-center gap-3">
-                  <span className={`px-4 py-1.5 rounded-full text-xs font-black tracking-widest ring-1 ${statusBg}`}>
+                  <span className={`px-4 py-1.5 rounded-full text-xs font-black tracking-widest ring-1 flex items-center gap-2 ${statusBg}`}>
+                    <span className={`status-dot animate-status-pulse ${r.devpulseScore?.status === "SAFE" ? "bg-emerald-400 text-emerald-400" : r.devpulseScore?.status === "WARNING" ? "bg-amber-400 text-amber-400" : "bg-red-400 text-red-400"}`} />
                     {r.devpulseScore?.status || "N/A"}
                   </span>
                   <span className="text-xs text-slate-500">CVE breakdown:</span>
@@ -266,9 +303,9 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
 
                 {/* AI Pipeline Insights */}
                 {r.insights?.explanation && (
-                  <div className="rounded-2xl p-4" style={{ background: "rgba(0,191,255,0.05)", boxShadow: "inset 0 0 0 1px rgba(0,191,255,0.15)" }}>
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ background: "linear-gradient(90deg,#00BFFF,#FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>AI Pipeline Insights</p>
-                    <p className="text-sm text-slate-300 leading-relaxed">{r.insights.explanation}</p>
+                  <div className="rounded-2xl p-4" style={{ background: "rgba(37,99,235,0.05)", boxShadow: "inset 0 0 0 1px rgba(37,99,235,0.15)" }}>
+                    <p className="section-label mb-[18px]">AI Pipeline Insights</p>
+                    <p className="text-sm text-secondary max-w-[65ch] mb-[18px]">{r.insights.explanation}</p>
                   </div>
                 )}
 
@@ -280,8 +317,8 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                   const prob = aiData.failurePrediction?.probability;
                   const probColor = prob >= 70 ? "text-red-400" : prob >= 40 ? "text-amber-400" : "text-emerald-400";
                   return (
-                    <div className="rounded-2xl p-4 space-y-4" style={{ background: "rgba(0,191,255,0.04)", boxShadow: "inset 0 0 0 1px rgba(255,106,0,0.15)" }}>
-                      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ background: "linear-gradient(90deg,#00BFFF,#FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>AI Repository Analysis</p>
+                    <div className="rounded-2xl p-4 space-y-4" style={{ background: "rgba(37,99,235,0.04)", boxShadow: "inset 0 0 0 1px rgba(56,189,248,0.15)" }}>
+                      <p className="section-label">AI Repository Analysis</p>
 
                       {/* Decision + Probability */}
                       <div className="flex items-center gap-3">
@@ -307,10 +344,10 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                       {/* Suggestions */}
                       {aiData.suggestions?.length > 0 && (
                         <div className="space-y-2">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Remediation Steps</p>
+                          <p className="section-label">Remediation Steps</p>
                           {aiData.suggestions.map((s, si) => (
                             <div key={si} className="flex gap-2.5">
-                              <div className="w-5 h-5 shrink-0 rounded-md text-white flex items-center justify-center text-[10px] font-black" style={{ background: "linear-gradient(135deg,#00BFFF,#FF6A00)" }}>{si + 1}</div>
+                              <div className="w-5 h-5 shrink-0 rounded-md text-white flex items-center justify-center text-[10px] font-black" style={{ background: "linear-gradient(135deg,#38BDF8,#2563EB)" }}>{si + 1}</div>
                               <p className="text-xs text-slate-400 leading-relaxed">{s}</p>
                             </div>
                           ))}
@@ -321,8 +358,8 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                 })()}
 
                 {/* Pipeline Stages */}
-                <div className="bg-white/[0.03] ring-1 ring-white/[0.06] rounded-2xl p-5">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-4">Pipeline Stages</p>
+                <div className="surface-2 rounded-2xl p-6">
+                  <p className="section-label mb-4">Pipeline Stages</p>
                   <div className="space-y-2">
                     {[
                       { name: "Backend Tests",  status: r.stages?.backend?.tests },
@@ -332,7 +369,10 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                     ].map(({ name, status }) => (
                       <div key={name} className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0">
                         <span className="text-sm text-slate-400">{name}</span>
-                        <span className={`text-xs font-bold uppercase tracking-widest ${stgColor(status)}`}>{stgLabel(status)}</span>
+                        <span className={`text-xs font-bold uppercase tracking-widest flex items-center gap-2 ${stgColor(status)}`}>
+                          <span className={`status-dot animate-status-pulse ${status === "success" ? "bg-emerald-400 text-emerald-400" : status === "failure" ? "bg-red-400 text-red-400" : "bg-slate-500 text-slate-500"}`} />
+                          {stgLabel(status)}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -347,8 +387,9 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                     score: h.devpulseScore.score,
                   }));
                   return (
-                    <div className="bg-white/[0.03] ring-1 ring-white/[0.06] rounded-2xl p-5">
-                      <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ background: "linear-gradient(90deg,#00BFFF,#FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Score History</p>
+                    <div className="surface-2 rounded-2xl p-6 relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 animate-sweep pointer-events-none" />
+                      <p className="section-label mb-4">Score History</p>
                       <ResponsiveContainer width="100%" height={100}>
                         <BarChart data={chartData} margin={{ top: 4, right: 0, left: -32, bottom: 0 }}>
                           <XAxis dataKey="name" tick={{ fill: "#475569", fontSize: 10 }} axisLine={false} tickLine={false} />
@@ -356,7 +397,7 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                           <Tooltip
                             contentStyle={{ background: "#0f1421", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, fontSize: 12 }}
                             labelStyle={{ color: "#94a3b8" }}
-                            itemStyle={{ color: "#00BFFF" }}
+                            itemStyle={{ color: "#4F46E5" }}
                           />
                           <Bar dataKey="score" radius={[4, 4, 0, 0]}>
                             {chartData.map((entry, index) => (
@@ -370,8 +411,8 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                           <defs>
                             {chartData.map((_, index) => (
                               <linearGradient key={index} id={`scoreGrad${index}`} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#00BFFF" />
-                                <stop offset="100%" stopColor="#FF6A00" />
+                                <stop offset="0%" stopColor="#4F46E5" />
+                                <stop offset="100%" stopColor="#06B6D4" />
                               </linearGradient>
                             ))}
                           </defs>
@@ -383,8 +424,8 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
 
                 {/* Top Vulnerabilities */}
                 {vulns.length > 0 && (
-                  <div className="bg-white/[0.03] ring-1 ring-white/[0.06] rounded-2xl p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-4">
+                  <div className="surface-2 rounded-2xl p-6">
+                    <p className="section-label mb-4">
                       Top Vulnerabilities ({vulns.length})
                     </p>
                     <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
@@ -424,13 +465,13 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
       </div>
 
       {/* Sidebar */}
-      <aside className="relative z-10 w-[280px] shrink-0 flex flex-col border-r border-white/[0.06] bg-black/20 backdrop-blur-sm">
+      <aside className="relative z-10 w-[280px] shrink-0 flex flex-col border-r border-slate-400/[0.04] backdrop-blur-3xl shadow-[4px_0_24px_rgba(0,0,0,0.3)]" style={{ background: "linear-gradient(180deg, rgba(2,6,23,.4), rgba(2,6,23,.6))" }}>
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 py-5 border-b border-white/[0.06]">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
             <img src="/Logo.png" alt="DevPulse" className="w-full h-full object-cover" />
           </div>
-          <span className="text-base font-black tracking-tight" style={{ background: "linear-gradient(90deg,#00BFFF,#FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>DevPulse</span>
+          <span className="text-base font-black tracking-tight" style={{ background: "linear-gradient(90deg,#22D3EE,#3B82F6,#8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>DevPulse</span>
         </div>
 
         {/* Search */}
@@ -438,7 +479,7 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
           <div className="relative group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-600 group-focus-within:text-blue-400 transition-colors" />
             <input
-              className="w-full bg-white/[0.04] ring-1 ring-white/[0.08] focus:ring-blue-500/40 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-300 placeholder:text-slate-600 outline-none transition-all"
+              className="w-full bg-white/[0.04] ring-1 ring-white/[0.04] focus:ring-blue-500/40 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-300 placeholder:text-slate-600 outline-none transition-all"
               onChange={e => startTransition(() => setSearchTerm(e.target.value))}
               placeholder="Search repos..."
               value={searchTerm}
@@ -460,7 +501,7 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                   ? "text-white border-b-2"
                   : "text-slate-600 hover:text-slate-400"
               }`}
-              style={sidebarTab === tab.id ? { borderImage: "linear-gradient(90deg,#00BFFF,#FF6A00) 1", color: "#00BFFF" } : {}}
+              style={sidebarTab === tab.id ? { color: "#38BDF8", boxShadow: "0 0 0 1px rgba(56,189,248,.4), 0 0 20px rgba(56,189,248,.15)" } : {}}
             >
               {tab.icon && <tab.icon className="w-3 h-3" aria-hidden="true" />}
               {tab.label}
@@ -471,7 +512,7 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
 
         {/* Tab: Repositories */}
         {sidebarTab === "repos" && (
-          <div className="flex-1 overflow-y-auto px-2 pb-4 space-y-1">
+          <div className="flex-1 overflow-y-auto px-2 pb-4 flex flex-col gap-[18px]">
             {repoState.status === "loading" && (
               <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-600">
                 <Loader2 className="w-6 h-6 animate-spin" />
@@ -513,11 +554,11 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
             <div className="flex-1 overflow-y-auto flex flex-col pb-4">
               {/* Header row */}
               <div className="px-4 py-2 flex items-center justify-between shrink-0">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">All Repositories</span>
+                <span className="section-label">All Repositories</span>
                 <button
                   onClick={() => fetchSidebarHistory()}
                   className="text-[10px] font-bold uppercase tracking-widest transition-colors"
-                  style={{ color: "#00BFFF" }}
+                  style={{ color: "#4F46E5" }}
                 >Refresh</button>
               </div>
 
@@ -529,7 +570,7 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                     value={historySearch}
                     onChange={e => setHistorySearch(e.target.value)}
                     placeholder="Search reports..."
-                    className="w-full bg-white/[0.03] ring-1 ring-white/[0.08] focus:ring-blue-500/40 rounded-lg pl-7 pr-3 py-1.5 text-[11px] text-slate-300 placeholder:text-slate-600 outline-none transition-all"
+                    className="w-full bg-white/[0.03] ring-1 ring-white/[0.04] focus:ring-blue-500/40 rounded-lg pl-7 pr-3 py-1.5 text-[11px] text-slate-300 placeholder:text-slate-600 outline-none transition-all"
                   />
                 </div>
               </div>
@@ -586,8 +627,22 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                   </p>
                 </div>
               ) : (
-                <div className="px-2 space-y-1.5 overflow-y-auto flex-1">
-                  <p className="text-[9px] text-slate-700 uppercase tracking-widest font-bold px-2 mb-1">Auto-deleted after 7 days · {filtered.length} records</p>
+                <div className="px-2 space-y-1.5 overflow-y-auto flex-1 pb-4">
+                  <p className="section-label px-2 mb-1">Auto-deleted after 7 days · {filtered.length} records</p>
+                  
+                  {filtered.length === 0 && (
+                    <div className="mt-4 mx-2 flex flex-col items-center justify-center text-center p-6 border border-white/5 rounded-2xl bg-white/[0.01] relative overflow-hidden">
+                      <div className="absolute inset-0 opacity-20 animate-slow-breathe pointer-events-none" style={{ backgroundImage: "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0ibm9uZSI+PC9yZWN0Pgo8cGF0aCBkPSJNMjAgMEwxIDBMMCAwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMTQ4LDE2MywxODQsMC4wNSkiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8cGF0aCBkPSJNMCAyMEwwIDFMMSAxIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMTQ4LDE2MywxODQsMC4wNSkiIHN0cm9rZS13aWR0aD0iMSI+PC9wYXRoPgo8L3N2Zz4=')" }} />
+                      
+                      <div className="w-10 h-10 rounded-full bg-[#0f1421] border border-white/5 flex items-center justify-center mb-3 relative overflow-hidden shadow-[0_0_20px_rgba(37,99,235,0.05)] z-10">
+                        <Activity className="w-4 h-4 text-slate-500 opacity-50" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 to-transparent animate-sweep pointer-events-none" />
+                      </div>
+                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 relative z-10">No pipeline records</h4>
+                      <p className="text-[10px] text-slate-500 font-mono relative z-10">System monitoring active but no history detected.</p>
+                    </div>
+                  )}
+
                   {filtered.map((record, i) => {
                     const sc = record.devpulseScore?.score ?? "–";
                     const scColor = sc >= 75 ? "text-emerald-400" : sc >= 50 ? "text-amber-400" : "text-red-400";
@@ -599,8 +654,8 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                     return (
                       <div
                         key={record.id || i}
-                      className={`relative bg-white/[0.02] ring-1 rounded-xl p-3 transition-all ${isSelected ? "ring-white/20 bg-white/[0.04]" : "ring-white/[0.06] hover:bg-white/[0.04]"}`}
-                      style={isSelected ? { boxShadow: "inset 0 0 0 1px rgba(0,191,255,0.3), 0 0 12px rgba(0,191,255,0.1)" } : {}}
+                      className={`relative bg-white/[0.01] ring-1 rounded-xl p-3 transition-all ${isSelected ? "ring-white/10 bg-white/[0.03]" : "ring-white/[0.03] hover:bg-white/[0.02]"}`}
+                      style={isSelected ? { boxShadow: "inset 0 0 0 1px rgba(37,99,235,0.3), 0 0 12px rgba(37,99,235,0.1)" } : {}}
                       >
                         {/* Select checkbox */}
                         <input
@@ -618,7 +673,7 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                         >
                           {/* Repo name + status */}
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-[11px] font-bold text-slate-300 truncate max-w-[120px]" title={record.repository}>
+                            <span className="text-[11px] font-bold text-slate-400 truncate max-w-[120px]" title={record.repository}>
                               {record.repository?.split("/")[1] || record.repository}
                             </span>
                             <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded tracking-widest ${statusBg}`}>
@@ -633,7 +688,7 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                           </div>
                           {/* Score + CVEs */}
                           <div className="flex items-center gap-2 mb-2">
-                            <span className={`text-lg font-black ${scColor}`}>{sc}</span>
+                            <span className={`text-lg font-black ${scColor}`}><CountUp value={sc} /></span>
                             <div className="text-[10px] text-slate-600">
                               <div>{cves} CVEs · {record.branch || "main"}</div>
                             </div>
@@ -644,8 +699,7 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
                         <div className="flex items-center gap-1.5 pl-5">
                           <button
                             onClick={e => { e.stopPropagation(); downloadPDF(record); }}
-                            className="flex items-center gap-1 text-[10px] font-bold text-white px-2 py-1 rounded-lg transition-all"
-                            style={{ background: "linear-gradient(135deg, #00BFFF 0%, #FF6A00 100%)" }}
+                            className="flex items-center gap-1 text-[10px] font-bold text-white px-2 py-1 rounded-lg premium-btn"
                           >
                             <FileDown className="w-3 h-3" /> PDF
                           </button>
@@ -670,23 +724,23 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
         <div className="border-t border-white/[0.06] bg-white/[0.01] p-4 group relative">
           {/* Hover Card */}
           <div className="absolute bottom-full left-0 w-full p-4 mb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none translate-y-2 group-hover:translate-y-0 z-50">
-            <div className="bg-slate-900 border border-white/10 rounded-xl p-4 shadow-2xl">
-              <div className="grid grid-cols-4 gap-2 text-center divide-x divide-white/10">
+            <div className="bg-slate-900/60 backdrop-blur-2xl border border-white/10 rounded-xl p-4 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+              <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-center">
                 <div>
-                  <div className="text-lg font-black text-emerald-400">{user.publicRepos || 0}</div>
-                  <div className="text-[9px] uppercase tracking-widest text-slate-500 font-bold mt-1">Public</div>
+                  <div className="text-lg font-black text-emerald-400"><CountUp value={user.publicRepos || 0} /></div>
+                  <div className="section-label mt-1">Public</div>
                 </div>
                 <div>
-                  <div className="text-lg font-black text-purple-400">{user.privateRepos || 0}</div>
-                  <div className="text-[9px] uppercase tracking-widest text-slate-500 font-bold mt-1">Private</div>
+                  <div className="text-lg font-black text-purple-400"><CountUp value={user.privateRepos || 0} /></div>
+                  <div className="section-label mt-1">Private</div>
                 </div>
                 <div>
-                  <div className="text-lg font-black text-white">{user.followers || 0}</div>
-                  <div className="text-[9px] uppercase tracking-widest text-slate-500 font-bold mt-1">Followers</div>
+                  <div className="text-lg font-black text-primary"><CountUp value={user.followers || 0} /></div>
+                  <div className="section-label mt-1">Followers</div>
                 </div>
                 <div>
-                  <div className="text-lg font-black text-white">{user.following || 0}</div>
-                  <div className="text-[9px] uppercase tracking-widest text-slate-500 font-bold mt-1">Following</div>
+                  <div className="text-lg font-black text-primary"><CountUp value={user.following || 0} /></div>
+                  <div className="section-label mt-1">Following</div>
                 </div>
               </div>
             </div>
@@ -694,20 +748,20 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
 
           <a href={user.profileUrl || "#"} target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:bg-white/[0.04] p-2 -m-2 rounded-xl transition-colors">
             {user.avatarUrl ? (
-              <div className="rounded-full shrink-0 p-[2px]" style={{ background: "linear-gradient(135deg,#00BFFF,#FF6A00)", boxShadow: "0 0 10px rgba(0,191,255,0.3)" }}>
+              <div className="rounded-full shrink-0 p-[2px]" style={{ background: "linear-gradient(135deg,#38BDF8,#2563EB)", boxShadow: "0 0 10px rgba(37,99,235,0.3)" }}>
                 <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
               </div>
             ) : (
               <div className="w-[44px] h-[44px] rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white"
-                style={{ background: "linear-gradient(135deg,#00BFFF,#FF6A00)", boxShadow: "0 0 10px rgba(0,191,255,0.3)" }}>
+                style={{ background: "linear-gradient(135deg,#38BDF8,#2563EB)", boxShadow: "0 0 10px rgba(37,99,235,0.3)" }}>
                 {getInitials(user)}
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-base font-black truncate w-fit max-w-full" style={{ background: "linear-gradient(90deg,#00BFFF,#FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{user.username}</p>
+              <p className="text-base font-black truncate w-fit max-w-full" style={{ background: "linear-gradient(90deg,#22D3EE,#3B82F6,#8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{user.username}</p>
               <div className="flex items-center gap-1.5 text-[10px] font-bold mt-1 w-fit px-2 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.03)", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)" }}>
-                <div className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: "linear-gradient(135deg,#00BFFF,#FF6A00)" }}></div>
-                <span style={{ background: "linear-gradient(90deg,#00BFFF,#FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Connected via GitHub OAuth</span>
+                <div className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: "linear-gradient(135deg,#38BDF8,#2563EB)" }}></div>
+                <span style={{ background: "linear-gradient(90deg,#22D3EE,#3B82F6,#8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Connected via GitHub OAuth</span>
               </div>
             </div>
           </a>
@@ -716,23 +770,35 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
 
       {/* Main */}
       <main className="flex-1 overflow-y-auto relative z-10">
-        <div className="max-w-5xl mx-auto p-8">
+        <div className="w-full max-w-[1800px] p-8 lg:px-12">
           {/* Dashboard header */}
           <div className="mb-8 flex items-start justify-between">
             <div>
-              <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ background: "linear-gradient(90deg,#00BFFF,#FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>DevPulse Dashboard</p>
-              <h1 className="text-2xl font-black text-white">Welcome back, <span style={{ background: "linear-gradient(90deg,#00BFFF,#FF6A00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{user.displayName || user.username}</span> 👋</h1>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-subtle-pulse absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-500"></span>
+                </span>
+                <p className="section-label">DevPulse Dashboard</p>
+              </div>
+              <h1 className="text-2xl heading-primary">Welcome back, <span className="heading-primary">{user.displayName || user.username}</span> 👋</h1>
             </div>
-            <div className="flex items-center gap-5">
-              <div className="text-right">
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Session Info</p>
-                <p className="text-xs text-slate-400">Synced {repoState.data?.length ?? 0} repos at {new Date().toLocaleTimeString([], {hour: "2-digit", minute:"2-digit"})}</p>
-
+            <div className="flex items-center gap-6">
+              <div className="text-right flex items-center gap-3">
+                <div>
+                  <p className="section-label flex items-center justify-end gap-1.5">
+                    <span className="relative flex h-1.5 w-1.5 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                    Live Sync
+                  </p>
+                  <p className="text-xs text-slate-400">Synced {repoState.data?.length ?? 0} repos at {new Date().toLocaleTimeString([], {hour: "2-digit", minute:"2-digit"})}</p>
+                </div>
               </div>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 font-semibold text-sm px-4 py-2.5 rounded-xl transition-all active:scale-95 text-white"
-                style={{ background: "linear-gradient(135deg, #00BFFF 0%, #FF6A00 100%)", boxShadow: "0 0 16px rgba(0,191,255,0.25)" }}
+                className="flex items-center gap-2 font-semibold text-sm px-4 py-2.5 rounded-xl active:scale-95 text-white premium-btn"
                 title="Log out"
               >
                 <LogOut className="w-4 h-4" />
@@ -743,8 +809,11 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
 
           {/* Scan progress stepper — shows for all AI + pipeline analyses */}
           {analysisState.status === "loading" && analysisState.targetRepositoryId === selectedRepo?.id && analysisState.jobStatus && (
-            <div className="mb-6 bg-white/[0.02] ring-1 ring-white/[0.08] rounded-2xl p-5">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Analysis in progress</p>
+            <div className="mb-6 bg-white/[0.02] ring-1 ring-white/[0.04] rounded-2xl p-6">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="status-dot animate-status-pulse bg-cyan-400 text-cyan-400" />
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Scanning in progress</p>
+              </div>
               <ScanProgressIndicator status={analysisState.jobStatus} />
             </div>
           )}

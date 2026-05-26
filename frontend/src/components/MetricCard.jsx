@@ -1,16 +1,17 @@
 import { Info } from "lucide-react";
+import CountUp from "./CountUp";
 
 const toneMap = {
-  danger:  { ring: "ring-red-500/30 bg-red-500/[0.02]",    text: "text-red-400",    glow: "bg-red-500/20", shadow: "shadow-[inset_0_1px_0_rgba(239,68,68,0.2)]" },
-  warning: { ring: "ring-amber-500/30 bg-amber-500/[0.02]", text: "text-amber-400",  glow: "bg-amber-500/20", shadow: "shadow-[inset_0_1px_0_rgba(245,158,11,0.2)]" },
-  success: { ring: "ring-emerald-500/30 bg-emerald-500/[0.02]", text: "text-emerald-400", glow: "bg-emerald-500/20", shadow: "shadow-[inset_0_1px_0_rgba(16,185,129,0.2)]" },
-  neutral: { ring: "ring-white/10 bg-white/[0.02]",   text: "text-slate-300",  glow: "bg-blue-500/10", shadow: "shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]" },
+  danger:  { borderColor: "rgba(239,68,68,0.1)", text: "text-red-500", glow: "bg-red-500/15" },
+  warning: { borderColor: "rgba(245,158,11,0.1)", text: "text-amber-500", glow: "bg-amber-500/15" },
+  primary: { borderColor: "rgba(34,211,238,0.1)", text: "text-[#22D3EE]", glow: "bg-[#22D3EE]/15" },
+  neutral: { borderColor: "rgba(148,163,184,0.05)", text: "text-slate-300", glow: "bg-blue-500/10" },
 };
 
-function MetricCard({ eyebrow, value, detail, tone = "neutral" }) {
+function MetricCard({ eyebrow, value, detail, tone = "neutral", isSpinning = false, subtext }) {
   const t = toneMap[tone] || toneMap.neutral;
   return (
-    <div className={`relative overflow-hidden rounded-2xl ring-1 p-6 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] ${t.ring} ${t.shadow}`}>
+    <div className="relative overflow-hidden rounded-2xl p-6 premium-transition hover:-translate-y-0.5 surface-1">
       <div className="relative z-10 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">{eyebrow}</span>
@@ -22,13 +23,16 @@ function MetricCard({ eyebrow, value, detail, tone = "neutral" }) {
           </div>
         </div>
         <div className={`text-4xl font-black tracking-tight ${t.text}`}>
-          {value}
+          <CountUp value={value} isSpinning={isSpinning} />
           {typeof value === "number" && eyebrow.toLowerCase().includes("risk") && (
             <span className="text-sm font-normal text-slate-600 ml-1">/ 100</span>
           )}
         </div>
+        {subtext && (
+          <div className="text-[10px] text-slate-500/80 font-mono pt-1">{subtext}</div>
+        )}
       </div>
-      <div className={`absolute -right-6 -bottom-6 w-28 h-28 rounded-full blur-3xl opacity-30 ${t.glow}`} />
+      <div className={`absolute -right-6 -bottom-6 w-28 h-28 rounded-full blur-3xl opacity-15 ${t.glow}`} />
     </div>
   );
 }

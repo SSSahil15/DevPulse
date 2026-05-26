@@ -17,7 +17,7 @@ Yes! DevPulse is fully open-source and designed to run easily using lightweight 
 ## 2. Security & Data Privacy
 
 ### Does DevPulse store my GitHub access tokens in plain text?
-**No.** All user and organization access tokens are encrypted with `AES-256-CBC` at the storage layer prior to writing to PostgreSQL. Decryption occurs only at the service layer, isolated from direct database queries.
+**No.** All user and organization access tokens are encrypted with `AES-256-GCM` at the storage layer prior to writing to PostgreSQL. Decryption occurs only at the service layer, isolated from direct database queries.
 
 ### Will DevPulse ever push code or write to my repository?
 **Never.** DevPulse requires read-only scopes (`repo`, `read:user`) to clone, scan dependencies, and retrieve metadata. It never modifies, creates, or writes back commits to your repositories.
@@ -37,4 +37,4 @@ When you click **Trigger Simulation**, DevPulse automatically executes a cache e
 ## 4. API & Customization
 
 ### Can I share reports with stakeholders who don't have GitHub accounts?
-**Yes.** Use the **Share Report** feature to generate a secure, tokenized public report snapshot (`dp_rpt_...`). Anyone with the link can view the read-only dashboard without signing in. These snapshots automatically expire after 30 days.
+**Yes.** Use the **Share Report** feature to generate a secure, tokenized public report snapshot (`dp_rpt_...`). Anyone with the link can view the read-only dashboard without signing in. These snapshots automatically expire after 7 days.

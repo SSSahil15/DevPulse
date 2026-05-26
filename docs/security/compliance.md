@@ -8,7 +8,7 @@ DevPulse is aligned with modern software security standards, ensuring that your 
 
 ### OWASP Top 10
 - **A01:2021-Broken Access Control**: Enforced through secure, stateless JWT middleware validating active user sessions.
-- **A02:2021-Cryptographic Failures**: Symmetric encryption using AES-256-CBC blocks direct access to stored developer tokens.
+- **A02:2021-Cryptographic Failures**: Symmetric authenticated encryption using AES-256-GCM blocks direct access to stored developer tokens.
 - **A03:2021-Injection**: Raw SQL statements are parameterized to completely prevent SQL injection vulnerabilities in PostgreSQL.
 
 ### SOC 2 & ISO 27001 Preparedness

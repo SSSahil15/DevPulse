@@ -8,7 +8,7 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Native dependencies such as better-sqlite3 need build tools during npm ci.
+# Native dependencies may need build tools during npm ci.
 RUN apk add --no-cache python3 make g++
 
 # Copy dependency manifests first (cache layer)
@@ -55,7 +55,7 @@ COPY --from=builder --chown=devpulse:devpulse /app/node_modules ./node_modules
 COPY --from=builder --chown=devpulse:devpulse /app/src ./src
 COPY --from=builder --chown=devpulse:devpulse /app/package.json ./
 
-# Create writable runtime directories for SQLite, Trivy cache, scan clones, and logs.
+# Create writable runtime directories for Trivy cache, scan clones, and logs.
 RUN mkdir -p /app/.data /app/.temp_scans /app/logs /home/devpulse/.cache && \
   chown -R devpulse:devpulse /app/.data /app/.temp_scans /app/logs /home/devpulse/.cache
 

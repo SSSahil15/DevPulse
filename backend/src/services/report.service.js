@@ -9,7 +9,7 @@ function generateShareToken() {
 }
 
 /**
- * Create a shareable report snapshot (persisted to SQLite).
+ * Create a shareable report snapshot (persisted to PostgreSQL).
  */
 async function createReport({ repository, repoMeta, devpulseScore, stages, insights, createdBy }) {
   const token = generateShareToken();

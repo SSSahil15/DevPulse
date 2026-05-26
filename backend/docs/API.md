@@ -21,10 +21,10 @@ curl -X GET http://localhost:4000/auth/me \
 
 ## Key Endpoints
 1. **User Info**: `GET /auth/me`
-2. **Repositories**: `GET /api/repos`
-3. **Analyze**: `POST /api/repos/analyze`
+2. **Repositories**: `GET /repos`
+3. **Analyze**: `POST /analyze`
 4. **Historical Scores**: `GET /api/pipeline/score/:repoFullName/history`
-5. **AI Chat**: `POST /api/ai/ask`
+5. **AI Chat**: `POST /api/ai/chat`
 
 ## Error Handling
 All APIs use standard HTTP status codes. Errors will generally return a JSON payload in this format:

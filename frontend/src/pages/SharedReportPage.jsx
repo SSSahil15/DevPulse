@@ -154,7 +154,7 @@ function SharedReportPage() {
           </div>
 
           {/* Repository Info */}
-          <div className="bg-white/[0.03] ring-1 ring-white/10 rounded-2xl p-7 mb-6">
+          <div className="glass-card rounded-2xl p-7 mb-6">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">Repository</p>
@@ -191,7 +191,7 @@ function SharedReportPage() {
           </div>
 
           {/* Score + Risk Category */}
-          <div className="bg-white/[0.03] ring-1 ring-white/10 rounded-2xl p-7 mb-6">
+          <div className="glass-card rounded-2xl p-7 mb-6">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-5">DevPulse Score</p>
             <div className="flex items-center gap-8">
               {/* Big score number */}
@@ -231,7 +231,7 @@ function SharedReportPage() {
 
           {/* Factor Breakdown */}
           {score?.factors && (
-            <div className="bg-white/[0.03] ring-1 ring-white/10 rounded-2xl p-7 mb-6">
+            <div className="glass-card rounded-2xl p-7 mb-6">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-5">Score Factor Breakdown</p>
               <div className="grid grid-cols-2 gap-4">
                 {Object.entries(score.factors).map(([key, factor]) => {
@@ -272,7 +272,7 @@ function SharedReportPage() {
 
           {/* Vulnerability Summary */}
           {report.stages?.security && (
-            <div className="bg-white/[0.03] ring-1 ring-white/10 rounded-2xl p-7 mb-6">
+            <div className="glass-card rounded-2xl p-7 mb-6">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-5">Vulnerability Summary</p>
               <div className="grid grid-cols-4 gap-3">
                 {[
@@ -319,7 +319,7 @@ function SharedReportPage() {
 
           {/* AI Insights */}
           {report.insights && (
-            <div className="bg-white/[0.03] ring-1 ring-white/10 rounded-2xl p-7 mb-6">
+            <div className="glass-card rounded-2xl p-7 mb-6">
               <div className="flex items-center gap-2 mb-5">
                 <Lightbulb className="w-4 h-4 text-amber-400" />
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">AI Insights</p>
