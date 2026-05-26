@@ -469,7 +469,7 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 py-5 border-b border-white/[0.06]">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
-            <img src="/Logo.png" alt="DevPulse" className="w-full h-full object-cover" />
+            <img src="/Logo.png" alt="DevPulse" className="w-full h-full object-cover" width="40" height="40" loading="eager" />
           </div>
           <span className="text-base font-black tracking-tight" style={{ background: "linear-gradient(90deg,#22D3EE,#3B82F6,#8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>DevPulse</span>
         </div>

@@ -167,9 +167,11 @@ jobs:
         working-directory: ai
         run: |
           set +e
-          pip-audit --format json \
+          pip-audit --config ${{ github.workspace }}/.pip-audit.toml \
+            --format json \
             -o ${{ github.workspace }}/${{ env.REPORTS_DIR }}/pip/ai-audit.json
-          pip-audit --desc on 2>&1 \
+          pip-audit --config ${{ github.workspace }}/.pip-audit.toml \
+            --desc on 2>&1 \
             | tee ${{ github.workspace }}/${{ env.REPORTS_DIR }}/pip/ai-audit.txt
           echo "exit=$?" >> $GITHUB_OUTPUT
 

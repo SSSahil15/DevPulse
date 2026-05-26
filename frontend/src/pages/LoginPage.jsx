@@ -63,7 +63,7 @@ function LoginPage({ sessionError }) {
       <nav className="relative z-10 flex items-center justify-between px-8 py-5 border-b border-white/5">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden shrink-0">
-            <img src="/Logo.png" alt="DevPulse" className="w-full h-full object-cover" />
+            <img src="/Logo.png" alt="DevPulse" className="w-full h-full object-cover" width="48" height="48" loading="eager" />
           </div>
           <span className="text-xl font-black tracking-tight text-white">DevPulse</span>
         </div>
@@ -89,7 +89,15 @@ function LoginPage({ sessionError }) {
           {/* Hero Logo */}
           <div className="flex flex-col items-center gap-4">
             <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl flex items-center justify-center overflow-hidden shrink-0 shadow-2xl ring-2 ring-white/10">
-              <img src="/Logo.png" alt="DevPulse" className="w-full h-full object-cover" />
+              <img
+                src="/Logo.png"
+                alt="DevPulse"
+                className="w-full h-full object-cover"
+                width="128"
+                height="128"
+                fetchpriority="high"
+                loading="eager"
+              />
             </div>
           </div>
 
@@ -161,7 +169,9 @@ function LoginPage({ sessionError }) {
 
         {/* Our Services */}
         <div id="services" className="relative z-10 mt-20 w-full max-w-4xl mx-auto scroll-mt-24">
-          <p className="text-center text-xs text-slate-600 uppercase tracking-widest mb-8 font-semibold">Our Services</p>
+          {/* h2 provides correct heading hierarchy: h1 → h2 → h3 */}
+          <h2 className="sr-only">Our Services</h2>
+          <p aria-hidden="true" className="text-center text-xs text-slate-600 uppercase tracking-widest mb-8 font-semibold">Our Services</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {FEATURES.map(({ icon: Icon, title, desc }) => (
               <div key={title} className="bg-white/[0.03] border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors">
@@ -179,7 +189,7 @@ function LoginPage({ sessionError }) {
         <div className="relative z-10 mt-16 mb-10 w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
           {/* About Us */}
           <div id="about" className="bg-white/[0.02] border border-white/5 rounded-2xl p-8 hover:bg-white/[0.03] transition-colors scroll-mt-24">
-            <h3 className="font-bold text-lg mb-3 text-slate-200">About Us</h3>
+            <h2 className="font-bold text-lg mb-3 text-slate-200">About Us</h2>
             <p className="text-sm text-slate-400 leading-relaxed">
               DevPulse was engineered to solve the disconnect between CI/CD pipelines and security scanning. We believe developers deserve real-time, actionable intelligence directly inside their dashboard, turning noisy risk into a clear operational signal.
             </p>
@@ -190,7 +200,7 @@ function LoginPage({ sessionError }) {
             {/* Glow effect */}
             <div className="absolute -inset-2 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-            <h3 className="relative z-10 font-bold text-lg mb-6 text-slate-200">Connect with the Creator</h3>
+            <h2 className="relative z-10 font-bold text-lg mb-6 text-slate-200">Connect with the Creator</h2>
             
             <div className="relative z-10 flex flex-col gap-4">
               {/* Email Card */}
@@ -237,7 +247,7 @@ function LoginPage({ sessionError }) {
                 <MessageSquare className="w-5 h-5 text-blue-400" />
               </div>
               <div>
-                <h3 className="font-bold text-lg text-slate-200">Send Feedback</h3>
+                <h2 className="font-bold text-lg text-slate-200">Send Feedback</h2>
                 <p className="text-xs text-slate-500">We'd love to hear your thoughts on DevPulse</p>
               </div>
             </div>
@@ -245,7 +255,7 @@ function LoginPage({ sessionError }) {
             {isFeedbackSent ? (
               <div className="flex flex-col items-center justify-center py-8 text-center animate-in fade-in zoom-in duration-300">
                 <CheckCircle2 className="w-12 h-12 text-emerald-400 mb-4" />
-                <h4 className="text-lg font-bold text-slate-200 mb-2">Thank you!</h4>
+                <h3 className="text-lg font-bold text-slate-200 mb-2">Thank you!</h3>
                 <p className="text-sm text-slate-400">Your feedback has been received. We appreciate your input.</p>
               </div>
             ) : (

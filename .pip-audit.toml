@@ -5,10 +5,15 @@
 # ignoring specific vulnerabilities (false positives or accepted risks).
 #
 # IMPORTANT: Every ignored vulnerability MUST have a documented reason.
-# Remove this example block and add real exceptions as needed.
 
-# [ignore-vulns]
-# EXAMPLE IGNORE BLOCK (uncomment and customize):
-# [[ignore-vulns]]
-# id = "GHSA-xxxx-yyyy-zzzz"
-# reason = "This vulnerability affects feature X which is not used in our codebase. Reviewed on 2026-01-01 by [name]. Review due: 2026-04-01."
+# ── Accepted Risk: Starlette 0.x — No Fix Available ──────────────────────────
+# PYSEC-2026-161 affects starlette <1.0.1. However, the patched version
+# (starlette>=1.0.1) is incompatible with current FastAPI (0.x series) which
+# pins starlette<1.0 in its own dependency tree. FastAPI 1.x does not exist yet.
+# There is no actionable fix in the 0.x branch.
+# Mitigations in place: starlette is an internal ASGI framework not exposed to
+# untrusted user input paths. The AI service only processes trusted CI webhook data.
+# Review due: 2026-09-01 — upgrade when FastAPI 1.x is released and stable.
+[[ignore-vulns]]
+id = "PYSEC-2026-161"
+reason = "No fix available in starlette 0.x branch. starlette>=1.0.1 is incompatible with FastAPI 0.x which pins starlette<1.0. The AI service is not exposed to untrusted external input. Review due 2026-09-01 when FastAPI 1.x ships."

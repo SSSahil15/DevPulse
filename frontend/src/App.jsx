@@ -16,7 +16,7 @@ function LoadingScreen() {
   return (
     <div className="min-h-screen bg-[#080b14] flex flex-col items-center justify-center gap-6">
         <div className="animate-pulse w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden shrink-0">
-          <img src="/Logo.png" alt="DevPulse" className="w-full h-full object-cover" />
+          <img src="/Logo.png" alt="DevPulse" className="w-full h-full object-cover" width="64" height="64" loading="eager" />
         </div>
       <div className="flex items-center gap-2 text-slate-400 text-sm">
         <Loader2 className="w-4 h-4 animate-spin" />
