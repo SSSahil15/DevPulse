@@ -135,6 +135,86 @@ const COPILOT_MESSAGES = [
   "Generating fix... PR #142 created. Awaiting approval."
 ];
 
+const WaveChart = () => (
+  <>
+    <style>{`
+      @keyframes flow {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+      .animate-flow {
+        animation: flow 3s linear infinite;
+      }
+    `}</style>
+    <div className="absolute inset-0 w-[200%] h-full flex animate-flow opacity-60">
+      {[1, 2].map((i) => (
+        <svg key={i} className="w-1/2 h-full transition-all duration-700" preserveAspectRatio="none" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="gradient-red" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="rgba(248,113,113,0.2)" />
+              <stop offset="100%" stopColor="rgba(248,113,113,0)" />
+            </linearGradient>
+            <linearGradient id="gradient-blue" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="rgba(59,130,246,0.2)" />
+              <stop offset="100%" stopColor="rgba(59,130,246,0)" />
+            </linearGradient>
+          </defs>
+          <path d="M0,100 L0,60 Q25,30 50,60 T100,60 L100,100 Z" fill="url(#gradient-red)" />
+          <path d="M0,60 Q25,30 50,60 T100,60" fill="none" stroke="#f87171" strokeWidth="1.5" />
+          <path d="M0,100 L0,40 Q25,80 50,40 T100,40 L100,100 Z" fill="url(#gradient-blue)" />
+          <path d="M0,40 Q25,80 50,40 T100,40" fill="none" stroke="#3b82f6" strokeWidth="1.5" />
+        </svg>
+      ))}
+    </div>
+  </>
+);
+
+const BarChart = () => (
+  <div className="absolute inset-0 flex items-end justify-between px-2 opacity-80 pt-8 pb-2">
+    {[40, 70, 45, 90, 65, 80, 30, 55, 85, 50, 75, 40, 95, 60].map((h, i) => (
+      <div key={i} className="w-3 bg-emerald-500/10 rounded-t-sm relative group overflow-hidden" style={{ height: `${h}%` }}>
+        <div className="absolute bottom-0 left-0 w-full bg-emerald-400/40 rounded-t-sm animate-pulse" style={{ height: `${h * 0.7}%`, animationDelay: `${i * 0.1}s` }} />
+      </div>
+    ))}
+  </div>
+);
+
+const SecurityLineChart = () => (
+  <div className="absolute inset-0 w-full h-full opacity-70">
+    <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+      <defs>
+        <linearGradient id="gradient-orange" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="rgba(249,115,22,0.3)" />
+          <stop offset="100%" stopColor="rgba(249,115,22,0)" />
+        </linearGradient>
+      </defs>
+      <path d="M0,100 L0,80 L10,60 L20,90 L30,40 L40,70 L50,20 L60,50 L70,30 L80,60 L90,10 L100,40 L100,100 Z" fill="url(#gradient-orange)" />
+      <path d="M0,80 L10,60 L20,90 L30,40 L40,70 L50,20 L60,50 L70,30 L80,60 L90,10 L100,40" fill="none" stroke="#f97316" strokeWidth="1.5" strokeLinejoin="round" />
+      <circle cx="50" cy="20" r="2" fill="#f97316" className="animate-pulse" />
+      <circle cx="90" cy="10" r="2" fill="#f97316" className="animate-pulse" />
+    </svg>
+  </div>
+);
+
+const ActivityGrid = () => (
+  <div className="absolute inset-0 flex flex-col gap-2 p-2 opacity-60">
+    {[...Array(4)].map((_, row) => (
+      <div key={row} className="flex gap-2 justify-between flex-1">
+        {[...Array(14)].map((_, col) => {
+          const isActive = (row * 14 + col) % 3 === 0 || (row * 14 + col) % 7 === 0;
+          return (
+            <div 
+              key={col} 
+              className={`flex-1 rounded-sm ${isActive ? 'bg-purple-500/40 shadow-[0_0_8px_rgba(168,85,247,0.5)] animate-pulse' : 'bg-white/5'}`} 
+              style={isActive ? { animationDelay: `${(row * col) % 5 * 0.2}s` } : {}}
+            />
+          );
+        })}
+      </div>
+    ))}
+  </div>
+);
+
 function DashboardMockup() {
   const [activeTab, setActiveTab] = useState(0);
   const [riskScore, setRiskScore] = useState(72);
@@ -163,10 +243,7 @@ function DashboardMockup() {
       title: "Deployment Analytics",
       desc: "Live security and operational signals.",
       chartTitle: "Vulnerability Trend",
-      paths: {
-        redFill: "M0,100 L0,60 Q25,30 50,60 T100,60 L100,100 Z", redStroke: "M0,60 Q25,30 50,60 T100,60",
-        blueFill: "M0,100 L0,40 Q25,80 50,40 T100,40 L100,100 Z", blueStroke: "M0,40 Q25,80 50,40 T100,40"
-      },
+      chartComponent: <WaveChart />,
       stats: [
         { label: "Risk Score", value: riskScore, color: "text-red-400", bg: "bg-red-500/10" },
         { label: "Scanned", value: scanned.toLocaleString(), color: "text-white", bg: "bg-blue-500/10" },
@@ -177,10 +254,7 @@ function DashboardMockup() {
       title: "Active Repositories",
       desc: "Synced from GitHub organization.",
       chartTitle: "Scan Velocity",
-      paths: {
-        redFill: "M0,100 L0,50 Q25,10 50,50 T100,50 L100,100 Z", redStroke: "M0,50 Q25,10 50,50 T100,50",
-        blueFill: "M0,100 L0,50 Q25,90 50,50 T100,50 L100,100 Z", blueStroke: "M0,50 Q25,90 50,50 T100,50"
-      },
+      chartComponent: <BarChart />,
       stats: [
         { label: "Monitored", value: "42", color: "text-emerald-400", bg: "bg-emerald-500/10" },
         { label: "Outdated", value: "8", color: "text-orange-400", bg: "bg-orange-500/10" },
@@ -191,10 +265,7 @@ function DashboardMockup() {
       title: "Security Posture",
       desc: "Open issues and patch status.",
       chartTitle: "Critical Issues Timeline",
-      paths: {
-        redFill: "M0,100 L0,70 Q25,40 50,70 T100,70 L100,100 Z", redStroke: "M0,70 Q25,40 50,70 T100,70",
-        blueFill: "M0,100 L0,30 Q25,60 50,30 T100,30 L100,100 Z", blueStroke: "M0,30 Q25,60 50,30 T100,30"
-      },
+      chartComponent: <SecurityLineChart />,
       stats: [
         { label: "Critical", value: cves, color: "text-red-400", bg: "bg-red-500/10" },
         { label: "High", value: "24", color: "text-orange-400", bg: "bg-orange-500/10" },
@@ -205,10 +276,7 @@ function DashboardMockup() {
       title: "Copilot Activity",
       desc: "Auto-fixes and intelligent monitoring.",
       chartTitle: "Agent Actions Timeline",
-      paths: {
-        redFill: "M0,100 L0,55 Q25,35 50,55 T100,55 L100,100 Z", redStroke: "M0,55 Q25,35 50,55 T100,55",
-        blueFill: "M0,100 L0,45 Q25,65 50,45 T100,45 L100,100 Z", blueStroke: "M0,45 Q25,65 50,45 T100,45"
-      },
+      chartComponent: <ActivityGrid />,
       stats: [
         { label: "Auto-fixed", value: "1,024", color: "text-blue-400", bg: "bg-blue-500/10" },
         { label: "Active Agents", value: "3", color: "text-purple-400", bg: "bg-purple-500/10" },
@@ -285,47 +353,14 @@ function DashboardMockup() {
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   </div>
                 </div>
-                {/* Fake Chart Lines (Animated Flow) */}
-                <style>{`
-                  @keyframes flow {
-                    0% { transform: translateX(0); }
-                    100% { transform: translateX(-50%); }
-                  }
-                  .animate-flow {
-                    animation: flow 3s linear infinite;
-                  }
-                `}</style>
-                <div className="flex-1 relative w-full h-full opacity-60 overflow-hidden">
-                  <div className="absolute inset-0 w-[200%] h-full flex animate-flow">
-                    {/* First Copy */}
-                    <svg className="w-1/2 h-full transition-all duration-700" preserveAspectRatio="none" viewBox="0 0 100 100">
-                      <defs>
-                        <linearGradient id="gradient-red" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0%" stopColor="rgba(248,113,113,0.2)" />
-                          <stop offset="100%" stopColor="rgba(248,113,113,0)" />
-                        </linearGradient>
-                        <linearGradient id="gradient-blue" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0%" stopColor="rgba(59,130,246,0.2)" />
-                          <stop offset="100%" stopColor="rgba(59,130,246,0)" />
-                        </linearGradient>
-                      </defs>
-                      <path d={TAB_CONTENT[activeTab].paths.redFill} fill="url(#gradient-red)" className="transition-all duration-700" />
-                      <path d={TAB_CONTENT[activeTab].paths.redStroke} fill="none" stroke="#f87171" strokeWidth="1.5" className="transition-all duration-700" />
-                      
-                      <path d={TAB_CONTENT[activeTab].paths.blueFill} fill="url(#gradient-blue)" className="transition-all duration-700" />
-                      <path d={TAB_CONTENT[activeTab].paths.blueStroke} fill="none" stroke="#3b82f6" strokeWidth="1.5" className="transition-all duration-700" />
-                    </svg>
-                    {/* Second Copy for looping */}
-                    <svg className="w-1/2 h-full transition-all duration-700" preserveAspectRatio="none" viewBox="0 0 100 100">
-                      <path d={TAB_CONTENT[activeTab].paths.redFill} fill="url(#gradient-red)" className="transition-all duration-700" />
-                      <path d={TAB_CONTENT[activeTab].paths.redStroke} fill="none" stroke="#f87171" strokeWidth="1.5" className="transition-all duration-700" />
-                      
-                      <path d={TAB_CONTENT[activeTab].paths.blueFill} fill="url(#gradient-blue)" className="transition-all duration-700" />
-                      <path d={TAB_CONTENT[activeTab].paths.blueStroke} fill="none" stroke="#3b82f6" strokeWidth="1.5" className="transition-all duration-700" />
-                    </svg>
-                  </div>
-                </div>
-             </div>
+                            {/* Dynamic Chart Container */}
+                {/* Dynamic Chart Container */}
+                 <div className="flex-1 relative w-full h-full overflow-hidden">
+                    <div className="absolute inset-0 animate-fade-in" key={activeTab}>
+                       {TAB_CONTENT[activeTab].chartComponent}
+                    </div>
+                 </div>
+              </div>
              
              {/* Floating AI Copilot Widget */}
              <div className="absolute bottom-6 right-6 w-64 bg-[#0d1117]/90 backdrop-blur-md border border-blue-500/30 rounded-2xl p-3 shadow-2xl shadow-blue-500/20 transition-all duration-300">
