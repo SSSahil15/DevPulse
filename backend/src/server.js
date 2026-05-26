@@ -1,3 +1,6 @@
+// ─── OpenTelemetry must be initialised FIRST before any other require ─────────
+require("./instrumentation");
+
 const app    = require("./app");
 const config = require("./config/env");
 const logger = require("./utils/logger");
@@ -6,6 +9,9 @@ const { db } = require("./db/database");
 const server = app.listen(config.port, () => {
   logger.info(`DevPulse backend listening on http://localhost:${config.port}`);
 });
+
+const { initSocket } = require("./socket");
+initSocket(server);
 
 async function shutdown() {
   logger.info("[Server] Received kill signal, shutting down gracefully...");

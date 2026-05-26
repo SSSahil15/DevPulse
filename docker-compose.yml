@@ -28,6 +28,38 @@ services:
       - devpulse_network
     restart: unless-stopped
 
+  backend_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: devpulse-backend:latest
+    container_name: devpulse_worker
+    command: ["node", "src/worker.js"]
+    env_file:
+      - ./backend/.env
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://devpulse:devpulse@postgres:5432/devpulse
+      - REDIS_URL=redis://redis:6379
+      - AI_SERVICE_URL=http://ai:8000
+      - SENTRY_RELEASE=devpulse-backend@local
+      - OTEL_SERVICE_NAME=devpulse-worker
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://devpulse_otel_collector:4318
+    depends_on:
+      - ai
+      - postgres
+      - redis
+    networks:
+      - devpulse_network
+    # Worker has no HTTP port — health check via process existence
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'node src/worker.js' > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
   ai:
     build:
       context: ./ai
@@ -40,6 +72,7 @@ services:
       - ./ai/.env
     environment:
       - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - DATABASE_URL=postgresql://devpulse:devpulse@postgres:5432/devpulse
       - SENTRY_ENVIRONMENT=development
       - SENTRY_RELEASE=devpulse-ai@local
     networks:
@@ -47,7 +80,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     container_name: devpulse_postgres
     environment:
       - POSTGRES_USER=devpulse

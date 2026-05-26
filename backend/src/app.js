@@ -79,9 +79,10 @@ const feedbackRoutes = require("./routes/feedback.routes");
 const reportRoutes   = require("./routes/report.routes");
 const aiChatRoutes   = require("./routes/aiChat.routes");
 const dbStatsRoutes  = require("./routes/db-stats.routes");
-const { generalApiLimiter, authLimiter }    = require("./middleware/rateLimiter");
-const { requestTiming, getMetrics }          = require("./middleware/requestTiming");
-const requestId                              = require("./middleware/requestId");
+const { generalApiLimiter, authLimiter }         = require("./middleware/rateLimiter");
+
+const { httpMetricsMiddleware, metricsHandler }    = require("./utils/metrics");
+const requestId                                   = require("./middleware/requestId");
 const { isHttpError }                        = require("./utils/httpError");
 
 
@@ -281,7 +282,11 @@ app.use(express.urlencoded({ extended: true, limit: "50kb" }));
 
 // ─── Request Timing (p50/p95/p99 histogram) ─────────────────────────────────────
 // Mount early so ALL routes are timed including health checks
-app.use(requestTiming);
+
+
+// ─── Prometheus Metrics Middleware ───────────────────────────────────────────
+// Records http_requests_total and http_request_duration_seconds for every request
+app.use(httpMetricsMiddleware);
 
 // ─── Global Rate Limit (catch-all) ────────────────────────────────────────────
 app.use("/api", generalApiLimiter);
@@ -386,17 +391,11 @@ app.use("/api/reports",  reportRoutes);
 app.use("/api/ai",       aiChatRoutes);
 app.use("/api/admin/db-stats", dbStatsRoutes);  // DB observability — auth-gated
 
-// ─── Metrics Endpoint ────────────────────────────────────────────────────────────
-// Returns per-route p50/p95/p99 latency histogram as JSON.
-// In production: only accessible from localhost / internal network.
-// Expose to external monitoring by pointing your APM scraper at /metrics.
-app.get("/metrics", (req, res) => {
-  const isLocal = req.ip === "127.0.0.1" || req.ip === "::1" || req.ip === "::ffff:127.0.0.1";
-  if (config.isProduction && !isLocal) {
-    return res.status(403).json({ message: "Metrics not publicly accessible." });
-  }
-  res.json(getMetrics());
-});
+// ─── Prometheus Metrics Endpoint ─────────────────────────────────────────────
+// Exposes metrics in standard Prometheus text format for scraping.
+// Also exposes the legacy JSON histogram at /metrics/json for backward compat.
+app.get("/metrics", metricsHandler);
+app.get("/metrics/json", (req, res) => res.json(getMetrics()));
 
 // ─── 404 ─────────────────────────────────────────────────────────────────────
 app.use((req, res) => {

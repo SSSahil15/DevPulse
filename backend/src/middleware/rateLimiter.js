@@ -119,10 +119,10 @@ const publicReportLimiter = createLimiter({
   useUserId: false,
 });
 
-/** Analyze Repo — 5 requests per 24 hours per user */
+/** Analyze Repo — 100 requests per 24 hours per user (Increased for testing) */
 const analyzeLimiter = createLimiter({
   windowMs: 24 * 60 * 60 * 1000, // 24 hours
-  max: 5,
+  max: 100,
   name: "Repository Analysis",
   useUserId: true,
 });

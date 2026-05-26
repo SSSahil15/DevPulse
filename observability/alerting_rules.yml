@@ -1,0 +1,112 @@
+groups:
+  - name: devpulse.backend
+    rules:
+      # API error rate > 5% for 5 minutes
+      - alert: HighErrorRate
+        expr: |
+          (
+            rate(http_requests_total{job="devpulse-backend", status_code=~"5.."}[5m])
+            /
+            rate(http_requests_total{job="devpulse-backend"}[5m])
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP error rate on backend"
+          description: "Error rate is {{ $value | humanizePercentage }} over last 5 minutes."
+
+      # API p99 latency > 2s
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job="devpulse-backend"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High p99 API latency"
+          description: "p99 latency is {{ $value }}s (threshold: 2s)."
+
+      # BullMQ queue depth > 50 waiting jobs
+      - alert: QueueDepthHigh
+        expr: bullmq_queue_waiting{job="devpulse-backend"} > 50
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Scan queue is backing up"
+          description: "{{ $value }} jobs are waiting in the scan queue."
+
+  - name: devpulse.ai
+    rules:
+      # AI inference error rate > 10%
+      - alert: AIInferenceErrors
+        expr: |
+          (
+            rate(ai_analysis_requests_total{job="devpulse-ai", status="error"}[5m])
+            /
+            rate(ai_analysis_requests_total{job="devpulse-ai"}[5m])
+          ) > 0.10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High AI inference error rate"
+          description: "AI inference error rate is {{ $value | humanizePercentage }}."
+
+      # AI inference p95 > 10s (LLM calls can be slow, but 10s is too much)
+      - alert: AIInferenceSlow
+        expr: |
+          histogram_quantile(0.95, rate(ai_analysis_duration_seconds_bucket{job="devpulse-ai"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "AI inference is slow"
+          description: "p95 AI inference latency is {{ $value }}s (threshold: 10s)."
+
+  - name: devpulse.redis
+    rules:
+      # Redis memory usage > 80%
+      - alert: RedisHighMemory
+        expr: |
+          redis_memory_used_bytes / redis_memory_max_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis is using {{ $value | humanizePercentage }} of max memory."
+
+      # Redis is down
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is unreachable"
+          description: "Redis exporter reports the instance is down."
+
+  - name: devpulse.postgres
+    rules:
+      # Postgres is down
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL is unreachable"
+          description: "Postgres exporter reports the instance is down."
+
+      # Active connections > 80% of max_connections
+      - alert: PostgresHighConnections
+        expr: |
+          pg_stat_activity_count / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Postgres connection pool is nearly full"
+          description: "{{ $value | humanizePercentage }} of max_connections are in use."

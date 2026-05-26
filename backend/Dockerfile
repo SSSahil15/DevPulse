@@ -62,6 +62,9 @@ RUN mkdir -p /app/.data /app/.temp_scans /app/logs /home/devpulse/.cache && \
 # Runtime config
 ENV NODE_ENV=production
 ENV PORT=4000
+# OpenTelemetry — override at runtime via docker-compose env
+ENV OTEL_SERVICE_NAME=devpulse-backend
+ENV OTEL_EXPORTER_OTLP_ENDPOINT=http://devpulse_otel_collector:4318
 EXPOSE 4000
 
 USER devpulse

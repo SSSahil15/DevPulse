@@ -1,6 +1,7 @@
 fastapi>=0.115.0
 uvicorn>=0.30.1
 pydantic>=2.7.4
+pydantic-settings>=2.3.4
 scikit-learn>=1.5.0
 pandas>=2.2.2
 numpy>=1.26.4
@@ -8,3 +9,13 @@ python-dotenv>=1.2.2
 requests>=2.33.0
 sentry-sdk[fastapi]>=2.29.1
 urllib3>=2.7.0
+tenacity>=8.4.1
+langchain>=0.2.14
+langchain-openai>=0.1.22
+
+# ── Observability ─────────────────────────────────────────────────────────────
+prometheus-client>=0.20.0
+opentelemetry-api>=1.25.0
+opentelemetry-sdk>=1.25.0
+opentelemetry-instrumentation-fastapi>=0.46b0
+opentelemetry-exporter-otlp-proto-http>=1.25.0

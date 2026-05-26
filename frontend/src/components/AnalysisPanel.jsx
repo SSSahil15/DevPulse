@@ -15,6 +15,7 @@ import InsightsPanel from "./InsightsPanel";
 import ErrorBoundary from "./ErrorBoundary";
 import CountUp from "./CountUp";
 import { apiRequest, pollScanJob } from "../api";
+import { ScanProgress } from "./ScanProgress";
 
 function getRiskTone(score) {
   if (score >= 80) return "success";
@@ -352,33 +353,10 @@ function AnalysisPanel({ analysisState, analysisResult, onAnalyze, repository, a
         />
       </div>
 
-      {/* AI Analysis Job Queue Stepper */}
+      {/* AI Analysis Job Queue Stepper (Real-time via WebSockets) */}
       {analysisState.status === "loading" && (
-        <div className="rounded-2xl p-6 relative overflow-hidden mt-4 bg-[#0a0f1d] border border-blue-500/20 shadow-[0_0_40px_rgba(37,99,235,0.08),inset_0_0_20px_rgba(37,99,235,0.05)]">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0ibm9uZSI+PC9yZWN0Pgo8cGF0aCBkPSJNMjAgMEwxIDBMMCAwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMzcsOTksMjM1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjEiPjwvcGF0aD4KPHBhdGggZD0iTTAgMjBMMCAxTDEgMSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDM3LDk5LDIzNSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIj48L3BhdGg+Cjwvc3ZnPg==')] opacity-50 pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-400/10 to-transparent animate-scan-line pointer-events-none" style={{ animationDuration: '4s' }} />
-          
-          <div className="flex items-center gap-2 mb-4 relative z-10">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-status-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400 font-mono">AI Analysis Initializing...</p>
-          </div>
-          <div className="flex flex-col gap-3 relative z-10">
-            {[
-              { label: "Fetching repository metadata",       icon: GitBranch,   done: true,  active: false },
-              { label: "Running AI failure prediction model", icon: Zap,         done: false, active: true  },
-              { label: "Calculating risk score & insights",   icon: ShieldAlert, done: false, active: false },
-            ].map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <div key={i} className={`flex items-center gap-3 text-xs ${step.done ? "text-emerald-400" : step.active ? "text-white" : "text-slate-600"}`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${step.done ? "bg-emerald-500/10 border border-emerald-500/20" : step.active ? "bg-blue-500/20 border border-blue-400/40 shadow-[0_0_12px_rgba(59,130,246,0.3)]" : "bg-white/5 border border-white/5"}`}>
-                    {step.active ? <Loader2 className="w-3 h-3 animate-spin text-blue-400" /> : step.done ? <CheckCircle2 className="w-3 h-3" /> : <Icon className="w-3 h-3 opacity-50" />}
-                  </div>
-                  <span className={step.active ? "font-semibold text-blue-100 animate-pulse" : "font-medium"}>{step.label}</span>
-                </div>
-              );
-            })}
-          </div>
+        <div className="rounded-2xl relative overflow-hidden mt-4">
+          <ScanProgress room={`scan_${repository.fullName}`} />
         </div>
       )}
 

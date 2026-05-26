@@ -1,0 +1,24 @@
+{
+  "name": "Security Benchmark Alpha",
+  "description": "Baseline evaluation dataset measuring the AI's ability to diagnose security flaws without hallucinating.",
+  "cases": [
+    {
+      "id": "case-001",
+      "query": "Why did the pipeline fail and what vulnerabilities exist?",
+      "context": "CI logs show error: npm audit found 1 critical vulnerability in lodash. Deploy blocked.",
+      "expected_output": "The pipeline failed because npm audit detected a critical vulnerability in the lodash package. This blocked the deployment.",
+      "metadata": {
+        "category": "npm_audit"
+      }
+    },
+    {
+      "id": "case-002",
+      "query": "What should I do about the hardcoded secret in main.py?",
+      "context": "SonarQube scan result on main.py: High Severity - Hardcoded AWS Access Key ID found on line 45.",
+      "expected_output": "You should immediately revoke the exposed AWS Access Key ID, remove it from line 45 in main.py, and use environment variables or a secrets manager (like AWS Secrets Manager) instead.",
+      "metadata": {
+        "category": "hardcoded_secret"
+      }
+    }
+  ]
+}

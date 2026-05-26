@@ -36,6 +36,8 @@ router.post(
   ensureGitHubTokenSynced,
   validate(analyzeSchema, "body"),
   asyncHandler(async (req, res) => {
+    const { scanQueue } = require("../queues");
+
     let { repositoryFullName, repoUrl } = req.body;
 
     if (repoUrl && !repositoryFullName) {
@@ -52,13 +54,18 @@ router.post(
       }
     }
 
-    const repository = await fetchRepository(req.githubAccessToken, repositoryFullName);
-    const mappedRepository = mapRepository(repository);
-    const analysis = await buildInitialAnalysis(mappedRepository, req.githubAccessToken);
+    const room = `scan_${repositoryFullName}`;
 
-    return res.status(200).json({
-      analysis,
-      repository: mappedRepository
+    const job = await scanQueue.add("analyzeRepo", {
+      repositoryFullName,
+      githubAccessToken: req.githubAccessToken,
+      room
+    });
+
+    return res.status(202).json({
+      message: "Analysis started in background.",
+      jobId: job.id,
+      room
     });
   })
 );

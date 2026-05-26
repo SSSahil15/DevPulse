@@ -1,0 +1,57 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://devpulse_loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      # Use container name as job label
+      - source_labels: [__meta_docker_container_name]
+        target_label: job
+        regex: /(.*)
+        replacement: $1
+      # Attach service label from Docker labels if set
+      - source_labels: [__meta_docker_container_label_com_docker_compose_service]
+        target_label: service
+      # Attach image name
+      - source_labels: [__meta_docker_container_image]
+        target_label: image
+
+    pipeline_stages:
+      # Parse JSON logs (Winston & Python structured logs)
+      - json:
+          expressions:
+            level: level
+            message: message
+            service: service
+            requestId: requestId
+            trace_id: trace_id
+            span_id: span_id
+            duration_ms: duration_ms
+            status: status
+
+      # Promote parsed fields to Loki labels
+      - labels:
+          level:
+          service:
+
+      # Set the log timestamp from the JSON field if present
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+          fallback_formats:
+            - RFC3339
+
+      # Drop noisy health-check logs to reduce volume
+      - drop:
+          expression: '.*"url":"/health/live".*'
+          drop_counter_reason: health_check

@@ -43,11 +43,30 @@ function maskSensitive(value) {
   return masked;
 }
 
-// ─── Custom format: apply masking to every log entry's metadata ───────────────
+// ─── OpenTelemetry trace context injection ────────────────────────────────────
+// If the OTel SDK is active, we pull the current trace_id and span_id and
+// inject them into every log entry so Loki can correlate logs → Tempo traces.
+let otelApi;
+try {
+  otelApi = require("@opentelemetry/api");
+} catch (_) {
+  otelApi = null; // OTel not installed — no-op
+}
+
+function getTraceContext() {
+  if (!otelApi) return {};
+  const span = otelApi.trace.getActiveSpan();
+  if (!span) return {};
+  const ctx = span.spanContext();
+  if (!otelApi.isSpanContextValid(ctx)) return {};
+  return { trace_id: ctx.traceId, span_id: ctx.spanId };
+}
+
+// ─── Custom format: apply masking + OTel trace injection to every log entry ──
 const maskingFormat = winston.format((info) => {
   const { level, message, timestamp: ts, service, stack, ...meta } = info;
   const maskedMeta = maskSensitive(meta);
-  return { level, message, timestamp: ts, service, stack, ...maskedMeta };
+  return { level, message, timestamp: ts, service, stack, ...maskedMeta, ...getTraceContext() };
 })();
 
 // ─── Log directory (project root /logs) ──────────────────────────────────────

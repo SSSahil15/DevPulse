@@ -14,35 +14,7 @@ function getInitials(user) {
   return (user.displayName || user.username).split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase();
 }
 
-// ─── Scan Progress Steps ──────────────────────────────────────────────────────
-const SCAN_STEPS = [
-  { id: "clone",    label: "Cloning repository",       icon: ScanLine  },
-  { id: "trivy",    label: "Running Trivy security scan", icon: ShieldCheck },
-  { id: "health",   label: "Fetching GitHub health metrics", icon: Clock },
-  { id: "score",    label: "Calculating DevPulse Score", icon: CheckCircle2 },
-];
 
-function ScanProgressIndicator({ status }) {
-  const stepIndex = status === "processing" ? 2 : status === "pending" ? 0 : 3;
-  return (
-    <div className="flex flex-col gap-2 py-4">
-      {SCAN_STEPS.map((step, i) => {
-        const Icon = step.icon;
-        const done = i < stepIndex;
-        const active = i === stepIndex;
-        return (
-          <div key={step.id} className={`flex items-center gap-3 text-xs transition-colors ${done ? "text-emerald-400" : active ? "text-white" : "text-slate-600"}`}>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${done ? "bg-emerald-500/20" : active ? "" : "bg-white/5"}`}
-              style={active ? { background: "linear-gradient(135deg,#38BDF8,#2563EB)", boxShadow: "0 0 8px rgba(37,99,235,0.4)" } : {}}>
-              {active ? <Loader2 className="w-3 h-3 animate-spin" /> : <Icon className="w-3 h-3" />}
-            </div>
-            <span className={active ? "font-semibold" : ""}>{step.label}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 // ─── Dashboard Content ────────────────────────────────────────────────────────
 function DashboardContent({ accessToken, onLogout, user }) {
@@ -807,16 +779,7 @@ ${record.insights?'<div class="section"><div class="section-label">💡 AI Insig
             </div>
           </div>
 
-          {/* Scan progress stepper — shows for all AI + pipeline analyses */}
-          {analysisState.status === "loading" && analysisState.targetRepositoryId === selectedRepo?.id && analysisState.jobStatus && (
-            <div className="mb-6 bg-white/[0.02] ring-1 ring-white/[0.04] rounded-2xl p-6">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="status-dot animate-status-pulse bg-cyan-400 text-cyan-400" />
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Scanning in progress</p>
-              </div>
-              <ScanProgressIndicator status={analysisState.jobStatus} />
-            </div>
-          )}
+
 
           <AnalysisPanel
             accessToken={accessToken}

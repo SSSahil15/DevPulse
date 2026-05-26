@@ -1,0 +1,170 @@
+version: '3.8'
+
+# ─── DevPulse Observability Stack ────────────────────────────────────────────
+# Run alongside the main stack:
+#   docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d
+#
+# Or bring up only the observability stack independently:
+#   docker compose -f docker-compose.observability.yml up -d
+#
+# Grafana:    http://localhost:3001   (admin / devpulse)
+# Prometheus: http://localhost:9090
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Prometheus ─────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: devpulse_prometheus
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/alerting_rules.yml:/etc/prometheus/alerting_rules.yml:ro
+      - devpulse_prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    networks:
+      - devpulse_local_net
+      - observability_net
+    restart: unless-stopped
+
+  # ── Grafana ────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: devpulse_grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=devpulse
+      - GF_SERVER_HTTP_PORT=3000
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor tempoSearch tempoBackendSearch traceToLogs
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - devpulse_grafana_data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    networks:
+      - observability_net
+    restart: unless-stopped
+
+  # ── Loki (log aggregation) ─────────────────────────────────────────────────
+  loki:
+    image: grafana/loki:3.1.0
+    container_name: devpulse_loki
+    command: -config.file=/etc/loki/loki.yml
+    volumes:
+      - ./observability/loki.yml:/etc/loki/loki.yml:ro
+      - devpulse_loki_data:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - observability_net
+    restart: unless-stopped
+
+  # ── Promtail (Docker log scraper → Loki) ───────────────────────────────────
+  promtail:
+    image: grafana/promtail:3.1.0
+    container_name: devpulse_promtail
+    volumes:
+      - ./observability/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/promtail.yml
+    depends_on:
+      - loki
+    networks:
+      - observability_net
+      - devpulse_local_net
+    restart: unless-stopped
+
+  # ── Grafana Tempo (distributed tracing) ────────────────────────────────────
+  tempo:
+    image: grafana/tempo:2.5.0
+    container_name: devpulse_tempo
+    command: -config.file=/etc/tempo/tempo.yml
+    volumes:
+      - ./observability/tempo.yml:/etc/tempo/tempo.yml:ro
+      - devpulse_tempo_data:/var/tempo
+    ports:
+      - "3200:3200"   # Tempo HTTP API
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+    networks:
+      - observability_net
+      - devpulse_local_net
+    restart: unless-stopped
+
+  # ── OpenTelemetry Collector ─────────────────────────────────────────────────
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.103.0
+    container_name: devpulse_otel_collector
+    command: ["--config=/etc/otel/otel-collector.yml"]
+    volumes:
+      - ./observability/otel-collector.yml:/etc/otel/otel-collector.yml:ro
+    ports:
+      - "4319:4317"   # OTLP gRPC (collector → services use this port)
+      - "4320:4318"   # OTLP HTTP (collector → services use this port)
+      - "8889:8889"   # Prometheus metrics exposed by collector itself
+    depends_on:
+      - tempo
+      - prometheus
+    networks:
+      - observability_net
+      - devpulse_local_net
+    restart: unless-stopped
+
+  # ── Redis Exporter ─────────────────────────────────────────────────────────
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.62.0
+    container_name: devpulse_redis_exporter
+    environment:
+      - REDIS_ADDR=redis://devpulse_redis:6379
+    ports:
+      - "9121:9121"
+    networks:
+      - observability_net
+      - devpulse_local_net
+    restart: unless-stopped
+
+  # ── Postgres Exporter ──────────────────────────────────────────────────────
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: devpulse_postgres_exporter
+    environment:
+      - DATA_SOURCE_NAME=postgresql://devpulse:devpulse@devpulse_postgres:5432/devpulse?sslmode=disable
+    ports:
+      - "9187:9187"
+    networks:
+      - observability_net
+      - devpulse_local_net
+    restart: unless-stopped
+
+volumes:
+  devpulse_prometheus_data:
+    name: devpulse_prometheus_data
+  devpulse_grafana_data:
+    name: devpulse_grafana_data
+  devpulse_loki_data:
+    name: devpulse_loki_data
+  devpulse_tempo_data:
+    name: devpulse_tempo_data
+
+networks:
+  observability_net:
+    name: devpulse_observability_net
+  # Attach to the main app network so we can scrape backend/ai metrics
+  devpulse_local_net:
+    external: true
+    name: devpulse_local_net

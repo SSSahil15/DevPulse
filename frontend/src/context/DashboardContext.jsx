@@ -117,8 +117,15 @@ export function DashboardProvider({ children, accessToken, user, onSessionExpire
         body: JSON.stringify({ repositoryFullName: repo.fullName }),
       });
 
-      setAnalysisResult(data);
-      setAnalysisState({ error: "", status: "success", targetRepositoryId: repo.id, jobStatus: null });
+      // We expect a 202 Accepted with a jobId and room.
+      // The ScanProgress WebSocket component will handle completion!
+      setAnalysisState({ 
+        error: "", 
+        status: "loading", 
+        targetRepositoryId: repo.id, 
+        jobStatus: "queued",
+        jobId: data.jobId 
+      });
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) { onSessionExpired?.("Session expired."); return; }
       setAnalysisState({ error: err.message, status: "error", targetRepositoryId: repo.id, jobStatus: null });
