@@ -354,11 +354,15 @@ function DashboardMockup() {
                   </div>
                 </div>
                             {/* Dynamic Chart Container */}
-                {/* Dynamic Chart Container */}
                  <div className="flex-1 relative w-full h-full overflow-hidden">
-                    <div className="absolute inset-0 animate-fade-in" key={activeTab}>
-                       {TAB_CONTENT[activeTab].chartComponent}
-                    </div>
+                    {TAB_CONTENT.map((tab, idx) => (
+                      <div 
+                        key={idx}
+                        className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${activeTab === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+                      >
+                         {tab.chartComponent}
+                      </div>
+                    ))}
                  </div>
               </div>
              
@@ -384,49 +388,45 @@ function DashboardMockup() {
   );
 }
 
-function DemoVideoSection() {
+function VideoModal({ isOpen, onClose }) {
+  if (!isOpen) return null;
+  
   return (
-    <section id="demo" className="w-full max-w-5xl mx-auto px-6 py-20">
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center gap-2 text-purple-400 text-xs font-bold uppercase tracking-widest mb-4">
-          <PlayCircle className="w-4 h-4" /> See It In Action
-        </div>
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
-          Watch how DevPulse secures <br className="hidden sm:block" />your deployments in minutes.
-        </h2>
-        <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-          Take a quick tour of our real platform dashboard, pipeline analyzer, and automated remediation engine.
-        </p>
-      </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-[#080b14]/90 backdrop-blur-md animate-in fade-in duration-300" 
+        onClick={onClose}
+      />
       
-      <div className="relative w-full aspect-video rounded-3xl overflow-hidden group cursor-pointer border border-white/10 shadow-[0_0_100px_rgba(37,99,235,0.15)] bg-[#0a0e17]">
-        {/* Thumbnail Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-purple-900/20 transition-opacity duration-500 group-hover:opacity-100 opacity-60" />
-        <div className="absolute inset-0 opacity-[0.03] group-hover:scale-105 transition-transform duration-1000" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
-        
-        {/* Play Button Center */}
-        <div className="absolute inset-0 flex items-center justify-center z-10">
-          <div className="w-20 h-20 rounded-full bg-blue-600/90 flex items-center justify-center pl-2 shadow-[0_0_40px_rgba(37,99,235,0.6)] group-hover:scale-110 group-hover:bg-blue-500 transition-all duration-300 backdrop-blur-md">
-            <svg className="w-8 h-8 text-white fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      {/* Modal Content */}
+      <div className="relative w-full max-w-4xl bg-[#0d1117] border border-white/10 rounded-2xl overflow-hidden shadow-[0_0_100px_rgba(37,99,235,0.2)] animate-in zoom-in-95 duration-300">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
+          <div className="text-white font-semibold flex items-center gap-2">
+            <PlayCircle className="w-5 h-5 text-blue-400" />
+            DevPulse Platform Demo
           </div>
+          <button onClick={onClose} className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white transition-colors">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
         
-        {/* Hover overlay hint */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        {/* Player Controls Mockup */}
-        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black/80 to-transparent flex items-end px-6 pb-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-          <div className="w-full flex items-center gap-4">
-            <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden cursor-pointer relative">
-              <div className="absolute top-0 left-0 w-1/3 h-full bg-blue-500 rounded-full" />
-              <div className="absolute top-1/2 -translate-y-1/2 left-1/3 w-3 h-3 bg-white rounded-full shadow-lg" />
-            </div>
-            <div className="text-xs text-white font-mono font-medium tracking-wide">00:00 / 03:24</div>
-          </div>
+        {/* Video Player */}
+        <div className="w-full aspect-video bg-black relative">
+          <iframe 
+            className="absolute inset-0 w-full h-full"
+            src="https://www.youtube.com/embed/ScMzIvxBSi4?autoplay=1" 
+            title="DevPulse Demo"
+            frameBorder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            allowFullScreen
+          ></iframe>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -439,6 +439,8 @@ export default function LoginPage() {
 }
 
 function LoginPageContent({ isLoading, setIsLoading, authError, sessionError }) {
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+
   function handleLoginWithGitHub() {
     setIsLoading(true);
     window.location.href = `${BACKEND_URL}/auth/github`;
@@ -510,7 +512,10 @@ function LoginPageContent({ isLoading, setIsLoading, authError, sessionError }) 
               {isLoading ? "Redirecting..." : "Connect GitHub"}
               {!isLoading && <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
             </button>
-            <button className="flex items-center justify-center gap-2 font-bold text-base px-8 py-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors w-full sm:w-auto">
+            <button 
+              onClick={() => setIsVideoModalOpen(true)}
+              className="flex items-center justify-center gap-2 font-bold text-base px-8 py-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors w-full sm:w-auto"
+            >
               <PlayCircle className="w-5 h-5" /> View Demo
             </button>
           </div>
@@ -540,9 +545,6 @@ function LoginPageContent({ isLoading, setIsLoading, authError, sessionError }) 
             <div className="flex items-center gap-2"><GithubIcon className="w-4 h-4 text-white" /> Native Integrations</div>
           </div>
         </section>
-
-        {/* Demo Video Section */}
-        <DemoVideoSection />
 
         {/* Stats Preview (Animated) */}
         <section className="w-full max-w-5xl mx-auto px-6 py-12">
@@ -677,6 +679,9 @@ function LoginPageContent({ isLoading, setIsLoading, authError, sessionError }) 
           </div>
         </div>
       </footer>
+      
+      {/* Video Modal */}
+      <VideoModal isOpen={isVideoModalOpen} onClose={() => setIsVideoModalOpen(false)} />
     </div>
   );
 }
