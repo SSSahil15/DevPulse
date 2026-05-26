@@ -217,6 +217,7 @@ const ActivityGrid = () => (
 
 function DashboardMockup() {
   const [activeTab, setActiveTab] = useState(0);
+  const [copilotStep, setCopilotStep] = useState(0);
   const [riskScore, setRiskScore] = useState(72);
   const [scanned, setScanned] = useState(1248);
   const [cves, setCves] = useState(14);
@@ -226,6 +227,10 @@ function DashboardMockup() {
       setActiveTab((prev) => (prev + 1) % MOCK_TABS.length);
     }, 3000);
     
+    const copilotInterval = setInterval(() => {
+      setCopilotStep((prev) => (prev + 1) % COPILOT_MESSAGES.length);
+    }, 4500);
+    
     const dataInterval = setInterval(() => {
       setRiskScore(prev => Math.max(0, Math.min(100, prev + (Math.floor(Math.random() * 3) - 1))));
       setScanned(prev => prev + Math.floor(Math.random() * 5));
@@ -234,6 +239,7 @@ function DashboardMockup() {
     
     return () => {
       clearInterval(tabInterval);
+      clearInterval(copilotInterval);
       clearInterval(dataInterval);
     };
   }, []);
@@ -321,61 +327,60 @@ function DashboardMockup() {
           </div>
           
           {/* Main Area */}
-          <div className="flex-1 p-6 flex flex-col gap-6 relative">
-             <div className="flex justify-between items-start">
-               <div>
-                 <h2 className="text-xl font-bold text-white mb-1 transition-all">{TAB_CONTENT[activeTab].title}</h2>
-                 <p className="text-slate-400 text-xs transition-all">{TAB_CONTENT[activeTab].desc}</p>
-               </div>
-               <div className="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-bold border border-emerald-500/20 flex items-center gap-1.5">
-                 <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> System Healthy
-               </div>
-             </div>
-             
-             {/* Stats Row */}
-             <div className="grid grid-cols-3 gap-3">
-                {TAB_CONTENT[activeTab].stats.map((stat, idx) => (
-                  <div key={idx} className="h-24 bg-white/5 rounded-xl border border-white/5 p-4 flex flex-col justify-center relative overflow-hidden">
-                     <div className="text-slate-400 text-xs mb-1">{stat.label}</div>
-                     <div className={`text-2xl font-black ${stat.color} animate-fade-in`}>{stat.value}</div>
-                     <div className={`absolute -right-4 -bottom-4 w-20 h-20 rounded-full blur-xl ${stat.bg}`} />
-                  </div>
-                ))}
-             </div>
-
-             {/* Main Chart Area */}
-             <div className="flex-1 bg-white/5 rounded-xl border border-white/5 p-4 relative overflow-hidden flex flex-col">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="text-xs font-semibold text-slate-300 transition-all">{TAB_CONTENT[activeTab].chartTitle}</div>
-                  <div className="flex gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  </div>
-                </div>
-                            {/* Dynamic Chart Container */}
-                 <div className="flex-1 relative w-full h-full overflow-hidden">
-                    {TAB_CONTENT.map((tab, idx) => (
-                      <div 
-                        key={idx}
-                        className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${activeTab === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-                      >
-                         {tab.chartComponent}
+          <div className="flex-1 relative overflow-hidden">
+            {TAB_CONTENT.map((tab, idx) => (
+              <div 
+                key={idx}
+                className={`absolute inset-0 p-6 flex flex-col gap-6 transition-opacity duration-700 ease-in-out ${activeTab === idx ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+              >
+                 <div className="flex justify-between items-start">
+                   <div>
+                     <h2 className="text-xl font-bold text-white mb-1">{tab.title}</h2>
+                     <p className="text-slate-400 text-xs">{tab.desc}</p>
+                   </div>
+                   <div className="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-bold border border-emerald-500/20 flex items-center gap-1.5">
+                     <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> System Healthy
+                   </div>
+                 </div>
+                 
+                 {/* Stats Row */}
+                 <div className="grid grid-cols-3 gap-3">
+                    {tab.stats.map((stat, sIdx) => (
+                      <div key={sIdx} className="h-24 bg-white/5 rounded-xl border border-white/5 p-4 flex flex-col justify-center relative overflow-hidden">
+                         <div className="text-slate-400 text-xs mb-1">{stat.label}</div>
+                         <div className={`text-2xl font-black ${stat.color} transition-colors`}>{stat.value}</div>
+                         <div className={`absolute -right-4 -bottom-4 w-20 h-20 rounded-full blur-xl ${stat.bg}`} />
                       </div>
                     ))}
                  </div>
+    
+                 {/* Main Chart Area */}
+                 <div className="flex-1 bg-white/5 rounded-xl border border-white/5 p-4 relative overflow-hidden flex flex-col">
+                    <div className="flex justify-between items-center mb-4 relative z-20">
+                      <div className="text-xs font-semibold text-slate-300">{tab.chartTitle}</div>
+                      <div className="flex gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      </div>
+                    </div>
+                    <div className="flex-1 relative w-full h-full overflow-hidden">
+                       {tab.chartComponent}
+                    </div>
+                 </div>
               </div>
+            ))}
              
              {/* Floating AI Copilot Widget */}
-             <div className="absolute bottom-6 right-6 w-64 bg-[#0d1117]/90 backdrop-blur-md border border-blue-500/30 rounded-2xl p-3 shadow-2xl shadow-blue-500/20 transition-all duration-300">
+             <div className="absolute bottom-6 right-6 w-64 bg-[#0d1117]/90 backdrop-blur-md border border-blue-500/30 rounded-2xl p-3 shadow-2xl shadow-blue-500/20 transition-all duration-300 z-50">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-5 h-5 rounded bg-blue-500 flex items-center justify-center"><Zap className="w-3 h-3 text-white" /></div>
                   <div className="text-xs font-bold text-white">AI Copilot</div>
                 </div>
                 <div className="bg-white/5 rounded-lg p-2 text-[10px] text-slate-300 leading-relaxed border border-white/5 h-12 flex items-center overflow-hidden">
-                  <div key={activeTab} className="animate-fade-in">{COPILOT_MESSAGES[activeTab]}</div>
+                  <div key={copilotStep} className="animate-fade-in">{COPILOT_MESSAGES[copilotStep]}</div>
                 </div>
-                {activeTab === 2 && (
+                {copilotStep === 3 && (
                   <div className="mt-2 bg-blue-500 hover:bg-blue-400 transition-colors text-white text-[10px] font-bold py-1.5 rounded flex justify-center cursor-pointer animate-fade-in shadow-lg shadow-blue-500/20">
                     Generate Fix
                   </div>
