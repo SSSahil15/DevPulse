@@ -384,6 +384,52 @@ function DashboardMockup() {
   );
 }
 
+function DemoVideoSection() {
+  return (
+    <section id="demo" className="w-full max-w-5xl mx-auto px-6 py-20">
+      <div className="text-center mb-12">
+        <div className="inline-flex items-center gap-2 text-purple-400 text-xs font-bold uppercase tracking-widest mb-4">
+          <PlayCircle className="w-4 h-4" /> See It In Action
+        </div>
+        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
+          Watch how DevPulse secures <br className="hidden sm:block" />your deployments in minutes.
+        </h2>
+        <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+          Take a quick tour of our real platform dashboard, pipeline analyzer, and automated remediation engine.
+        </p>
+      </div>
+      
+      <div className="relative w-full aspect-video rounded-3xl overflow-hidden group cursor-pointer border border-white/10 shadow-[0_0_100px_rgba(37,99,235,0.15)] bg-[#0a0e17]">
+        {/* Thumbnail Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-purple-900/20 transition-opacity duration-500 group-hover:opacity-100 opacity-60" />
+        <div className="absolute inset-0 opacity-[0.03] group-hover:scale-105 transition-transform duration-1000" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+        
+        {/* Play Button Center */}
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <div className="w-20 h-20 rounded-full bg-blue-600/90 flex items-center justify-center pl-2 shadow-[0_0_40px_rgba(37,99,235,0.6)] group-hover:scale-110 group-hover:bg-blue-500 transition-all duration-300 backdrop-blur-md">
+            <svg className="w-8 h-8 text-white fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        
+        {/* Hover overlay hint */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Player Controls Mockup */}
+        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black/80 to-transparent flex items-end px-6 pb-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+          <div className="w-full flex items-center gap-4">
+            <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden cursor-pointer relative">
+              <div className="absolute top-0 left-0 w-1/3 h-full bg-blue-500 rounded-full" />
+              <div className="absolute top-1/2 -translate-y-1/2 left-1/3 w-3 h-3 bg-white rounded-full shadow-lg" />
+            </div>
+            <div className="text-xs text-white font-mono font-medium tracking-wide">00:00 / 03:24</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -494,6 +540,9 @@ function LoginPageContent({ isLoading, setIsLoading, authError, sessionError }) 
             <div className="flex items-center gap-2"><GithubIcon className="w-4 h-4 text-white" /> Native Integrations</div>
           </div>
         </section>
+
+        {/* Demo Video Section */}
+        <DemoVideoSection />
 
         {/* Stats Preview (Animated) */}
         <section className="w-full max-w-5xl mx-auto px-6 py-12">
