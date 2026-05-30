@@ -398,13 +398,13 @@ const providerTokenDB = {
   async upsert({ userId, encryptedToken, githubLogin, profileUrl }) {
     await pool.query(
       `
-      INSERT INTO provider_tokens (user_id, encrypted_token, github_login, profile_url, updated_at)
+      INSERT INTO provider_tokens (user_id, encrypted_token, github_login, profile_url, synced_at)
       VALUES ($1, $2, $3, $4, $5)
       ON CONFLICT(user_id) DO UPDATE SET
         encrypted_token = EXCLUDED.encrypted_token,
         github_login    = EXCLUDED.github_login,
         profile_url     = EXCLUDED.profile_url,
-        updated_at      = EXCLUDED.updated_at
+        synced_at      = EXCLUDED.synced_at
     `,
       [userId, encryptedToken, githubLogin || null, profileUrl || null, new Date().toISOString()],
     );
@@ -413,7 +413,7 @@ const providerTokenDB = {
   async getByUserId(userId) {
     // user_id is the primary key — always an index seek, no full scan
     const { rows } = await pool.query(
-      `SELECT user_id, encrypted_token, github_login, profile_url, updated_at FROM provider_tokens WHERE user_id = $1 LIMIT 1`,
+      `SELECT user_id, encrypted_token, github_login, profile_url, synced_at FROM provider_tokens WHERE user_id = $1 LIMIT 1`,
       [userId],
     );
     return rows.length ? rows[0] : null;
