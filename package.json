@@ -1,0 +1,10 @@
+{
+  "name": "devpulse-root",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "^3.8.3"
+  }
+}

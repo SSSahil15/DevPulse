@@ -50,12 +50,12 @@ This pillar evaluates developer metrics pulled from the GitHub API:
 
 ## Score Classification
 
-| Score Range | Tier | Visual Theme | Action Required |
-|-------------|------|--------------|-----------------|
-| **90 - 100** | A (Excellent) | Vibrant Green | Perfect. Keep dependencies updated. |
-| **75 - 89** | B (Healthy) | Soft Yellow | Safe. Plan minor vulnerability upgrades. |
-| **50 - 74** | C (Warning) | Orange Gradient | Caution. High CVEs require immediate attention. |
-| **0 - 49** | F (Critical) | Fiery Red | Blocked! Deployment prohibited due to critical risks. |
+| Score Range  | Tier          | Visual Theme    | Action Required                                       |
+| ------------ | ------------- | --------------- | ----------------------------------------------------- |
+| **90 - 100** | A (Excellent) | Vibrant Green   | Perfect. Keep dependencies updated.                   |
+| **75 - 89**  | B (Healthy)   | Soft Yellow     | Safe. Plan minor vulnerability upgrades.              |
+| **50 - 74**  | C (Warning)   | Orange Gradient | Caution. High CVEs require immediate attention.       |
+| **0 - 49**   | F (Critical)  | Fiery Red       | Blocked! Deployment prohibited due to critical risks. |
 
 ---
 

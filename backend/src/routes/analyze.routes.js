@@ -1,14 +1,14 @@
-const express = require("express");
-const { z } = require("zod");
+const express = require('express');
+const { z } = require('zod');
 
-const ensureAuthenticated = require("../middleware/ensureAuthenticated");
-const ensureGitHubTokenSynced = require("../middleware/ensureGitHubTokenSynced");
-const validate = require("../middleware/validate");
-const { analyzeLimiter } = require("../middleware/rateLimiter");
-const { buildInitialAnalysis } = require("../services/analyze.service");
-const { fetchRepository, mapRepository } = require("../services/github.service");
-const asyncHandler = require("../utils/asyncHandler");
-const { githubFullNameSchema, githubUrlSchema } = require("../validation/schemas");
+const ensureAuthenticated = require('../middleware/ensureAuthenticated');
+const ensureGitHubTokenSynced = require('../middleware/ensureGitHubTokenSynced');
+const validate = require('../middleware/validate');
+const { analyzeLimiter } = require('../middleware/rateLimiter');
+const { buildInitialAnalysis } = require('../services/analyze.service');
+const { fetchRepository, mapRepository } = require('../services/github.service');
+const asyncHandler = require('../utils/asyncHandler');
+const { githubFullNameSchema, githubUrlSchema } = require('../validation/schemas');
 
 const router = express.Router();
 
@@ -22,52 +22,51 @@ const analyzeSchema = z
     repoUrl: githubUrlSchema.optional(),
   })
   .refine((data) => data.repositoryFullName || data.repoUrl, {
-    message: "Either repositoryFullName or repoUrl must be provided.",
-    path: ["repositoryFullName"],
+    message: 'Either repositoryFullName or repoUrl must be provided.',
+    path: ['repositoryFullName'],
   });
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 router.post(
-  "/",
-  ensureAuthenticated,           // auth first (sets req.user for key generator)
-  analyzeLimiter,                // 5 req / 24 h per user — most expensive endpoint
+  '/',
+  ensureAuthenticated, // auth first (sets req.user for key generator)
+  analyzeLimiter, // 5 req / 24 h per user — most expensive endpoint
   ensureGitHubTokenSynced,
-  validate(analyzeSchema, "body"),
+  validate(analyzeSchema, 'body'),
   asyncHandler(async (req, res) => {
-    const { scanQueue } = require("../queues");
+    const { scanQueue } = require('../queues');
 
     let { repositoryFullName, repoUrl } = req.body;
 
     if (repoUrl && !repositoryFullName) {
       try {
         const urlObj = new URL(repoUrl);
-        const pathParts = urlObj.pathname.split("/").filter(Boolean);
+        const pathParts = urlObj.pathname.split('/').filter(Boolean);
         if (pathParts.length >= 2) {
-          repositoryFullName = `${pathParts[0]}/${pathParts[1]}`.replace(/\.git$/, "");
+          repositoryFullName = `${pathParts[0]}/${pathParts[1]}`.replace(/\.git$/, '');
         } else {
-          return res.status(400).json({ message: "Invalid GitHub URL format." });
+          return res.status(400).json({ message: 'Invalid GitHub URL format.' });
         }
       } catch (err) {
-        return res.status(400).json({ message: "Invalid GitHub URL format." });
+        return res.status(400).json({ message: 'Invalid GitHub URL format.' });
       }
     }
 
     const room = `scan_${repositoryFullName}`;
 
-    const job = await scanQueue.add("analyzeRepo", {
+    const job = await scanQueue.add('analyzeRepo', {
       repositoryFullName,
       githubAccessToken: req.githubAccessToken,
-      room
+      room,
     });
 
     return res.status(202).json({
-      message: "Analysis started in background.",
+      message: 'Analysis started in background.',
       jobId: job.id,
-      room
+      room,
     });
-  })
+  }),
 );
 
 module.exports = router;

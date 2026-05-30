@@ -1,6 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel
 
+
 class RepositoryMetadata(BaseModel):
     id: int
     name: str
@@ -11,6 +12,7 @@ class RepositoryMetadata(BaseModel):
     updatedAt: str
     size: int
 
+
 class SecuritySummary(BaseModel):
     critical: int
     high: int
@@ -18,11 +20,13 @@ class SecuritySummary(BaseModel):
     low: int
     unknown: int
 
+
 class SecurityScan(BaseModel):
     status: str
     severityScore: float
     summary: SecuritySummary
     vulnerabilities: List[dict]
+
 
 class PredictionResult(BaseModel):
     probability: float

@@ -1,15 +1,15 @@
-const axios = require("axios");
-const crypto = require("crypto");
-const config = require("../config/env");
-const redis  = require("./redis.service");
-const logger = require("../utils/logger");
+const axios = require('axios');
+const crypto = require('crypto');
+const config = require('../config/env');
+const redis = require('./redis.service');
+const logger = require('../utils/logger');
 
 // ─── Lightweight Circuit Breaker ──────────────────────────────────────────────
 const circuitBreaker = {
-  failures:  0,
+  failures: 0,
   openUntil: null,
-  THRESHOLD: 3,           // open after N consecutive failures
-  RESET_MS:  30_000,      // stay open for 30s, then half-open
+  THRESHOLD: 3, // open after N consecutive failures
+  RESET_MS: 30_000, // stay open for 30s, then half-open
 
   isOpen() {
     if (this.openUntil && Date.now() < this.openUntil) return true;
@@ -20,30 +20,36 @@ const circuitBreaker = {
     return false;
   },
 
-  recordSuccess() { this.failures = 0; this.openUntil = null; },
+  recordSuccess() {
+    this.failures = 0;
+    this.openUntil = null;
+  },
 
   recordFailure() {
     this.failures += 1;
     if (this.failures >= this.THRESHOLD) {
       this.openUntil = Date.now() + this.RESET_MS;
-      logger.warn("[GitHub] Circuit breaker OPEN — GitHub API unavailable, short-circuiting for 30s", {
-        failures: this.failures,
-        resetAt:  new Date(this.openUntil).toISOString(),
-      });
+      logger.warn(
+        '[GitHub] Circuit breaker OPEN — GitHub API unavailable, short-circuiting for 30s',
+        {
+          failures: this.failures,
+          resetAt: new Date(this.openUntil).toISOString(),
+        },
+      );
     }
   },
 };
 
 function createGitHubClient(accessToken) {
   const client = axios.create({
-    baseURL: "https://api.github.com",
+    baseURL: 'https://api.github.com',
     headers: {
-      Accept: "application/vnd.github+json",
+      Accept: 'application/vnd.github+json',
       Authorization: `Bearer ${accessToken}`,
-      "User-Agent": "DevPulse",
-      "X-GitHub-Api-Version": "2022-11-28"
+      'User-Agent': 'DevPulse',
+      'X-GitHub-Api-Version': '2022-11-28',
     },
-    timeout: 10000
+    timeout: 10000,
   });
 
   // ─── Request timing interceptors ─────────────────────────────────────────
@@ -53,8 +59,8 @@ function createGitHubClient(accessToken) {
 
     // Circuit breaker gate
     if (circuitBreaker.isOpen()) {
-      const err = new Error("GitHub API circuit breaker is open — too many consecutive failures");
-      err.code = "CIRCUIT_OPEN";
+      const err = new Error('GitHub API circuit breaker is open — too many consecutive failures');
+      err.code = 'CIRCUIT_OPEN';
       return Promise.reject(err);
     }
 
@@ -65,30 +71,30 @@ function createGitHubClient(accessToken) {
     (response) => {
       const durationMs = Date.now() - (response.config.metadata?.startMs || Date.now());
       circuitBreaker.recordSuccess();
-      logger.info("[GitHub] API call", {
-        endpoint:    response.config.url,
-        method:      response.config.method?.toUpperCase(),
-        status:      response.status,
+      logger.info('[GitHub] API call', {
+        endpoint: response.config.url,
+        method: response.config.method?.toUpperCase(),
+        status: response.status,
         duration_ms: durationMs,
-        rate_limit_remaining: response.headers["x-ratelimit-remaining"] ?? null,
+        rate_limit_remaining: response.headers['x-ratelimit-remaining'] ?? null,
       });
       return response;
     },
     (error) => {
       const durationMs = Date.now() - (error.config?.metadata?.startMs || Date.now());
-      if (error.code !== "CIRCUIT_OPEN") {
+      if (error.code !== 'CIRCUIT_OPEN') {
         circuitBreaker.recordFailure();
       }
-      logger.warn("[GitHub] API error", {
-        endpoint:    error.config?.url,
-        method:      error.config?.method?.toUpperCase(),
-        status:      error.response?.status ?? null,
+      logger.warn('[GitHub] API error', {
+        endpoint: error.config?.url,
+        method: error.config?.method?.toUpperCase(),
+        status: error.response?.status ?? null,
         duration_ms: durationMs,
-        code:        error.code,
-        message:     error.message,
+        code: error.code,
+        message: error.message,
       });
       return Promise.reject(error);
-    }
+    },
   );
 
   return client;
@@ -111,7 +117,7 @@ function mapRepository(repository) {
     size: repository.size,
     stargazersCount: repository.stargazers_count,
     updatedAt: repository.updated_at,
-    visibility: repository.visibility
+    visibility: repository.visibility,
   };
 }
 
@@ -131,7 +137,7 @@ async function fetchPaginatedGitHubResults(client, endpoint, initialParams) {
 
   for (let page = 1; page <= config.githubRepoPageLimit && nextUrl; page += 1) {
     const response = await client.get(nextUrl, {
-      params: nextParams
+      params: nextParams,
     });
 
     items.push(...response.data);
@@ -144,20 +150,20 @@ async function fetchPaginatedGitHubResults(client, endpoint, initialParams) {
 
 async function fetchAuthenticatedViewer(accessToken) {
   const client = createGitHubClient(accessToken);
-  const response = await client.get("/user");
+  const response = await client.get('/user');
 
   return {
     avatarUrl: response.data.avatar_url,
     id: response.data.id,
     login: response.data.login,
-    profileUrl: response.data.html_url
+    profileUrl: response.data.html_url,
   };
 }
 
 async function fetchUserRepositories(accessToken) {
-  const tokenHash = crypto.createHash("sha256").update(accessToken).digest("hex");
+  const tokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
   const cacheKey = `user:repos:${tokenHash}`;
-  
+
   const cached = await redis.get(cacheKey);
   if (cached) {
     console.log(`[GitHub] Cache HIT for user repos (${tokenHash.substring(0, 8)})`);
@@ -165,11 +171,11 @@ async function fetchUserRepositories(accessToken) {
   }
 
   const client = createGitHubClient(accessToken);
-  const repositories = await fetchPaginatedGitHubResults(client, "/user/repos", {
-    affiliation: "owner,collaborator,organization_member",
-    direction: "desc",
+  const repositories = await fetchPaginatedGitHubResults(client, '/user/repos', {
+    affiliation: 'owner,collaborator,organization_member',
+    direction: 'desc',
     per_page: 100,
-    sort: "updated"
+    sort: 'updated',
   });
 
   const mapped = repositories.map(mapRepository);
@@ -202,7 +208,7 @@ async function fetchCommitActivity(accessToken, repoFullName) {
   try {
     // Fetch up to 100 recent commits with stats
     const response = await client.get(`/repos/${repoFullName}/commits`, {
-      params: { since, per_page: 100 }
+      params: { since, per_page: 100 },
     });
 
     const commits = response.data || [];
@@ -222,8 +228,8 @@ async function fetchCommitActivity(accessToken, repoFullName) {
     });
 
     const statsResults = await Promise.allSettled(statsPromises);
-    statsResults.forEach(result => {
-      if (result.status === "fulfilled") {
+    statsResults.forEach((result) => {
+      if (result.status === 'fulfilled') {
         totalAdditions += result.value.additions || 0;
         totalDeletions += result.value.deletions || 0;
       }
@@ -235,7 +241,7 @@ async function fetchCommitActivity(accessToken, repoFullName) {
       totalAdditions,
       totalDeletions,
       codeChurn: totalAdditions + totalDeletions,
-      periodDays: 30
+      periodDays: 30,
     };
   } catch (error) {
     console.error(`[GitHub] Failed to fetch commit activity for ${repoFullName}:`, error.message);
@@ -245,7 +251,7 @@ async function fetchCommitActivity(accessToken, repoFullName) {
       totalAdditions: 0,
       totalDeletions: 0,
       codeChurn: 0,
-      periodDays: 30
+      periodDays: 30,
     };
   }
 }
@@ -258,15 +264,15 @@ async function fetchContributors(accessToken, repoFullName) {
 
   try {
     const response = await client.get(`/repos/${repoFullName}/contributors`, {
-      params: { per_page: 100, anon: false }
+      params: { per_page: 100, anon: false },
     });
     return {
       count: (response.data || []).length,
-      contributors: (response.data || []).slice(0, 10).map(c => ({
+      contributors: (response.data || []).slice(0, 10).map((c) => ({
         login: c.login,
         contributions: c.contributions,
-        avatarUrl: c.avatar_url
-      }))
+        avatarUrl: c.avatar_url,
+      })),
     };
   } catch (error) {
     console.error(`[GitHub] Failed to fetch contributors for ${repoFullName}:`, error.message);
@@ -306,5 +312,5 @@ module.exports = {
   fetchRepository,
   fetchUserRepositories,
   getNextPageUrl,
-  mapRepository
+  mapRepository,
 };

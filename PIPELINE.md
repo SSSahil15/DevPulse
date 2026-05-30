@@ -21,14 +21,14 @@
 
 ## Pipeline Stages
 
-| # | Stage | What it does | Blocks deploy? |
-|---|-------|-------------|----------------|
-| 1 | **Backend** | `npm ci` → syntax check → `npm test` | ✅ Yes if tests fail |
-| 2 | **Frontend** | `npm ci` → `vite build` → `npm test` | ✅ Yes if build fails |
-| 3 | **Security** | Trivy filesystem scan (CRITICAL/HIGH/MEDIUM) | ✅ Yes if critical CVEs |
-| 4 | **Docker** | Build image → Trivy image scan | ✅ Yes if build fails |
-| 5 | **Report** | POST results to DevPulse API | ❌ Never blocks |
-| 6 | **Deploy** | Gate check: only runs on `main` push | N/A |
+| #   | Stage        | What it does                                 | Blocks deploy?          |
+| --- | ------------ | -------------------------------------------- | ----------------------- |
+| 1   | **Backend**  | `npm ci` → syntax check → `npm test`         | ✅ Yes if tests fail    |
+| 2   | **Frontend** | `npm ci` → `vite build` → `npm test`         | ✅ Yes if build fails   |
+| 3   | **Security** | Trivy filesystem scan (CRITICAL/HIGH/MEDIUM) | ✅ Yes if critical CVEs |
+| 4   | **Docker**   | Build image → Trivy image scan               | ✅ Yes if build fails   |
+| 5   | **Report**   | POST results to DevPulse API                 | ❌ Never blocks         |
+| 6   | **Deploy**   | Gate check: only runs on `main` push         | N/A                     |
 
 ## Setup Instructions
 
@@ -49,16 +49,17 @@ The pipeline will trigger automatically on the push.
 
 Go to your repo → **Settings → Secrets and variables → Actions → New repository secret**
 
-| Secret | Value | Required? |
-|--------|-------|-----------|
-| `DEVPULSE_API_URL` | Your deployed backend URL (e.g. `https://devpulse-api.example.com`) | Optional — if not set, the report step is skipped |
-| `DEVPULSE_API_TOKEN` | A Bearer token for the pipeline API | Optional |
+| Secret               | Value                                                               | Required?                                         |
+| -------------------- | ------------------------------------------------------------------- | ------------------------------------------------- |
+| `DEVPULSE_API_URL`   | Your deployed backend URL (e.g. `https://devpulse-api.example.com`) | Optional — if not set, the report step is skipped |
+| `DEVPULSE_API_TOKEN` | A Bearer token for the pipeline API                                 | Optional                                          |
 
 > **For local development**, you don't need these secrets. The pipeline will still run all stages and save logs as artifacts.
 
 ### 3. View Results
 
 After a pipeline run:
+
 1. Go to your repo → **Actions** tab
 2. Click the latest run
 3. Download artifacts:
@@ -119,10 +120,10 @@ The pipeline results feed directly into the AI risk engine:
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| Pipeline fails on `npm ci` | Ensure `package-lock.json` is committed |
-| Trivy scan times out | First run downloads vulnerability DB (~30s) |
-| Docker build fails | Check the `backend/Dockerfile` paths |
-| Report step shows "skipping" | Set `DEVPULSE_API_URL` in GitHub Secrets |
-| Deploy stage doesn't run | Only triggers on `push` to `main` branch |
+| Problem                      | Solution                                    |
+| ---------------------------- | ------------------------------------------- |
+| Pipeline fails on `npm ci`   | Ensure `package-lock.json` is committed     |
+| Trivy scan times out         | First run downloads vulnerability DB (~30s) |
+| Docker build fails           | Check the `backend/Dockerfile` paths        |
+| Report step shows "skipping" | Set `DEVPULSE_API_URL` in GitHub Secrets    |
+| Deploy stage doesn't run     | Only triggers on `push` to `main` branch    |

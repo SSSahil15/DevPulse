@@ -1,10 +1,12 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
+
 class Settings(BaseSettings):
     """
     Environment variable configuration and validation for the AI service.
     """
+
     NODE_ENV: str = "development"
     SENTRY_DSN: str = ""
     SENTRY_ENVIRONMENT: str = "development"
@@ -17,6 +19,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://devpulse:devpulse@postgres:5432/devpulse"
 
     # Using pydantic_settings to read from .env if present
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+
 
 settings = Settings()

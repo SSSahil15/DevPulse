@@ -15,6 +15,7 @@ We prioritize user privacy and data security. Below are the rules and system pro
 ## 2. Token Lifetime & Eviction
 
 To minimize the impact of compromised session keys:
+
 - **Short-Lived JWTs**: DevPulse session JWTs are signed with a strict **7-day expiration window**.
 - **Instant Eviction on Logout**: When a user logs out or deletes their account:
   1. The backend deletes the encrypted GitHub OAuth token from PostgreSQL.

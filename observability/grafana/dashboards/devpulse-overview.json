@@ -14,14 +14,25 @@
       "title": "Request Rate (req/s)",
       "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{
-        "expr": "sum(rate(http_requests_total{job=\"devpulse-backend\"}[2m]))",
-        "legendFormat": "req/s"
-      }],
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{job=\"devpulse-backend\"}[2m]))",
+          "legendFormat": "req/s"
+        }
+      ],
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
-      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [
-        { "value": 0, "color": "green" }, { "value": 50, "color": "yellow" }, { "value": 100, "color": "red" }
-      ]}}}
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 50, "color": "yellow" },
+              { "value": 100, "color": "red" }
+            ]
+          }
+        }
+      }
     },
     {
       "id": 2,
@@ -29,14 +40,30 @@
       "title": "Error Rate (5xx %)",
       "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{
-        "expr": "100 * sum(rate(http_requests_total{job=\"devpulse-backend\",status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"devpulse-backend\"}[5m]))",
-        "legendFormat": "5xx %"
-      }],
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "unit": "percent", "colorMode": "background" },
-      "fieldConfig": { "defaults": { "unit": "percent", "color": { "mode": "thresholds" }, "thresholds": { "steps": [
-        { "value": 0, "color": "green" }, { "value": 1, "color": "yellow" }, { "value": 5, "color": "red" }
-      ]}}}
+      "targets": [
+        {
+          "expr": "100 * sum(rate(http_requests_total{job=\"devpulse-backend\",status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"devpulse-backend\"}[5m]))",
+          "legendFormat": "5xx %"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "unit": "percent",
+        "colorMode": "background"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 1, "color": "yellow" },
+              { "value": 5, "color": "red" }
+            ]
+          }
+        }
+      }
     },
     {
       "id": 3,
@@ -44,14 +71,26 @@
       "title": "API p99 Latency (ms)",
       "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{
-        "expr": "histogram_quantile(0.99, sum by(le) (rate(http_request_duration_seconds_bucket{job=\"devpulse-backend\"}[5m]))) * 1000",
-        "legendFormat": "p99 ms"
-      }],
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum by(le) (rate(http_request_duration_seconds_bucket{job=\"devpulse-backend\"}[5m]))) * 1000",
+          "legendFormat": "p99 ms"
+        }
+      ],
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
-      "fieldConfig": { "defaults": { "unit": "ms", "color": { "mode": "thresholds" }, "thresholds": { "steps": [
-        { "value": 0, "color": "green" }, { "value": 500, "color": "yellow" }, { "value": 2000, "color": "red" }
-      ]}}}
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 500, "color": "yellow" },
+              { "value": 2000, "color": "red" }
+            ]
+          }
+        }
+      }
     },
     {
       "id": 4,
@@ -59,14 +98,25 @@
       "title": "Scan Queue Depth",
       "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{
-        "expr": "bullmq_queue_waiting{job=\"devpulse-backend\",queue=\"scanQueue\"}",
-        "legendFormat": "waiting"
-      }],
+      "targets": [
+        {
+          "expr": "bullmq_queue_waiting{job=\"devpulse-backend\",queue=\"scanQueue\"}",
+          "legendFormat": "waiting"
+        }
+      ],
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
-      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [
-        { "value": 0, "color": "green" }, { "value": 10, "color": "yellow" }, { "value": 50, "color": "red" }
-      ]}}}
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 10, "color": "yellow" },
+              { "value": 50, "color": "red" }
+            ]
+          }
+        }
+      }
     },
     {
       "id": 5,
@@ -74,10 +124,12 @@
       "title": "HTTP Request Rate by Route",
       "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{
-        "expr": "sum by(route) (rate(http_requests_total{job=\"devpulse-backend\"}[2m]))",
-        "legendFormat": "{{route}}"
-      }],
+      "targets": [
+        {
+          "expr": "sum by(route) (rate(http_requests_total{job=\"devpulse-backend\"}[2m]))",
+          "legendFormat": "{{route}}"
+        }
+      ],
       "fieldConfig": { "defaults": { "unit": "reqps" } }
     },
     {
@@ -182,11 +234,18 @@
       "title": "Live Application Logs",
       "gridPos": { "x": 0, "y": 28, "w": 24, "h": 10 },
       "datasource": { "type": "loki", "uid": "loki" },
-      "targets": [{
-        "expr": "{job=~\"devpulse_backend|devpulse_worker|devpulse_ai\"} | json",
-        "legendFormat": ""
-      }],
-      "options": { "showTime": true, "showLabels": true, "wrapLogMessage": false, "sortOrder": "Descending" }
+      "targets": [
+        {
+          "expr": "{job=~\"devpulse_backend|devpulse_worker|devpulse_ai\"} | json",
+          "legendFormat": ""
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "wrapLogMessage": false,
+        "sortOrder": "Descending"
+      }
     }
   ]
 }

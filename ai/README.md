@@ -7,4 +7,3 @@ Planned components:
 - Dummy CI logs dataset
 - Failure prediction model with scikit-learn
 - Explanation engine that turns scan results and errors into human-readable guidance
-

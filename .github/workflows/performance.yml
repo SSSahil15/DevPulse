@@ -3,7 +3,7 @@
 # ║  Bundle Size · Lighthouse CI · Backend Smoke Test           ║
 # ╚══════════════════════════════════════════════════════════════╝
 
-name: "⚡ Performance Pipeline"
+name: '⚡ Performance Pipeline'
 
 on:
   push:
@@ -13,13 +13,13 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: '20'
   # Performance budgets — override via GitHub Repository Variables
   BUNDLE_BUDGET_KB: ${{ vars.BUNDLE_BUDGET_KB || '350' }}
-  LHCI_MIN_SCORE:   ${{ vars.LHCI_MIN_SCORE   || '0.9' }}
+  LHCI_MIN_SCORE: ${{ vars.LHCI_MIN_SCORE   || '0.9' }}
 
 permissions:
-  contents:      read
+  contents: read
   pull-requests: write
 
 concurrency:
@@ -27,14 +27,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   # ─── Job 1: Frontend Bundle Size ───────────────────────────
   bundle-size:
-    name: "📦 Bundle Size Check"
+    name: '📦 Bundle Size Check'
     runs-on: ubuntu-latest
     outputs:
       total_gzip_kb: ${{ steps.measure.outputs.total_gzip_kb }}
-      budget_ok:     ${{ steps.measure.outputs.budget_ok }}
+      budget_ok: ${{ steps.measure.outputs.budget_ok }}
     steps:
       - uses: actions/checkout@v4
 
@@ -44,17 +43,17 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: "📦 Install frontend deps"
+      - name: '📦 Install frontend deps'
         working-directory: frontend
         run: npm install --no-audit --no-fund
 
-      - name: "🏗️ Build frontend"
+      - name: '🏗️ Build frontend'
         working-directory: frontend
         run: npm run build
         env:
           CI: true
 
-      - name: "📊 Measure gzip bundle size"
+      - name: '📊 Measure gzip bundle size'
         id: measure
         working-directory: frontend
         run: |
@@ -98,14 +97,14 @@ jobs:
         env:
           BUNDLE_BUDGET_KB: ${{ env.BUNDLE_BUDGET_KB }}
 
-      - name: "🚨 Fail if over budget"
+      - name: '🚨 Fail if over budget'
         if: steps.measure.outputs.budget_ok == 'false'
         run: |
           echo "::error::Bundle size (${{ steps.measure.outputs.total_gzip_kb }} KB) exceeds budget (${{ env.BUNDLE_BUDGET_KB }} KB)."
           echo "::error::Open dist/stats.html locally to identify large modules."
           exit 1
 
-      - name: "📤 Upload frontend dist"
+      - name: '📤 Upload frontend dist'
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -115,7 +114,7 @@ jobs:
 
   # ─── Job 2: Lighthouse CI ──────────────────────────────────
   lighthouse:
-    name: "🔦 Lighthouse CI"
+    name: '🔦 Lighthouse CI'
     runs-on: ubuntu-latest
     needs: bundle-size
     steps:
@@ -127,26 +126,26 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: "📦 Install frontend deps"
+      - name: '📦 Install frontend deps'
         working-directory: frontend
         run: npm install --no-audit --no-fund
 
-      - name: "🏗️ Build frontend"
+      - name: '🏗️ Build frontend'
         working-directory: frontend
         run: npm run build
         env:
           CI: true
 
-      - name: "🔦 Install Lighthouse CI"
+      - name: '🔦 Install Lighthouse CI'
         run: npm install -g @lhci/cli@0.14.x
 
-      - name: "🔦 Run Lighthouse CI"
+      - name: '🔦 Run Lighthouse CI'
         working-directory: frontend
         run: lhci autorun --config=../.github/lighthouse/lighthouserc.js
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
 
-      - name: "📋 Lighthouse summary"
+      - name: '📋 Lighthouse summary'
         if: always()
         run: |
           echo "## Lighthouse CI" >> $GITHUB_STEP_SUMMARY
@@ -157,7 +156,7 @@ jobs:
 
   # ─── Job 3: Backend Health Smoke Test ──────────────────────
   backend-smoke:
-    name: "🔥 Backend Smoke Test (p99 < 500ms)"
+    name: '🔥 Backend Smoke Test (p99 < 500ms)'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -168,24 +167,24 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
-      - name: "📦 Install backend deps"
+      - name: '📦 Install backend deps'
         working-directory: backend
         run: npm install --no-audit --no-fund
 
-      - name: "🔥 Run health endpoint latency smoke test"
+      - name: '🔥 Run health endpoint latency smoke test'
         working-directory: backend
         # smoke-test.js starts the server, fires 40 requests, asserts p99 < 500ms
         run: node smoke-test.js 500
         env:
           NODE_ENV: test
-          TOKEN_ENCRYPTION_SECRET: "00000000000000000000000000000000"
-          JWT_SECRET:              "00000000000000000000000000000000"
-          GITHUB_CLIENT_ID:        "ci-smoke-client-id"
-          GITHUB_CLIENT_SECRET:    "ci-smoke-client-secret"
-          DATABASE_URL:            ""
-          REDIS_URL:               ""
+          TOKEN_ENCRYPTION_SECRET: '00000000000000000000000000000000'
+          JWT_SECRET: '00000000000000000000000000000000'
+          GITHUB_CLIENT_ID: 'ci-smoke-client-id'
+          GITHUB_CLIENT_SECRET: 'ci-smoke-client-secret'
+          DATABASE_URL: ''
+          REDIS_URL: ''
 
-      - name: "📋 Smoke test summary"
+      - name: '📋 Smoke test summary'
         if: always()
         run: |
           echo "## Backend Smoke Test" >> $GITHUB_STEP_SUMMARY
@@ -195,12 +194,12 @@ jobs:
 
   # ─── Job 4: PR Comment ─────────────────────────────────────
   pr-comment:
-    name: "💬 PR Performance Summary"
+    name: '💬 PR Performance Summary'
     runs-on: ubuntu-latest
     needs: [bundle-size, lighthouse, backend-smoke]
     if: always() && github.event_name == 'pull_request'
     steps:
-      - name: "💬 Post or update performance comment"
+      - name: '💬 Post or update performance comment'
         uses: actions/github-script@v7
         with:
           script: |

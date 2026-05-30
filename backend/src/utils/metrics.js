@@ -51,7 +51,7 @@ const bullmqQueueActive = new promClient.Gauge({
 const bullmqJobsTotal = new promClient.Counter({
   name: 'bullmq_jobs_total',
   help: 'Total number of BullMQ jobs processed',
-  labelNames: ['queue', 'status'],  // status: completed | failed
+  labelNames: ['queue', 'status'], // status: completed | failed
   registers: [register],
 });
 
@@ -113,12 +113,15 @@ function httpMetricsMiddleware(req, res, next) {
   res.on('finish', () => {
     const durationSec = Number(process.hrtime.bigint() - startNs) / 1e9;
     // Use matched route pattern if available, else fall back to raw path
-    const route      = req.route?.path || req.path || 'unknown';
-    const routeKey   = `${req.method} ${route}`;
+    const route = req.route?.path || req.path || 'unknown';
+    const routeKey = `${req.method} ${route}`;
     const statusCode = String(res.statusCode);
 
     httpRequestsTotal.inc({ method: req.method, route: routeKey, status_code: statusCode });
-    httpRequestDurationSeconds.observe({ method: req.method, route: routeKey, status_code: statusCode }, durationSec);
+    httpRequestDurationSeconds.observe(
+      { method: req.method, route: routeKey, status_code: statusCode },
+      durationSec,
+    );
   });
 
   next();

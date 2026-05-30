@@ -7,6 +7,7 @@ DevPulse allows security engineers and developers to securely export and share r
 ## 1. How Report Tokens Work
 
 When you click **Share Report** in the dashboard:
+
 1. DevPulse captures the current static snapshot of the selected repository's score, vulnerabilities, and commit activity.
 2. The backend generates a secure token using a unique prefix pattern:
    `dp_rpt_[a-f0-9]{24}`
@@ -27,6 +28,7 @@ When you click **Share Report** in the dashboard:
 ## 3. Security & Expiration Policies
 
 To ensure complete data protection and privacy:
+
 - **No Private Credentials**: Shared reports are completely stripped of raw environment variables, secrets, and repository access tokens.
 - **Read-Only**: Shared reports are static snapshots. Users viewing a shared report cannot trigger new simulations or access other dashboard pages.
 - **Expiration Policy**: By default, shared reports expire and become invalid after **30 days**. Once expired, querying the endpoint will return a clean `404 Not Found` response.

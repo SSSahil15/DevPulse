@@ -49,4 +49,3 @@ overrides:
       processors:
         - service-graphs
         - span-metrics
-

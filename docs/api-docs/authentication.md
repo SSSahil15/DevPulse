@@ -21,11 +21,11 @@ DevPulse implements a double-layered security authentication layout using **GitH
 
 DevPulse requests a minimal set of OAuth scopes required to perform health analyses:
 
-| Scope | Purpose |
-|-------|---------|
-| `repo` | Full control of private/public repositories (needed to clone and execute Trivy fs scans) |
-| `read:user` | Read user profile data (needed to synchronize names and avatars) |
-| `user:email` | Read primary email address (needed for email status alerts) |
+| Scope        | Purpose                                                                                  |
+| ------------ | ---------------------------------------------------------------------------------------- |
+| `repo`       | Full control of private/public repositories (needed to clone and execute Trivy fs scans) |
+| `read:user`  | Read user profile data (needed to synchronize names and avatars)                         |
+| `user:email` | Read primary email address (needed for email status alerts)                              |
 
 ---
 

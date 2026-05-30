@@ -40,6 +40,7 @@ GROQ_API_KEY=prod_groq_api_key
 ## 3. Database Backups & Maintenance
 
 To prevent catastrophic data loss:
+
 1. **Automated Snapshots**: Enforce daily automated snapshots of the production PostgreSQL cluster with a 30-day retention window.
 2. **Maintenance Mode**: Schedule heavy table migrations during low-traffic windows (e.g. Sundays 02:00 UTC) using transaction wrappers:
    ```sql

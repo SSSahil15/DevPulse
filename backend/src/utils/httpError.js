@@ -13,8 +13,8 @@
  */
 function createHttpError(statusCode, message) {
   const error = new Error(message);
-  error.statusCode    = statusCode;
-  error.isOperational = true;   // Safe, expected error — not a bug
+  error.statusCode = statusCode;
+  error.isOperational = true; // Safe, expected error — not a bug
   return error;
 }
 
@@ -29,5 +29,3 @@ function isHttpError(err) {
 
 module.exports = createHttpError;
 module.exports.isHttpError = isHttpError;
-
-

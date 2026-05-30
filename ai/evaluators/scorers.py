@@ -3,6 +3,7 @@ from langchain_core.prompts import PromptTemplate
 from models.config import settings
 from models.eval import AccuracyScore, HallucinationScore
 
+
 class Evaluator:
     def __init__(self):
         # We use a stronger model for evaluation if configured
@@ -11,12 +12,16 @@ class Evaluator:
             model=settings.EVAL_MODEL_NAME,
             openai_api_key=api_key,
             openai_api_base=settings.OPENAI_API_BASE,
-            temperature=0.0
+            temperature=0.0,
         )
-        
+
         # LLM bound to Pydantic outputs (using json_mode for Groq compatibility)
-        self.accuracy_judge = self.llm.with_structured_output(AccuracyScore, method="json_mode")
-        self.hallucination_judge = self.llm.with_structured_output(HallucinationScore, method="json_mode")
+        self.accuracy_judge = self.llm.with_structured_output(
+            AccuracyScore, method="json_mode"
+        )
+        self.hallucination_judge = self.llm.with_structured_output(
+            HallucinationScore, method="json_mode"
+        )
 
         self.accuracy_prompt = PromptTemplate.from_template(
             """You are an expert evaluator. Compare the generated AI response to the expected ground truth.

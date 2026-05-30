@@ -18,8 +18,9 @@ const { NodeSDK } = require('@opentelemetry/sdk-node');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
 
-const OTEL_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://devpulse_otel_collector:4318';
-const SERVICE_NAME  = process.env.OTEL_SERVICE_NAME || 'devpulse-backend';
+const OTEL_ENDPOINT =
+  process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://devpulse_otel_collector:4318';
+const SERVICE_NAME = process.env.OTEL_SERVICE_NAME || 'devpulse-backend';
 
 const sdk = new NodeSDK({
   serviceName: SERVICE_NAME,

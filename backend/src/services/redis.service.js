@@ -1,30 +1,30 @@
-const { createClient } = require("redis");
-const config = require("../config/env");
+const { createClient } = require('redis');
+const config = require('../config/env');
 
 let client = null;
 let isConnected = false;
 
-if (process.env.NODE_ENV !== "test" && config.redisUrl) {
+if (process.env.NODE_ENV !== 'test' && config.redisUrl) {
   client = createClient({
     url: config.redisUrl,
   });
 
-  client.on("error", (err) => {
-    console.error("[Redis] ❌ Client Error:", err.message);
+  client.on('error', (err) => {
+    console.error('[Redis] ❌ Client Error:', err.message);
     isConnected = false;
   });
 
-  client.on("connect", () => {
-    console.log("[Redis] Connecting to server...");
+  client.on('connect', () => {
+    console.log('[Redis] Connecting to server...');
   });
 
-  client.on("ready", () => {
-    console.log("[Redis] ✓ Client is ready and connected.");
+  client.on('ready', () => {
+    console.log('[Redis] ✓ Client is ready and connected.');
     isConnected = true;
   });
 
   client.connect().catch((err) => {
-    console.error("[Redis] ❌ Initial connection failed:", err.message);
+    console.error('[Redis] ❌ Initial connection failed:', err.message);
     isConnected = false;
   });
 }

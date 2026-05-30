@@ -13,7 +13,7 @@ on:
   workflow_dispatch: # Manual trigger from Actions tab
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: '20'
   DOCKER_IMAGE: devpulse-backend
 
 permissions:
@@ -27,10 +27,9 @@ concurrency:
 
 # ═══════════════════════════════════════════════════════════════
 jobs:
-
   # ─── Stage 1: Backend ──────────────────────────────────────
   backend:
-    name: "🔧 Backend · Build & Test (Node ${{ matrix.node }})"
+    name: '🔧 Backend · Build & Test (Node ${{ matrix.node }})'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
@@ -42,26 +41,26 @@ jobs:
         working-directory: backend
 
     steps:
-      - name: "📥 Checkout"
+      - name: '📥 Checkout'
         uses: actions/checkout@v4
 
-      - name: "⚙️ Setup Node.js"
+      - name: '⚙️ Setup Node.js'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
-      - name: "📁 Prepare logs"
+      - name: '📁 Prepare logs'
         run: mkdir -p ${{ github.workspace }}/logs
 
-      - name: "📦 Install dependencies"
+      - name: '📦 Install dependencies'
         run: |
           npm install --no-audit --no-fund 2>&1 | tee ${{ github.workspace }}/logs/backend-install.log
           echo "dep_count=$(ls node_modules | wc -l | tr -d ' ')" >> $GITHUB_OUTPUT
         id: install
 
-      - name: "🧪 Run tests with coverage"
+      - name: '🧪 Run tests with coverage'
         id: backend_tests
         run: |
           set +e
@@ -75,7 +74,7 @@ jobs:
           fi
           exit 0
 
-      - name: "📋 Test summary"
+      - name: '📋 Test summary'
         if: always()
         run: |
           echo "### 🧪 Backend Test Results (Node ${{ matrix.node }})" >> $GITHUB_STEP_SUMMARY
@@ -88,7 +87,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "📦 Dependencies installed: ${{ steps.install.outputs.dep_count }}" >> $GITHUB_STEP_SUMMARY
 
-      - name: "📤 Upload logs"
+      - name: '📤 Upload logs'
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -96,7 +95,7 @@ jobs:
           path: ${{ github.workspace }}/logs/
           retention-days: 14
 
-      - name: "📤 Upload coverage report"
+      - name: '📤 Upload coverage report'
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -109,7 +108,7 @@ jobs:
 
   # ─── Stage 2: Frontend ────────────────────────────────────
   frontend:
-    name: "🎨 Frontend · Build & Test (Node ${{ matrix.node }})"
+    name: '🎨 Frontend · Build & Test (Node ${{ matrix.node }})'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
@@ -121,23 +120,23 @@ jobs:
         working-directory: frontend
 
     steps:
-      - name: "📥 Checkout"
+      - name: '📥 Checkout'
         uses: actions/checkout@v4
 
-      - name: "⚙️ Setup Node.js"
+      - name: '⚙️ Setup Node.js'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: "📁 Prepare logs"
+      - name: '📁 Prepare logs'
         run: mkdir -p ${{ github.workspace }}/logs
 
-      - name: "📦 Install dependencies"
+      - name: '📦 Install dependencies'
         run: npm install --no-audit --no-fund 2>&1 | tee ${{ github.workspace }}/logs/frontend-install.log
 
-      - name: "🏗️ Build production bundle"
+      - name: '🏗️ Build production bundle'
         id: frontend_build
         run: |
           set +e
@@ -154,7 +153,7 @@ jobs:
           fi
           exit 0
 
-      - name: "🧪 Run tests with coverage"
+      - name: '🧪 Run tests with coverage'
         id: frontend_tests
         run: |
           set +e
@@ -167,7 +166,7 @@ jobs:
           fi
           exit 0
 
-      - name: "📋 Build summary"
+      - name: '📋 Build summary'
         if: always()
         run: |
           echo "### 🎨 Frontend Results (Node ${{ matrix.node }})" >> $GITHUB_STEP_SUMMARY
@@ -178,7 +177,7 @@ jobs:
           echo "| Tests | ${{ steps.frontend_tests.outputs.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Bundle Size | ${{ steps.frontend_build.outputs.bundle_size || 'N/A' }} |" >> $GITHUB_STEP_SUMMARY
 
-      - name: "📤 Upload logs"
+      - name: '📤 Upload logs'
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -186,7 +185,7 @@ jobs:
           path: ${{ github.workspace }}/logs/
           retention-days: 14
 
-      - name: "📤 Upload build output"
+      - name: '📤 Upload build output'
         if: steps.frontend_build.outputs.result == 'success' && matrix.node == 20
         uses: actions/upload-artifact@v4
         with:
@@ -194,7 +193,7 @@ jobs:
           path: frontend/dist/
           retention-days: 7
 
-      - name: "📤 Upload coverage report"
+      - name: '📤 Upload coverage report'
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -208,36 +207,36 @@ jobs:
 
   # ─── Stage 3: Playwright E2E Tests ───────────────────────
   e2e:
-    name: "🎭 E2E · Playwright Tests"
+    name: '🎭 E2E · Playwright Tests'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [backend, frontend]
-    
+
     steps:
-      - name: "📥 Checkout"
+      - name: '📥 Checkout'
         uses: actions/checkout@v4
 
-      - name: "⚙️ Setup Node.js"
+      - name: '⚙️ Setup Node.js'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
-      - name: "📦 Install Root and Service Dependencies"
+      - name: '📦 Install Root and Service Dependencies'
         run: |
           npm install --no-audit --no-fund
           cd backend && npm install --no-audit --no-fund
           cd ../frontend && npm install --no-audit --no-fund
 
-      - name: "🎭 Install Playwright Browsers"
+      - name: '🎭 Install Playwright Browsers'
         run: npx playwright install --with-deps
 
-      - name: "🎭 Run Playwright E2E Tests"
+      - name: '🎭 Run Playwright E2E Tests'
         run: npx playwright test
         env:
           CI: true
 
-      - name: "📤 Upload Playwright Report"
+      - name: '📤 Upload Playwright Report'
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -247,18 +246,18 @@ jobs:
 
   # ─── Stage 4: Security Scan ───────────────────────────────
   security:
-    name: "🛡️ Security · Trivy Scan"
+    name: '🛡️ Security · Trivy Scan'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - name: "📥 Checkout"
+      - name: '📥 Checkout'
         uses: actions/checkout@v4
 
-      - name: "📁 Prepare reports"
+      - name: '📁 Prepare reports'
         run: mkdir -p security-reports
 
-      - name: "🛡️ Trivy filesystem scan (Vulns, Secrets, Config)"
+      - name: '🛡️ Trivy filesystem scan (Vulns, Secrets, Config)'
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
@@ -269,7 +268,7 @@ jobs:
           scanners: vuln,secret,config
         continue-on-error: true
 
-      - name: "🛡️ Trivy — SARIF upload (Security Tab)"
+      - name: '🛡️ Trivy — SARIF upload (Security Tab)'
         uses: aquasecurity/trivy-action@master
         continue-on-error: true
         with:
@@ -279,16 +278,16 @@ jobs:
           output: security-reports/trivy-fs.sarif
           severity: CRITICAL,HIGH
           scanners: vuln,secret
-          exit-code: "0"
+          exit-code: '0'
 
-      - name: "📤 Upload Trivy SARIF"
+      - name: '📤 Upload Trivy SARIF'
         uses: github/codeql-action/upload-sarif@v3
         continue-on-error: true
         with:
           sarif_file: security-reports/trivy-fs.sarif
           category: trivy-filesystem
 
-      - name: "📊 Parse vulnerability counts"
+      - name: '📊 Parse vulnerability counts'
         id: vuln_count
         if: always()
         run: |
@@ -369,7 +368,7 @@ jobs:
             fi
           } | tee security-reports/trivy-summary.txt
 
-      - name: "📋 Security summary"
+      - name: '📋 Security summary'
         if: always()
         run: |
           echo "### 🛡️ Security Scan Results" >> $GITHUB_STEP_SUMMARY
@@ -387,7 +386,7 @@ jobs:
             echo "⚠️ **$TOTAL vulnerabilities found** — review the security-reports artifact" >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: "🚨 Fail on critical vulnerabilities"
+      - name: '🚨 Fail on critical vulnerabilities'
         run: |
           CRITICAL=${{ steps.vuln_count.outputs.vuln_critical || 0 }}
           if [ "$CRITICAL" -gt 0 ]; then
@@ -395,7 +394,7 @@ jobs:
             exit 1
           fi
 
-      - name: "📤 Upload security reports"
+      - name: '📤 Upload security reports'
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -412,19 +411,19 @@ jobs:
 
   # ─── Stage 5: Docker ──────────────────────────────────────
   docker:
-    name: "🐳 Docker · Build & Scan"
+    name: '🐳 Docker · Build & Scan'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [backend]
 
     steps:
-      - name: "📥 Checkout"
+      - name: '📥 Checkout'
         uses: actions/checkout@v4
 
-      - name: "📁 Prepare reports"
+      - name: '📁 Prepare reports'
         run: mkdir -p docker-reports
 
-      - name: "🐳 Build Docker image"
+      - name: '🐳 Build Docker image'
         id: docker_build
         run: |
           echo "Building ${{ env.DOCKER_IMAGE }}:${{ github.sha }}"
@@ -449,7 +448,7 @@ jobs:
           echo "result=success" >> $GITHUB_OUTPUT
           echo "image_size=$IMG_SIZE" >> $GITHUB_OUTPUT
 
-      - name: "🛡️ Scan Docker image with Trivy"
+      - name: '🛡️ Scan Docker image with Trivy'
         id: docker_scan
         if: steps.docker_build.outputs.result == 'success'
         uses: aquasecurity/trivy-action@master
@@ -460,7 +459,7 @@ jobs:
           severity: CRITICAL,HIGH
         continue-on-error: true
 
-      - name: "📊 Parse Docker scan results"
+      - name: '📊 Parse Docker scan results'
         id: docker_vulns
         if: always()
         run: |
@@ -482,7 +481,7 @@ jobs:
             echo "Image Vulns  : $IMG_VULNS"
           } | tee docker-reports/docker-summary.txt
 
-      - name: "📋 Docker summary"
+      - name: '📋 Docker summary'
         if: always()
         run: |
           echo "### 🐳 Docker Results" >> $GITHUB_STEP_SUMMARY
@@ -494,7 +493,7 @@ jobs:
           echo "| Image Vulnerabilities | ${{ steps.docker_vulns.outputs.count || 0 }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Tag | \`${{ env.DOCKER_IMAGE }}:${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
 
-      - name: "📤 Upload Docker reports"
+      - name: '📤 Upload Docker reports'
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -509,17 +508,17 @@ jobs:
 
   # ─── Stage 6: Report Results ──────────────────────────────
   report:
-    name: "📡 Report · Send to DevPulse API"
+    name: '📡 Report · Send to DevPulse API'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [backend, frontend, security, docker, e2e]
     if: always()
 
     steps:
-      - name: "📥 Checkout"
+      - name: '📥 Checkout'
         uses: actions/checkout@v4
 
-      - name: "📡 Build and send pipeline report"
+      - name: '📡 Build and send pipeline report'
         run: |
           # Determine overall status
           BACKEND="${{ needs.backend.result }}"
@@ -608,7 +607,7 @@ jobs:
             echo "   To enable: Settings → Secrets → DEVPULSE_API_URL"
           fi
 
-      - name: "📋 Report summary"
+      - name: '📋 Report summary'
         if: always()
         run: |
           echo "### 📡 Pipeline Report" >> $GITHUB_STEP_SUMMARY
@@ -623,14 +622,14 @@ jobs:
 
   # ─── Stage 7: Deploy Gate ─────────────────────────────────
   deploy:
-    name: "🚀 Deploy · Quality Gate"
+    name: '🚀 Deploy · Quality Gate'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [backend, frontend, security, docker, e2e]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: "🚦 Evaluate deployment readiness"
+      - name: '🚦 Evaluate deployment readiness'
         id: gate
         run: |
           echo "══════════════════════════════════════════════"
@@ -719,7 +718,7 @@ jobs:
             exit 1
           fi
 
-      - name: "📋 Deploy summary"
+      - name: '📋 Deploy summary'
         if: always()
         run: |
           echo "### 🚀 Deployment Gate" >> $GITHUB_STEP_SUMMARY

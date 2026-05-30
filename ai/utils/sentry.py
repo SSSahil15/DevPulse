@@ -8,6 +8,7 @@ _IS_PROD = settings.NODE_ENV == "production"
 # Sensitive request fields that must never reach Sentry
 _REDACT_KEYS = {"authorization", "x-api-key", "x-internal-secret", "cookie"}
 
+
 def _before_send(event, hint):
     """Strip auth headers and any PII before the event is sent to Sentry."""
     req = event.get("request", {})
@@ -19,6 +20,7 @@ def _before_send(event, hint):
             headers[key] = "[REDACTED]"
 
     return event
+
 
 def init_sentry():
     sentry_sdk.init(

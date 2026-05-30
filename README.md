@@ -39,22 +39,26 @@ By merging CI/CD heuristics, Trivy security scanning, repository health signals,
 DevPulse has been heavily audited, refactored, and hardened:
 
 ### 🔒 Security & Rate Limiting
+
 - **Strict Input Validation**: Zod schemas enforce query validation across all API endpoints, mitigating SSRF, XSS, and SQLi.
 - **Redis-Backed Rate Limiting**: Wired rate limiters to critical endpoints (analysis submissions, AI chat) using `express-rate-limit` and `rate-limit-redis` to guard against scraping, bot abuse, and DoS.
 - **HTTP Security Headers**: Enforced using `helmet` with strict CSP rules.
 - **CORS Lockdowns**: Dynamic origin checking for secure local testing and production domains.
 
 ### 📊 Database Optimizations
+
 - **PostgreSQL Migration**: Fully migrated to Postgres with a robust connection pool.
 - **Windowed Pagination**: Employs `COUNT(*) OVER()` window functions to retrieve listings and total counts in a single database round-trip.
 
 ### 📝 Observability & Distributed Tracing
+
 - **Grafana Dashboards**: Includes pre-provisioned Grafana dashboards tracking backend latency, AI inference duration, worker queue depths, and PostgreSQL stats.
 - **OpenTelemetry**: Spans propagate across the Node.js backend and the Python AI microservice. Traces are exported directly to Tempo.
 - **Prometheus Metrics**: `prom-client` in Node and Python exposes robust API tracking metrics.
 - **Loki Logging**: Complete central log aggregation via Docker's Promtail scraper.
 
 ### 🧹 Codebase Clarity
+
 - DevPulse has been surgically cleaned. All obsolete test suites, unused legacy custom metric wrappers, dead AI RAG integrations, and abandoned scripts have been entirely removed to ensure a 100% lean, production-only footprint.
 
 ---
@@ -62,21 +66,25 @@ DevPulse has been heavily audited, refactored, and hardened:
 ## 🛠️ Tech Stack
 
 **Frontend**
+
 - React 18 & Vite (Tailwind CSS, Glassmorphism, Recharts, Lucide React)
 - Socket.io Client (Real-time updates)
 
 **Backend (Node.js)**
+
 - Express.js (API & WebSockets)
 - PostgreSQL (Primary DB)
 - Redis & BullMQ (Message broker & Job queues)
 - Custom JWT Authentication & GitHub OAuth
 
 **AI Microservice (Python)**
+
 - FastAPI & Uvicorn
 - LangChain & OpenAI / Groq SDKs
 - Dedicated Evaluation Framework
 
 **Observability & Infrastructure**
+
 - Docker & Docker Compose
 - Grafana, Prometheus, Loki, Tempo, OpenTelemetry Collector
 
@@ -101,6 +109,7 @@ devpulse/
 DevPulse is fully Dockerized for a seamless one-click local setup!
 
 ### Prerequisites
+
 - **Docker** and **Docker Compose** installed.
 - **Groq API Key**
 - **GitHub OAuth App** (Authorization callback URL set to `http://localhost:4000/auth/github/callback`)
@@ -108,6 +117,7 @@ DevPulse is fully Dockerized for a seamless one-click local setup!
 ### 1. Environment Configuration
 
 Create a `.env` file in the `backend/` directory:
+
 ```env
 NODE_ENV=production
 PORT=4000
@@ -131,6 +141,7 @@ GROQ_API_KEY=your-groq-api-key
 ```
 
 Create a `.env` file in the `frontend/` directory:
+
 ```env
 VITE_API_URL=http://localhost:4000
 ```
@@ -140,11 +151,13 @@ VITE_API_URL=http://localhost:4000
 You can launch the core application alone, or with the full observability stack attached:
 
 **Start Core Stack (Frontend, Backend, Worker, AI, Postgres, Redis):**
+
 ```bash
 docker compose up -d
 ```
 
 **Start Core + Full Observability Stack (Grafana, Loki, Tempo, Prometheus):**
+
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d
 ```
@@ -178,6 +191,7 @@ If you are deploying the **Frontend** to Vercel and the **Backend/AI** to Render
    ```
 
 **Required Production Backend Variables:**
+
 ```env
 NODE_ENV=production
 BACKEND_URL=https://your-backend.onrender.com
@@ -203,4 +217,5 @@ GROQ_API_KEY=your-groq-api-key
 ---
 
 ## 📝 License
+
 MIT License.

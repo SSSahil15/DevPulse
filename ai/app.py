@@ -16,7 +16,9 @@ try:
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
-    _OTEL_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://devpulse_otel_collector:4318")
+    _OTEL_ENDPOINT = os.getenv(
+        "OTEL_EXPORTER_OTLP_ENDPOINT", "http://devpulse_otel_collector:4318"
+    )
     _provider = TracerProvider()
     _provider.add_span_processor(
         BatchSpanProcessor(OTLPSpanExporter(endpoint=f"{_OTEL_ENDPOINT}/v1/traces"))
@@ -27,8 +29,7 @@ except Exception:
     _OTEL_ENABLED = False
 
 from models.config import settings
-from models.api import AnalysisRequest, AnalysisResponse, IngestRequest, RAGQueryRequest
-from pipelines.analysis import AnalysisPipeline
+from models.api import AnalysisRequest, AnalysisResponse
 from pipelines.analysis import AnalysisPipeline
 from inference.llm import AdvancedLLMPredictor
 from utils.logger import log
@@ -46,16 +47,21 @@ if settings.SENTRY_DSN:
 
 startup_complete = False
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global startup_complete
     startup_complete = True
     log.info(
         "AI service startup complete",
-        extra={"env": settings.NODE_ENV, "sentry": "on" if settings.SENTRY_DSN else "off"},
+        extra={
+            "env": settings.NODE_ENV,
+            "sentry": "on" if settings.SENTRY_DSN else "off",
+        },
     )
     yield
     log.info("AI service shutting down gracefully")
+
 
 app = FastAPI(title="DevPulse AI Service", lifespan=lifespan)
 
@@ -67,11 +73,7 @@ if _OTEL_ENABLED:
 analysis_pipeline = AnalysisPipeline(predictor=AdvancedLLMPredictor())
 
 # ─── CORS & Middleware ────────────────────────────────────────────────────────
-_CORS_ORIGINS = (
-    [settings.BACKEND_URL]
-    if settings.NODE_ENV == "production"
-    else ["*"]
-)
+_CORS_ORIGINS = [settings.BACKEND_URL] if settings.NODE_ENV == "production" else ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -87,6 +89,7 @@ app.add_middleware(
     ],
 )
 
+
 @app.middleware("http")
 async def http_access_log(request: Request, call_next):
     start = time.perf_counter()
@@ -96,13 +99,13 @@ async def http_access_log(request: Request, call_next):
         log.error(
             "http",
             extra={
-                "type":        "http_access",
-                "method":      request.method,
-                "url":         str(request.url.path),
-                "status":      500,
+                "type": "http_access",
+                "method": request.method,
+                "url": str(request.url.path),
+                "status": 500,
                 "duration_ms": round((time.perf_counter() - start) * 1000),
-                "requestId":   request.headers.get("x-request-id", ""),
-                "error":       str(exc),
+                "requestId": request.headers.get("x-request-id", ""),
+                "error": str(exc),
             },
         )
         raise
@@ -112,18 +115,20 @@ async def http_access_log(request: Request, call_next):
     getattr(log, level)(
         "http",
         extra={
-            "type":        "http_access",
-            "method":      request.method,
-            "url":         str(request.url.path),
-            "status":      status,
+            "type": "http_access",
+            "method": request.method,
+            "url": str(request.url.path),
+            "status": status,
             "duration_ms": duration_ms,
-            "requestId":   request.headers.get("x-request-id", ""),
-            "userAgent":   request.headers.get("user-agent", ""),
+            "requestId": request.headers.get("x-request-id", ""),
+            "userAgent": request.headers.get("user-agent", ""),
         },
     )
     return response
 
+
 # ─── Health Endpoints ─────────────────────────────────────────────────────────
+
 
 @app.get("/health/startup")
 async def health_startup():
@@ -131,39 +136,47 @@ async def health_startup():
         return {"status": "started"}
     raise HTTPException(status_code=503, detail="starting")
 
+
 @app.get("/health")
 async def health():
     return {
         "service": "devpulse-ai",
         "status": "ok",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
+
 
 @app.get("/health/live")
 async def health_live():
     return {"status": "alive", "timestamp": datetime.utcnow().isoformat()}
+
 
 @app.get("/health/ready")
 async def health_ready():
     return {
         "status": "ready",
         "checks": {"pipeline": "ok"},
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
+
 
 @app.get("/model-info")
 async def model_info():
     """Returns metadata about the predictor for transparency and debugging."""
-    return pipeline.predictor.model_info()
+    return analysis_pipeline.predictor.model_info()
+
 
 # ─── Prometheus Metrics Endpoint ─────────────────────────────────────────────
+
 
 @app.get("/metrics")
 async def metrics():
     """Exposes Prometheus metrics in text format for scraping."""
     return Response(content=get_metrics_output(), media_type=CONTENT_TYPE_LATEST)
 
+
 # ─── Core Endpoint ────────────────────────────────────────────────────────────
+
 
 @app.post("/analyze", response_model=AnalysisResponse)
 async def analyze(request: AnalysisRequest, http_request: Request):
@@ -171,11 +184,14 @@ async def analyze(request: AnalysisRequest, http_request: Request):
     start_time = time.perf_counter()
     with sentry_sdk.new_scope() as scope:
         scope.set_tag("upstream_request_id", upstream_request_id)
-        scope.set_context("repository", {
-            "id":       request.repository.id,
-            "fullName": request.repository.fullName,
-            "language": request.repository.language,
-        })
+        scope.set_context(
+            "repository",
+            {
+                "id": request.repository.id,
+                "fullName": request.repository.fullName,
+                "language": request.repository.language,
+            },
+        )
 
         try:
             result = analysis_pipeline.run(request)
@@ -191,7 +207,7 @@ async def analyze(request: AnalysisRequest, http_request: Request):
             raise HTTPException(status_code=500, detail=str(e))
 
 
-
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

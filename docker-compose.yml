@@ -8,7 +8,7 @@ services:
     image: devpulse-backend:latest
     container_name: devpulse_backend
     ports:
-      - "4000:4000"
+      - '4000:4000'
     env_file:
       - ./backend/.env
     environment:
@@ -34,7 +34,7 @@ services:
       dockerfile: Dockerfile
     image: devpulse-backend:latest
     container_name: devpulse_worker
-    command: ["node", "src/worker.js"]
+    command: ['node', 'src/worker.js']
     env_file:
       - ./backend/.env
     environment:
@@ -53,7 +53,7 @@ services:
       - devpulse_network
     # Worker has no HTTP port — health check via process existence
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -f 'node src/worker.js' > /dev/null || exit 1"]
+      test: ['CMD-SHELL', "pgrep -f 'node src/worker.js' > /dev/null || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -67,7 +67,7 @@ services:
     image: devpulse-ai:latest
     container_name: devpulse_ai
     ports:
-      - "8000:8000"
+      - '8000:8000'
     env_file:
       - ./ai/.env
     environment:
@@ -87,7 +87,7 @@ services:
       - POSTGRES_PASSWORD=devpulse
       - POSTGRES_DB=devpulse
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - devpulse_pgdata:/var/lib/postgresql/data
     networks:
@@ -98,7 +98,7 @@ services:
     image: redis:7-alpine
     container_name: devpulse_redis
     ports:
-      - "6379:6379"
+      - '6379:6379'
     networks:
       - devpulse_network
     restart: unless-stopped

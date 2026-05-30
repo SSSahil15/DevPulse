@@ -1,11 +1,11 @@
-const crypto = require("crypto");
-const { reportDB } = require("../db/database");
+const crypto = require('crypto');
+const { reportDB } = require('../db/database');
 
 /**
  * Generate a cryptographically secure share token.
  */
 function generateShareToken() {
-  return `dp_rpt_${crypto.randomBytes(12).toString("hex")}`;
+  return `dp_rpt_${crypto.randomBytes(12).toString('hex')}`;
 }
 
 /**
@@ -24,19 +24,21 @@ async function createReport({ repository, repoMeta, devpulseScore, stages, insig
       language: repoMeta?.language || null,
       stargazersCount: repoMeta?.stargazersCount || 0,
       forksCount: repoMeta?.forksCount || 0,
-      defaultBranch: repoMeta?.defaultBranch || "main",
+      defaultBranch: repoMeta?.defaultBranch || 'main',
       htmlUrl: repoMeta?.htmlUrl || null,
     },
     devpulseScore: devpulseScore || null,
     stages: stages || null,
     insights: insights || null,
-    createdBy: createdBy || "anonymous",
+    createdBy: createdBy || 'anonymous',
     createdAt: now.toISOString(),
     expiresAt: expiresAt.toISOString(),
   };
 
   await reportDB.insert(report);
-  console.log(`[Reports] Created shareable report for ${repository} (token: ${token}), expires ${expiresAt.toDateString()}`);
+  console.log(
+    `[Reports] Created shareable report for ${repository} (token: ${token}), expires ${expiresAt.toDateString()}`,
+  );
   return report;
 }
 

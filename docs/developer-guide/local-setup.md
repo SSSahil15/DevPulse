@@ -22,7 +22,7 @@ This guide details how to set up each standalone component of DevPulse locally o
    ```bash
    npm run dev
    ```
-   *The backend will boot on `http://localhost:4000`.*
+   _The backend will boot on `http://localhost:4000`._
 
 ---
 
@@ -40,7 +40,7 @@ This guide details how to set up each standalone component of DevPulse locally o
    ```bash
    npm run dev
    ```
-   *The frontend UI will boot on `http://localhost:5174`.*
+   _The frontend UI will boot on `http://localhost:5174`._
 
 ---
 
@@ -63,7 +63,7 @@ This guide details how to set up each standalone component of DevPulse locally o
    ```bash
    uvicorn app:app --reload --port 8000
    ```
-   *The AI service will boot on `http://localhost:8000`.*
+   _The AI service will boot on `http://localhost:8000`._
 
 ---
 

@@ -1,6 +1,6 @@
-const path   = require("path");
-const winston = require("winston");
-require("winston-daily-rotate-file");
+const path = require('path');
+const winston = require('winston');
+require('winston-daily-rotate-file');
 
 const { combine, timestamp, json, errors, colorize, simple } = winston.format;
 
@@ -8,16 +8,28 @@ const { combine, timestamp, json, errors, colorize, simple } = winston.format;
 // Keys matching this set (case-insensitive) are replaced with "[REDACTED]"
 // in ALL log metadata. Add keys here if new sensitive fields are introduced.
 const SENSITIVE_KEYS = new Set([
-  "token", "access_token", "accesstoken",
-  "secret", "client_secret", "clientsecret",
-  "password", "passwd", "pwd",
-  "code",                          // OAuth authorization codes
-  "authorization",                 // HTTP Authorization header value
-  "key", "api_key", "apikey",
-  "jwt", "refresh_token",
-  "encrypted_token", "encryptedtoken",
-  "cookie", "session",
-  "groq_api_key", "groqapikey",
+  'token',
+  'access_token',
+  'accesstoken',
+  'secret',
+  'client_secret',
+  'clientsecret',
+  'password',
+  'passwd',
+  'pwd',
+  'code', // OAuth authorization codes
+  'authorization', // HTTP Authorization header value
+  'key',
+  'api_key',
+  'apikey',
+  'jwt',
+  'refresh_token',
+  'encrypted_token',
+  'encryptedtoken',
+  'cookie',
+  'session',
+  'groq_api_key',
+  'groqapikey',
 ]);
 
 /**
@@ -29,13 +41,13 @@ const SENSITIVE_KEYS = new Set([
  */
 function maskSensitive(value) {
   if (value === null || value === undefined) return value;
-  if (Array.isArray(value))                 return value.map(maskSensitive);
-  if (typeof value !== "object")            return value;
+  if (Array.isArray(value)) return value.map(maskSensitive);
+  if (typeof value !== 'object') return value;
 
   const masked = {};
   for (const [k, v] of Object.entries(value)) {
     if (SENSITIVE_KEYS.has(k.toLowerCase())) {
-      masked[k] = typeof v === "string" ? "[REDACTED]" : `[REDACTED:${typeof v}]`;
+      masked[k] = typeof v === 'string' ? '[REDACTED]' : `[REDACTED:${typeof v}]`;
     } else {
       masked[k] = maskSensitive(v);
     }
@@ -48,7 +60,7 @@ function maskSensitive(value) {
 // inject them into every log entry so Loki can correlate logs → Tempo traces.
 let otelApi;
 try {
-  otelApi = require("@opentelemetry/api");
+  otelApi = require('@opentelemetry/api');
 } catch (_) {
   otelApi = null; // OTel not installed — no-op
 }
@@ -72,14 +84,14 @@ const maskingFormat = winston.format((info) => {
 // ─── Log directory (project root /logs) ──────────────────────────────────────
 // In Docker the working directory is /app, so logs go to /app/logs.
 // Locally they go to <repo>/backend/logs (gitignored).
-const LOG_DIR = path.join(process.cwd(), "logs");
+const LOG_DIR = path.join(process.cwd(), 'logs');
 
 // ─── Shared JSON format (file transports) ────────────────────────────────────
 const jsonFormat = combine(
-  errors({ stack: true }),   // Automatically includes stack traces on Error objects
+  errors({ stack: true }), // Automatically includes stack traces on Error objects
   timestamp(),
-  maskingFormat,             // Redact sensitive fields before serialising
-  json()
+  maskingFormat, // Redact sensitive fields before serialising
+  json(),
 );
 
 // ─── Transports ───────────────────────────────────────────────────────────────
@@ -89,60 +101,58 @@ const transports = [];
 // 1. Console transport
 //    - Dev: human-readable coloured output
 //    - Prod: JSON (same as file) so log collectors can parse stdout
-if (process.env.NODE_ENV === "production") {
-  transports.push(
-    new winston.transports.Console({ format: jsonFormat })
-  );
+if (process.env.NODE_ENV === 'production') {
+  transports.push(new winston.transports.Console({ format: jsonFormat }));
 } else {
   transports.push(
     new winston.transports.Console({
       format: combine(
         errors({ stack: true }),
-        timestamp({ format: "HH:mm:ss" }),
+        timestamp({ format: 'HH:mm:ss' }),
         colorize({ all: true }),
-        simple()
+        simple(),
       ),
-    })
+    }),
   );
 }
 
 // 2. Daily rotating combined log (non-production only to keep container images lean)
 //    Keeps 14 days, max 20 MB per file, gzip on rotation.
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== 'production') {
   transports.push(
     new winston.transports.DailyRotateFile({
-      dirname:         LOG_DIR,
-      filename:        "devpulse-%DATE%.log",
-      datePattern:     "YYYY-MM-DD",
-      zippedArchive:   true,
-      maxSize:         "20m",
-      maxFiles:        "14d",
-      format:          jsonFormat,
-      auditFile:       path.join(LOG_DIR, ".audit-combined.json"),
-    })
+      dirname: LOG_DIR,
+      filename: 'devpulse-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true,
+      maxSize: '20m',
+      maxFiles: '14d',
+      format: jsonFormat,
+      auditFile: path.join(LOG_DIR, '.audit-combined.json'),
+    }),
   );
 
   // 3. Errors-only log (kept 30 days — useful for post-mortem debugging)
   transports.push(
     new winston.transports.DailyRotateFile({
-      dirname:         LOG_DIR,
-      filename:        "devpulse-error-%DATE%.log",
-      datePattern:     "YYYY-MM-DD",
-      level:           "error",
-      zippedArchive:   true,
-      maxSize:         "20m",
-      maxFiles:        "30d",
-      format:          jsonFormat,
-      auditFile:       path.join(LOG_DIR, ".audit-error.json"),
-    })
+      dirname: LOG_DIR,
+      filename: 'devpulse-error-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      level: 'error',
+      zippedArchive: true,
+      maxSize: '20m',
+      maxFiles: '30d',
+      format: jsonFormat,
+      auditFile: path.join(LOG_DIR, '.audit-error.json'),
+    }),
   );
 }
 
 // ─── Logger instance ──────────────────────────────────────────────────────────
 const logger = winston.createLogger({
-  level:       process.env.NODE_ENV === "production" ? "info" : "debug",
-  format:      jsonFormat,
-  defaultMeta: { service: "devpulse-backend" },
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  format: jsonFormat,
+  defaultMeta: { service: 'devpulse-backend' },
   transports,
 });
 
@@ -164,19 +174,19 @@ const logger = winston.createLogger({
  */
 logger.withContext = function withContext(req) {
   return logger.child({
-    requestId: req.requestId || "no-id",
-    userId:    req.user?.id  || "anonymous",
-    method:    req.method,
-    path:      req.path,
+    requestId: req.requestId || 'no-id',
+    userId: req.user?.id || 'anonymous',
+    method: req.method,
+    path: req.path,
   });
 };
 
 // ─── Startup notice ───────────────────────────────────────────────────────────
-if (process.env.NODE_ENV !== "production") {
-  logger.debug("[Logger] File rotation active", {
-    dir:      LOG_DIR,
-    combined: "devpulse-YYYY-MM-DD.log (14d, 20MB)",
-    errors:   "devpulse-error-YYYY-MM-DD.log (30d, 20MB)",
+if (process.env.NODE_ENV !== 'production') {
+  logger.debug('[Logger] File rotation active', {
+    dir: LOG_DIR,
+    combined: 'devpulse-YYYY-MM-DD.log (14d, 20MB)',
+    errors: 'devpulse-error-YYYY-MM-DD.log (30d, 20MB)',
   });
 }
 

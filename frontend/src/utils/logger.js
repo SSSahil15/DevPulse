@@ -16,34 +16,43 @@
  *   log.error('Request failed', { error, status: 500 });
  *   log.setContext({ userId: '123', page: '/dashboard' });
  */
-import * as Sentry from "@sentry/react";
+import * as Sentry from '@sentry/react';
 
 // ─── Sensitive key masking ────────────────────────────────────────────────────
 const SENSITIVE_KEYS = new Set([
-  "token", "access_token", "accesstoken",
-  "secret", "password", "passwd",
-  "code", "authorization",
-  "key", "api_key", "apikey",
-  "jwt", "refresh_token", "cookie", "session",
-  "client_secret", "groq_api_key",
+  'token',
+  'access_token',
+  'accesstoken',
+  'secret',
+  'password',
+  'passwd',
+  'code',
+  'authorization',
+  'key',
+  'api_key',
+  'apikey',
+  'jwt',
+  'refresh_token',
+  'cookie',
+  'session',
+  'client_secret',
+  'groq_api_key',
 ]);
 
 function maskSensitive(value) {
   if (value === null || value === undefined) return value;
   if (Array.isArray(value)) return value.map(maskSensitive);
   if (value instanceof Error) return value; // preserve Error objects intact
-  if (typeof value !== "object") return value;
+  if (typeof value !== 'object') return value;
   const masked = {};
   for (const [k, v] of Object.entries(value)) {
-    masked[k] = SENSITIVE_KEYS.has(k.toLowerCase())
-      ? "[REDACTED]"
-      : maskSensitive(v);
+    masked[k] = SENSITIVE_KEYS.has(k.toLowerCase()) ? '[REDACTED]' : maskSensitive(v);
   }
   return masked;
 }
 
 // ─── Persistent context (userId, page) ───────────────────────────────────────
-let _ctx = { service: "devpulse-frontend" };
+let _ctx = { service: 'devpulse-frontend' };
 
 function setContext(ctx = {}) {
   _ctx = { ..._ctx, ...maskSensitive(ctx) };
@@ -53,10 +62,10 @@ function setContext(ctx = {}) {
 // ─── Sentry breadcrumb helper ─────────────────────────────────────────────────
 function addBreadcrumb(level, message, data) {
   Sentry.addBreadcrumb({
-    category:  "log",
+    category: 'log',
     message,
-    level,   // 'debug' | 'info' | 'warning' | 'error' | 'fatal'
-    data:    maskSensitive(data),
+    level, // 'debug' | 'info' | 'warning' | 'error' | 'fatal'
+    data: maskSensitive(data),
     timestamp: Date.now() / 1000,
   });
 }
@@ -67,30 +76,30 @@ const log = {
     // Suppressed in production — no dev noise in prod console
     if (import.meta.env.PROD) return;
     console.debug(`[DEBUG] ${message}`, maskSensitive(context));
-    addBreadcrumb("debug", message, context);
+    addBreadcrumb('debug', message, context);
   },
 
   info(message, context = {}) {
     if (import.meta.env.DEV) {
       console.info(`[INFO] ${message}`, maskSensitive(context));
     }
-    addBreadcrumb("info", message, context);
+    addBreadcrumb('info', message, context);
   },
 
   warn(message, context = {}) {
     console.warn(`[WARN] ${message}`, maskSensitive(context));
-    addBreadcrumb("warning", message, context);
+    addBreadcrumb('warning', message, context);
     Sentry.captureMessage(`[WARN] ${message}`, {
-      level: "warning",
+      level: 'warning',
       extra: { ..._ctx, ...maskSensitive(context) },
     });
   },
 
   error(message, context = {}) {
     const isError = context instanceof Error;
-    const meta    = isError ? { error: context } : context;
+    const meta = isError ? { error: context } : context;
     console.error(`[ERROR] ${message}`, maskSensitive(meta));
-    addBreadcrumb("error", message, meta);
+    addBreadcrumb('error', message, meta);
 
     if (isError || meta.error instanceof Error) {
       Sentry.captureException(isError ? context : meta.error, {
@@ -98,7 +107,7 @@ const log = {
       });
     } else {
       Sentry.captureMessage(`[ERROR] ${message}`, {
-        level: "error",
+        level: 'error',
         extra: { ..._ctx, ...maskSensitive(meta) },
       });
     }
@@ -106,9 +115,9 @@ const log = {
 
   fatal(message, context = {}) {
     console.error(`[FATAL] ${message}`, maskSensitive(context));
-    addBreadcrumb("fatal", message, context);
+    addBreadcrumb('fatal', message, context);
     Sentry.captureMessage(`[FATAL] ${message}`, {
-      level: "fatal",
+      level: 'fatal',
       extra: { ..._ctx, ...maskSensitive(context) },
     });
   },
@@ -119,17 +128,16 @@ const log = {
 // ─── Global unhandled rejection handler ──────────────────────────────────────
 // Catches Promise rejections that were not caught with .catch() or try/catch.
 // Registered once on module import.
-if (typeof window !== "undefined") {
-  window.addEventListener("unhandledrejection", (event) => {
-    const reason  = event.reason;
-    const message = reason instanceof Error
-      ? reason.message
-      : String(reason ?? "Unknown rejection");
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    const reason = event.reason;
+    const message =
+      reason instanceof Error ? reason.message : String(reason ?? 'Unknown rejection');
 
-    console.error("[UNHANDLED REJECTION]", reason);
+    console.error('[UNHANDLED REJECTION]', reason);
 
     Sentry.captureException(reason instanceof Error ? reason : new Error(message), {
-      extra: { type: "unhandledRejection", raw: String(reason) },
+      extra: { type: 'unhandledRejection', raw: String(reason) },
     });
   });
 }

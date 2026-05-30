@@ -1,26 +1,32 @@
-import * as Sentry from "@sentry/react";
+import * as Sentry from '@sentry/react';
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
-const TOKEN_KEY = "devpulse_token";
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
+const TOKEN_KEY = 'devpulse_token';
 
 // ─── Token Helpers ────────────────────────────────────────────────────────────
 
 export class ApiError extends Error {
   constructor(message, status) {
     super(message);
-    this.name   = "ApiError";
+    this.name = 'ApiError';
     this.status = status;
   }
 }
 
-export function getStoredToken()    { return localStorage.getItem(TOKEN_KEY); }
-export function storeToken(token)   { localStorage.setItem(TOKEN_KEY, token); }
-export function clearToken()        { localStorage.removeItem(TOKEN_KEY); }
+export function getStoredToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
+export function storeToken(token) {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+export function clearToken() {
+  localStorage.removeItem(TOKEN_KEY);
+}
 
 export function decodeJWTPayload(token) {
   try {
-    let base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    while (base64.length % 4) base64 += "=";
+    let base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) base64 += '=';
     return JSON.parse(atob(base64));
   } catch {
     return null;
@@ -39,7 +45,12 @@ export function isTokenExpired(token) {
 function generateRequestId() {
   const arr = new Uint8Array(4);
   crypto.getRandomValues(arr);
-  return "clt-" + Array.from(arr).map(b => b.toString(16).padStart(2, "0")).join("");
+  return (
+    'clt-' +
+    Array.from(arr)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+  );
 }
 
 // ─── Retry with Exponential Back-off ─────────────────────────────────────────
@@ -61,7 +72,7 @@ function generateRequestId() {
  * @param {string}           opts.label        - Label for Sentry breadcrumbs
  * @returns {Promise<T>}
  */
-async function withRetry(fn, { maxAttempts = 3, baseDelayMs = 600, label = "request" } = {}) {
+async function withRetry(fn, { maxAttempts = 3, baseDelayMs = 600, label = 'request' } = {}) {
   let lastError;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -78,13 +89,13 @@ async function withRetry(fn, { maxAttempts = 3, baseDelayMs = 600, label = "requ
 
       const delayMs = baseDelayMs * 2 ** (attempt - 1); // 600ms, 1200ms, ...
       Sentry.addBreadcrumb({
-        category: "api",
-        message:  `[Retry] ${label} attempt ${attempt} failed — retrying in ${delayMs}ms`,
-        level:    "warning",
-        data:     { attempt, maxAttempts, delayMs, error: err.message },
+        category: 'api',
+        message: `[Retry] ${label} attempt ${attempt} failed — retrying in ${delayMs}ms`,
+        level: 'warning',
+        data: { attempt, maxAttempts, delayMs, error: err.message },
       });
 
-      await new Promise(r => setTimeout(r, delayMs));
+      await new Promise((r) => setTimeout(r, delayMs));
     }
   }
   throw lastError;
@@ -108,25 +119,25 @@ async function withRetry(fn, { maxAttempts = 3, baseDelayMs = 600, label = "requ
  * @param {boolean} [opts.retry=true]    - Set false to skip retry (for non-idempotent calls)
  * @returns {Promise<unknown>}           - Parsed JSON response
  */
-export async function apiRequest(path, { accessToken, method = "GET", body, retry = true } = {}) {
-  const token     = accessToken || getStoredToken();
+export async function apiRequest(path, { accessToken, method = 'GET', body, retry = true } = {}) {
+  const token = accessToken || getStoredToken();
   const requestId = generateRequestId();
 
   const headers = {
-    "Content-Type":  "application/json",
-    "X-Request-ID":  requestId,
+    'Content-Type': 'application/json',
+    'X-Request-ID': requestId,
   };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const doFetch = async () => {
     const res = await fetch(`${API_BASE}${path}`, { method, headers, body });
 
     if (!res.ok) {
-      const data  = await res.json().catch(() => ({ message: res.statusText }));
-      const error = new ApiError(data.message || "Request failed", res.status);
-      error.data      = data;
-      error.url       = `${API_BASE}${path}`;
-      error.requestId = res.headers.get("X-Request-ID") || requestId;
+      const data = await res.json().catch(() => ({ message: res.statusText }));
+      const error = new ApiError(data.message || 'Request failed', res.status);
+      error.data = data;
+      error.url = `${API_BASE}${path}`;
+      error.requestId = res.headers.get('X-Request-ID') || requestId;
       throw error;
     }
 
@@ -134,7 +145,7 @@ export async function apiRequest(path, { accessToken, method = "GET", body, retr
   };
 
   // Only auto-retry safe, idempotent methods
-  const isIdempotent = method === "GET" || method === "HEAD" || method === "OPTIONS";
+  const isIdempotent = method === 'GET' || method === 'HEAD' || method === 'OPTIONS';
   if (retry && isIdempotent) {
     return withRetry(doFetch, { label: `${method} ${path}` });
   }
@@ -148,12 +159,16 @@ export async function apiRequest(path, { accessToken, method = "GET", body, retr
  * Resolves with the final job object.
  * Rejects after maxAttempts (default: 60 × 2s = 2 minutes).
  */
-export async function pollScanJob(jobId, accessToken, { intervalMs = 2000, maxAttempts = 60 } = {}) {
+export async function pollScanJob(
+  jobId,
+  accessToken,
+  { intervalMs = 2000, maxAttempts = 60 } = {},
+) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    await new Promise(r => setTimeout(r, intervalMs));
+    await new Promise((r) => setTimeout(r, intervalMs));
     // Polling is idempotent GET — retry is enabled by default
     const job = await apiRequest(`/api/pipeline/simulate/status/${jobId}`, { accessToken });
-    if (job.status === "done" || job.status === "failed") return job;
+    if (job.status === 'done' || job.status === 'failed') return job;
   }
-  throw new ApiError("Scan job timed out after 2 minutes.", 504);
+  throw new ApiError('Scan job timed out after 2 minutes.', 504);
 }

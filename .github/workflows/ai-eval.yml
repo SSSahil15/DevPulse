@@ -12,27 +12,27 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Start Docker Compose
         run: |
           # Boot up the stack in detached mode
           docker compose -f docker-compose.yml up -d ai postgres redis
-      
+
       - name: Wait for services
         run: |
           echo "Waiting for AI service to be healthy..."
           sleep 10
-      
+
       - name: Run Evaluation Benchmark
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          EVAL_MODEL_NAME: "gpt-4o"
+          EVAL_MODEL_NAME: 'gpt-4o'
         run: |
           docker compose exec -T ai python scripts/evaluate.py
-      
+
       - name: Upload Evaluation Reports
         if: always()
         uses: actions/upload-artifact@v4

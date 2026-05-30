@@ -12,7 +12,6 @@ version: '3.8'
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
-
   # ── Prometheus ─────────────────────────────────────────────────────────────
   prometheus:
     image: prom/prometheus:v2.52.0
@@ -29,7 +28,7 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
       - '--web.enable-lifecycle'
     ports:
-      - "9090:9090"
+      - '9090:9090'
     networks:
       - devpulse_local_net
       - observability_net
@@ -50,7 +49,7 @@ services:
       - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - devpulse_grafana_data:/var/lib/grafana
     ports:
-      - "3001:3000"
+      - '3001:3000'
     depends_on:
       - prometheus
       - loki
@@ -68,7 +67,7 @@ services:
       - ./observability/loki.yml:/etc/loki/loki.yml:ro
       - devpulse_loki_data:/loki
     ports:
-      - "3100:3100"
+      - '3100:3100'
     networks:
       - observability_net
     restart: unless-stopped
@@ -98,9 +97,9 @@ services:
       - ./observability/tempo.yml:/etc/tempo/tempo.yml:ro
       - devpulse_tempo_data:/var/tempo
     ports:
-      - "3200:3200"   # Tempo HTTP API
-      - "4317:4317"   # OTLP gRPC receiver
-      - "4318:4318"   # OTLP HTTP receiver
+      - '3200:3200' # Tempo HTTP API
+      - '4317:4317' # OTLP gRPC receiver
+      - '4318:4318' # OTLP HTTP receiver
     networks:
       - observability_net
       - devpulse_local_net
@@ -110,13 +109,13 @@ services:
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.103.0
     container_name: devpulse_otel_collector
-    command: ["--config=/etc/otel/otel-collector.yml"]
+    command: ['--config=/etc/otel/otel-collector.yml']
     volumes:
       - ./observability/otel-collector.yml:/etc/otel/otel-collector.yml:ro
     ports:
-      - "4319:4317"   # OTLP gRPC (collector → services use this port)
-      - "4320:4318"   # OTLP HTTP (collector → services use this port)
-      - "8889:8889"   # Prometheus metrics exposed by collector itself
+      - '4319:4317' # OTLP gRPC (collector → services use this port)
+      - '4320:4318' # OTLP HTTP (collector → services use this port)
+      - '8889:8889' # Prometheus metrics exposed by collector itself
     depends_on:
       - tempo
       - prometheus
@@ -132,7 +131,7 @@ services:
     environment:
       - REDIS_ADDR=redis://devpulse_redis:6379
     ports:
-      - "9121:9121"
+      - '9121:9121'
     networks:
       - observability_net
       - devpulse_local_net
@@ -145,7 +144,7 @@ services:
     environment:
       - DATA_SOURCE_NAME=postgresql://devpulse:devpulse@devpulse_postgres:5432/devpulse?sslmode=disable
     ports:
-      - "9187:9187"
+      - '9187:9187'
     networks:
       - observability_net
       - devpulse_local_net

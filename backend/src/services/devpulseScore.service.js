@@ -60,7 +60,7 @@ function scoreSecurityFactor(stages) {
 
   return {
     score: Math.max(0, Math.min(100, score)),
-    details: details.length > 0 ? details : ["No vulnerabilities detected"],
+    details: details.length > 0 ? details : ['No vulnerabilities detected'],
     totalVulnerabilities: critical + high + medium,
   };
 }
@@ -91,7 +91,7 @@ function scoreCommitFrequencyFactor(repoHealth) {
     detail = `Minimal activity: ${commitsPerWeek} commits/week`;
   } else {
     score = 15;
-    detail = "No commits in the last 30 days — repo appears stale";
+    detail = 'No commits in the last 30 days — repo appears stale';
   }
 
   return {
@@ -122,7 +122,7 @@ function scoreContributorFactor(repoHealth) {
     detail = `Small team: ${count} contributors`;
   } else {
     score = 40;
-    detail = "Solo project — single point of failure risk";
+    detail = 'Solo project — single point of failure risk';
   }
 
   return {
@@ -145,7 +145,7 @@ function scoreCodeChurnFactor(repoHealth) {
 
   if (commits === 0) {
     score = 20;
-    detail = "No code changes detected in the last 30 days";
+    detail = 'No code changes detected in the last 30 days';
   } else if (avgChurnPerCommit <= 50) {
     score = 100;
     detail = `Clean, small commits: avg ${avgChurnPerCommit} lines/commit`;
@@ -176,14 +176,14 @@ function scoreHistoricalFailureRateFactor(pipelineHistory) {
   if (!pipelineHistory || pipelineHistory.length === 0) {
     return {
       score: 70, // Neutral — no history yet
-      details: ["No pipeline history available — neutral score applied"],
+      details: ['No pipeline history available — neutral score applied'],
       totalRuns: 0,
       failureRate: 0,
     };
   }
 
   const totalRuns = pipelineHistory.length;
-  const failures = pipelineHistory.filter(r => r.overallStatus === "failure").length;
+  const failures = pipelineHistory.filter((r) => r.overallStatus === 'failure').length;
   const failureRate = Math.round((failures / totalRuns) * 100);
 
   let score;
@@ -222,38 +222,38 @@ function scoreBuildGatesFactor(stages) {
   let score = 100;
   const details = [];
 
-  if (stages?.backend?.tests === "failure") {
+  if (stages?.backend?.tests === 'failure') {
     score -= 40;
-    details.push("Backend tests failed: -40");
+    details.push('Backend tests failed: -40');
   }
-  if (stages?.frontend?.build === "failure") {
+  if (stages?.frontend?.build === 'failure') {
     score -= 30;
-    details.push("Frontend build failed: -30");
+    details.push('Frontend build failed: -30');
   }
-  if (stages?.frontend?.tests === "failure") {
+  if (stages?.frontend?.tests === 'failure') {
     score -= 15;
-    details.push("Frontend tests failed: -15");
+    details.push('Frontend tests failed: -15');
   }
-  if (stages?.docker?.build === "failure") {
+  if (stages?.docker?.build === 'failure') {
     score -= 15;
-    details.push("Docker build failed: -15");
+    details.push('Docker build failed: -15');
   }
 
   return {
     score: Math.max(0, score),
-    details: details.length > 0 ? details : ["All build and test gates passed"],
+    details: details.length > 0 ? details : ['All build and test gates passed'],
   };
 }
 
 // ─── Main Score Calculator ───────────────────────────────────────────────────
 
 const FACTOR_WEIGHTS = {
-  security: 0.40,
+  security: 0.4,
   commitFrequency: 0.15,
-  contributors: 0.10,
-  codeChurn: 0.10,
+  contributors: 0.1,
+  codeChurn: 0.1,
   historicalFailureRate: 0.15,
-  buildGates: 0.10,
+  buildGates: 0.1,
 };
 
 /**
@@ -321,50 +321,59 @@ function calculateDevPulseScore(stages, repoHealth = null, pipelineHistory = [])
   };
 
   // Calculate final weighted score
-  const finalScore = Math.max(0, Math.min(100, Math.round(
-    factors.security.weighted +
-    factors.commitFrequency.weighted +
-    factors.contributors.weighted +
-    factors.codeChurn.weighted +
-    factors.historicalFailureRate.weighted +
-    factors.buildGates.weighted
-  )));
+  const finalScore = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(
+        factors.security.weighted +
+          factors.commitFrequency.weighted +
+          factors.contributors.weighted +
+          factors.codeChurn.weighted +
+          factors.historicalFailureRate.weighted +
+          factors.buildGates.weighted,
+      ),
+    ),
+  );
 
   // Risk category (new)
   let riskCategory;
   if (finalScore >= 80) {
-    riskCategory = "LOW";
+    riskCategory = 'LOW';
   } else if (finalScore >= 50) {
-    riskCategory = "MEDIUM";
+    riskCategory = 'MEDIUM';
   } else {
-    riskCategory = "HIGH";
+    riskCategory = 'HIGH';
   }
 
   // Legacy status (backwards compatible with existing UI)
   let status;
   let statusColor;
   if (finalScore >= 80) {
-    status = "SAFE";
-    statusColor = "green";
+    status = 'SAFE';
+    statusColor = 'green';
   } else if (finalScore >= 55) {
-    status = "WARNING";
-    statusColor = "amber";
+    status = 'WARNING';
+    statusColor = 'amber';
   } else if (finalScore >= 30) {
-    status = "RISKY";
-    statusColor = "orange";
+    status = 'RISKY';
+    statusColor = 'orange';
   } else {
-    status = "CRITICAL";
-    statusColor = "red";
+    status = 'CRITICAL';
+    statusColor = 'red';
   }
 
   // Build legacy breakdown array for backwards compatibility
   const breakdown = [];
   Object.entries(factors).forEach(([name, factor]) => {
-    factor.details.forEach(detail => {
-      if (!detail.includes("passed") && !detail.includes("No vulnerabilities")) {
+    factor.details.forEach((detail) => {
+      if (!detail.includes('passed') && !detail.includes('No vulnerabilities')) {
         breakdown.push({
-          check: name.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase()).trim(),
-          impact: Math.round(factor.weighted - (factor.weight * 100)),
+          check: name
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/^./, (s) => s.toUpperCase())
+            .trim(),
+          impact: Math.round(factor.weighted - factor.weight * 100),
           reason: detail,
         });
       }
@@ -398,56 +407,89 @@ function generatePipelineInsights(stages, score, repoHealth = null) {
   const high = Number(stages?.security?.high) || 0;
   const medium = Number(stages?.security?.medium) || 0;
   const imageVulns = Number(stages?.docker?.imageVulnerabilities) || 0;
-  const vulns = Array.isArray(stages?.security?.vulnerabilities) ? stages.security.vulnerabilities : [];
+  const vulns = Array.isArray(stages?.security?.vulnerabilities)
+    ? stages.security.vulnerabilities
+    : [];
 
   // ─── Security insights ─────────────────────────────────────
-  if (stages?.backend?.tests === "failure") {
-    issues.push("Backend test suite failed.");
-    suggestions.push("Run `npm test` locally and fix failing assertions before pushing.");
-    rootCauses.push("Backend tests failed, indicating a regression in application logic or breaking API contract changes.");
+  if (stages?.backend?.tests === 'failure') {
+    issues.push('Backend test suite failed.');
+    suggestions.push('Run `npm test` locally and fix failing assertions before pushing.');
+    rootCauses.push(
+      'Backend tests failed, indicating a regression in application logic or breaking API contract changes.',
+    );
   }
 
-  if (stages?.frontend?.build === "failure") {
-    issues.push("Frontend production build failed.");
-    suggestions.push("Check the frontend-logs artifact for TypeScript or Vite build errors.");
-    rootCauses.push("Frontend Vite build failed, likely due to missing environment variables or import errors in the React codebase.");
+  if (stages?.frontend?.build === 'failure') {
+    issues.push('Frontend production build failed.');
+    suggestions.push('Check the frontend-logs artifact for TypeScript or Vite build errors.');
+    rootCauses.push(
+      'Frontend Vite build failed, likely due to missing environment variables or import errors in the React codebase.',
+    );
   }
 
-  if (stages?.docker?.build === "failure") {
-    issues.push("Docker image build failed.");
-    suggestions.push("Test the build locally with `docker build -f backend/Dockerfile ./backend`.");
-    rootCauses.push("Docker multi-stage build failed. Check that all required source files are present and the Dockerfile paths are correct.");
+  if (stages?.docker?.build === 'failure') {
+    issues.push('Docker image build failed.');
+    suggestions.push('Test the build locally with `docker build -f backend/Dockerfile ./backend`.');
+    rootCauses.push(
+      'Docker multi-stage build failed. Check that all required source files are present and the Dockerfile paths are correct.',
+    );
   }
 
   if (critical > 0) {
     issues.push(`${critical} critical CVE(s) found in project dependencies.`);
-    suggestions.push(`Run \`npm audit fix --force\` in the affected workspace to auto-patch critical vulnerabilities.`);
-    rootCauses.push(`${critical} critical CVE(s) detected by Trivy filesystem scan. These must be patched immediately.`);
+    suggestions.push(
+      `Run \`npm audit fix --force\` in the affected workspace to auto-patch critical vulnerabilities.`,
+    );
+    rootCauses.push(
+      `${critical} critical CVE(s) detected by Trivy filesystem scan. These must be patched immediately.`,
+    );
   }
 
   if (high > 0) {
     issues.push(`${high} high-severity CVE(s) detected.`);
-    suggestions.push("Update affected packages to their latest patched versions using `npm update`.");
-    rootCauses.push(`${high} high-severity CVE(s) pose a significant risk and should be patched in the next release.`);
+    suggestions.push(
+      'Update affected packages to their latest patched versions using `npm update`.',
+    );
+    rootCauses.push(
+      `${high} high-severity CVE(s) pose a significant risk and should be patched in the next release.`,
+    );
   }
 
   if (medium > 0) {
     issues.push(`${medium} medium-severity CVE(s) detected.`);
-    suggestions.push("Schedule a dependency audit sprint to address medium vulnerabilities over the next development cycle.");
+    suggestions.push(
+      'Schedule a dependency audit sprint to address medium vulnerabilities over the next development cycle.',
+    );
     rootCauses.push(`${medium} medium-severity CVE(s) found.`);
   }
 
   if (imageVulns > 0) {
     issues.push(`${imageVulns} vulnerabilities found in the Docker image.`);
-    suggestions.push("Consider using a distroless or scratch base image to reduce the attack surface.");
+    suggestions.push(
+      'Consider using a distroless or scratch base image to reduce the attack surface.',
+    );
     rootCauses.push(`${imageVulns} vulnerabilities originate from the base Docker image OS.`);
   }
 
   if (vulns.length > 0) {
-    const vulnNames = vulns.map(v => `${v.id} (${v.pkgName})`).join(", ");
+    const vulnNames = vulns.map((v) => `${v.id} (${v.pkgName})`).join(', ');
     issues.push(`Actionable Vulnerabilities: ${vulnNames}.`);
-    vulns.forEach(v => {
-      suggestions.push(`Upgrade package '${v.pkgName}' to version ${v.fixedVersion || 'latest'} to resolve ${v.id}.`);
+    vulns.forEach((v) => {
+      const riskText = v.title || 'Vulnerability in dependency.';
+      let impactText =
+        v.description || `Potential ${v.severity?.toLowerCase() || 'unknown'} severity impact.`;
+
+      // Clean up markdown noise and truncate to keep it concise
+      impactText = impactText.split(/```|###/)[0].trim();
+      if (impactText.length > 200) {
+        impactText = impactText.substring(0, 197) + '...';
+      }
+
+      const fixText = `Upgrade package '${v.pkgName}' to version ${v.fixedVersion || 'latest'} to resolve ${v.id}.`;
+      suggestions.push(
+        `AI Vulnerability Explanation\n${v.id} detected in ${v.pkgName}@${v.installedVersion || 'unknown'}\nRisk: ${riskText}\nImpact: ${impactText}\nFix: ${fixText}`,
+      );
     });
   }
 
@@ -455,28 +497,43 @@ function generatePipelineInsights(stages, score, repoHealth = null) {
   if (repoHealth) {
     const cpw = repoHealth?.commitActivity?.commitsPerWeek || 0;
     const contribs = repoHealth?.contributors?.count || 1;
-    const avgChurn = repoHealth?.commitActivity?.totalCommits > 0
-      ? Math.round(repoHealth.commitActivity.codeChurn / repoHealth.commitActivity.totalCommits)
-      : 0;
+    const avgChurn =
+      repoHealth?.commitActivity?.totalCommits > 0
+        ? Math.round(repoHealth.commitActivity.codeChurn / repoHealth.commitActivity.totalCommits)
+        : 0;
 
     if (cpw < 1) {
-      issues.push("Repository appears stale with no commits in the last 30 days.");
-      suggestions.push("Consider archiving this repository if it is no longer actively maintained, or schedule regular maintenance commits.");
-      rootCauses.push("Stale repository with zero recent commit activity increases the risk of unpatched vulnerabilities.");
+      issues.push('Repository appears stale with no commits in the last 30 days.');
+      suggestions.push(
+        'Consider archiving this repository if it is no longer actively maintained, or schedule regular maintenance commits.',
+      );
+      rootCauses.push(
+        'Stale repository with zero recent commit activity increases the risk of unpatched vulnerabilities.',
+      );
     } else if (cpw < 3) {
-      suggestions.push(`Low commit frequency (${cpw}/week). Increasing development cadence would improve the health score.`);
+      suggestions.push(
+        `Low commit frequency (${cpw}/week). Increasing development cadence would improve the health score.`,
+      );
     }
 
     if (contribs === 1) {
-      issues.push("Single contributor — no code review coverage.");
-      suggestions.push("Add at least one additional contributor or enable branch protection rules requiring PR reviews.");
-      rootCauses.push("Solo development without code review increases the risk of undetected bugs reaching production.");
+      issues.push('Single contributor — no code review coverage.');
+      suggestions.push(
+        'Add at least one additional contributor or enable branch protection rules requiring PR reviews.',
+      );
+      rootCauses.push(
+        'Solo development without code review increases the risk of undetected bugs reaching production.',
+      );
     }
 
     if (avgChurn > 500) {
       issues.push(`Extremely high code churn (avg ${avgChurn} lines/commit).`);
-      suggestions.push("Break large changes into smaller, focused commits. Consider adopting a feature-branch workflow to isolate risky changes.");
-      rootCauses.push("Large code changes per commit significantly increase the probability of regression bugs.");
+      suggestions.push(
+        'Break large changes into smaller, focused commits. Consider adopting a feature-branch workflow to isolate risky changes.',
+      );
+      rootCauses.push(
+        'Large code changes per commit significantly increase the probability of regression bugs.',
+      );
     }
   }
 
@@ -484,20 +541,25 @@ function generatePipelineInsights(stages, score, repoHealth = null) {
   if (score.factors?.historicalFailureRate?.failureRate > 25) {
     const rate = score.factors.historicalFailureRate.failureRate;
     issues.push(`${rate}% historical pipeline failure rate.`);
-    suggestions.push("Investigate recurring failure patterns. Consider adding pre-commit hooks and improving test coverage to reduce failure frequency.");
-    rootCauses.push(`A ${rate}% failure rate across past pipeline runs indicates systemic issues with code quality or CI/CD configuration.`);
+    suggestions.push(
+      'Investigate recurring failure patterns. Consider adding pre-commit hooks and improving test coverage to reduce failure frequency.',
+    );
+    rootCauses.push(
+      `A ${rate}% failure rate across past pipeline runs indicates systemic issues with code quality or CI/CD configuration.`,
+    );
   }
 
   // ─── All-clear case ────────────────────────────────────────
   if (issues.length === 0) {
     return {
-      explanation: "All pipeline stages completed successfully. No vulnerabilities or failures detected.",
+      explanation:
+        'All pipeline stages completed successfully. No vulnerabilities or failures detected.',
       rootCause: null,
       issues: [],
       suggestions: [
-        "Pipeline is healthy. Consider adding integration tests to further increase confidence.",
-        "Review code coverage reports to identify untested code paths.",
-        "Enable Dependabot to automatically open PRs for dependency updates.",
+        'Pipeline is healthy. Consider adding integration tests to further increase confidence.',
+        'Review code coverage reports to identify untested code paths.',
+        'Enable Dependabot to automatically open PRs for dependency updates.',
       ],
       score: score.score,
       riskCategory: score.riskCategory,
@@ -508,11 +570,14 @@ function generatePipelineInsights(stages, score, repoHealth = null) {
   const explanation =
     `DevPulse detected ${issues.length} issue(s) in this pipeline run. ` +
     `The repository scored ${score.score}/100 (Risk: ${score.riskCategory}, Status: ${score.status}). ` +
-    issues.join(" ");
+    issues.join(' ');
 
   return {
     explanation,
-    rootCause: rootCauses.length > 0 ? rootCauses.join(" ") : "Multiple pipeline checks failed. Review each stage's logs for details.",
+    rootCause:
+      rootCauses.length > 0
+        ? rootCauses.join(' ')
+        : "Multiple pipeline checks failed. Review each stage's logs for details.",
     issues,
     suggestions: [...new Set(suggestions)].slice(0, 10),
     score: score.score,

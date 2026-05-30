@@ -30,6 +30,7 @@ Staging environments utilize dedicated pre-production API keys to prevent pollut
 ## 3. Smoke Testing Checklist
 
 Following a staging deployment, verify the following critical pathways:
+
 - [ ] Connect with GitHub redirects safely without auth failures.
 - [ ] Trigger V8-vulnerable dependency simulation and verify score drops cleanly on Recharts widget.
 - [ ] Verify that shared report exports generate valid `dp_rpt_...` links.

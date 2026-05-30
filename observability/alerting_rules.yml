@@ -13,8 +13,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "High HTTP error rate on backend"
-          description: "Error rate is {{ $value | humanizePercentage }} over last 5 minutes."
+          summary: 'High HTTP error rate on backend'
+          description: 'Error rate is {{ $value | humanizePercentage }} over last 5 minutes.'
 
       # API p99 latency > 2s
       - alert: HighLatency
@@ -24,8 +24,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "High p99 API latency"
-          description: "p99 latency is {{ $value }}s (threshold: 2s)."
+          summary: 'High p99 API latency'
+          description: 'p99 latency is {{ $value }}s (threshold: 2s).'
 
       # BullMQ queue depth > 50 waiting jobs
       - alert: QueueDepthHigh
@@ -34,8 +34,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Scan queue is backing up"
-          description: "{{ $value }} jobs are waiting in the scan queue."
+          summary: 'Scan queue is backing up'
+          description: '{{ $value }} jobs are waiting in the scan queue.'
 
   - name: devpulse.ai
     rules:
@@ -51,8 +51,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "High AI inference error rate"
-          description: "AI inference error rate is {{ $value | humanizePercentage }}."
+          summary: 'High AI inference error rate'
+          description: 'AI inference error rate is {{ $value | humanizePercentage }}.'
 
       # AI inference p95 > 10s (LLM calls can be slow, but 10s is too much)
       - alert: AIInferenceSlow
@@ -62,8 +62,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "AI inference is slow"
-          description: "p95 AI inference latency is {{ $value }}s (threshold: 10s)."
+          summary: 'AI inference is slow'
+          description: 'p95 AI inference latency is {{ $value }}s (threshold: 10s).'
 
   - name: devpulse.redis
     rules:
@@ -75,8 +75,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Redis memory usage is high"
-          description: "Redis is using {{ $value | humanizePercentage }} of max memory."
+          summary: 'Redis memory usage is high'
+          description: 'Redis is using {{ $value | humanizePercentage }} of max memory.'
 
       # Redis is down
       - alert: RedisDown
@@ -85,8 +85,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "Redis is unreachable"
-          description: "Redis exporter reports the instance is down."
+          summary: 'Redis is unreachable'
+          description: 'Redis exporter reports the instance is down.'
 
   - name: devpulse.postgres
     rules:
@@ -97,8 +97,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "PostgreSQL is unreachable"
-          description: "Postgres exporter reports the instance is down."
+          summary: 'PostgreSQL is unreachable'
+          description: 'Postgres exporter reports the instance is down.'
 
       # Active connections > 80% of max_connections
       - alert: PostgresHighConnections
@@ -108,5 +108,5 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Postgres connection pool is nearly full"
-          description: "{{ $value | humanizePercentage }} of max_connections are in use."
+          summary: 'Postgres connection pool is nearly full'
+          description: '{{ $value | humanizePercentage }} of max_connections are in use.'

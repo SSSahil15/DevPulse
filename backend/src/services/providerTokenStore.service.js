@@ -1,7 +1,7 @@
-const crypto = require("crypto");
-const { providerTokenDB } = require("../db/database");
-const { decryptText, encryptText } = require("../utils/crypto");
-const redis = require("./redis.service");
+const crypto = require('crypto');
+const { providerTokenDB } = require('../db/database');
+const { decryptText, encryptText } = require('../utils/crypto');
+const redis = require('./redis.service');
 
 /**
  * Provider Token Store — PostgreSQL-backed
@@ -10,40 +10,40 @@ const redis = require("./redis.service");
  */
 
 async function saveGitHubProviderToken({ githubViewer, providerToken, userId }) {
-  console.log("[TokenStore] Saving GitHub token for user:", userId, "login:", githubViewer.login);
+  console.log('[TokenStore] Saving GitHub token for user:', userId, 'login:', githubViewer.login);
   try {
     const encrypted = encryptText(providerToken);
-    console.log("[TokenStore] Token encrypted successfully");
+    console.log('[TokenStore] Token encrypted successfully');
     await providerTokenDB.upsert({
       userId,
       encryptedToken: encrypted,
       githubLogin: githubViewer.login,
       profileUrl: githubViewer.profileUrl,
     });
-    console.log("[TokenStore] ✓ GitHub token saved successfully for user:", userId);
+    console.log('[TokenStore] ✓ GitHub token saved successfully for user:', userId);
   } catch (err) {
-    console.error("[TokenStore] ❌ Failed to save GitHub token:", err.message);
+    console.error('[TokenStore] ❌ Failed to save GitHub token:', err.message);
     throw err;
   }
 }
 
 async function getGitHubProviderToken(userId) {
-  console.log("[TokenStore] Retrieving GitHub token for user:", userId);
+  console.log('[TokenStore] Retrieving GitHub token for user:', userId);
   const record = await providerTokenDB.getByUserId(userId);
-  
+
   if (!record) {
-    console.warn("[TokenStore] ⚠ No token record found for user:", userId);
+    console.warn('[TokenStore] ⚠ No token record found for user:', userId);
     return null;
   }
 
-  console.log("[TokenStore] Found token record for user:", userId);
+  console.log('[TokenStore] Found token record for user:', userId);
 
   try {
     const decrypted = decryptText(record.encrypted_token);
-    console.log("[TokenStore] ✓ Token decrypted successfully");
+    console.log('[TokenStore] ✓ Token decrypted successfully');
     return decrypted;
   } catch (err) {
-    console.error("[TokenStore] ❌ Failed to decrypt token:", err.message);
+    console.error('[TokenStore] ❌ Failed to decrypt token:', err.message);
     return null;
   }
 }
@@ -57,12 +57,12 @@ async function deleteGitHubProviderToken(userId) {
   try {
     const token = await getGitHubProviderToken(userId);
     if (token) {
-      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
       await redis.del(`user:repos:${tokenHash}`);
       console.log(`[TokenStore] Cleared cached repos for user: ${userId}`);
     }
   } catch (err) {
-    console.error("[TokenStore] Failed to clear cached repos during token deletion:", err.message);
+    console.error('[TokenStore] Failed to clear cached repos during token deletion:', err.message);
   }
   await providerTokenDB.deleteByUserId(userId);
 }

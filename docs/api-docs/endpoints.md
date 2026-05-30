@@ -7,14 +7,17 @@ This document catalogs all core RESTful API endpoints exposed by the DevPulse AP
 ## 1. Authentication Endpoints
 
 ### `GET /auth/github`
+
 - **Description**: Initiates the GitHub OAuth redirect flow.
 - **Authentication**: None.
 
 ### `GET /auth/github/callback`
+
 - **Description**: Receives authorization codes from GitHub and redirects to `/auth/callback?token=...`.
 - **Authentication**: None.
 
 ### `GET /auth/me`
+
 - **Description**: Returns details of the currently authenticated session.
 - **Headers**: `Authorization: Bearer <JWT>`
 - **Response `200 OK`**:
@@ -36,10 +39,12 @@ This document catalogs all core RESTful API endpoints exposed by the DevPulse AP
 ## 2. Repository & Analysis Endpoints
 
 ### `GET /repos`
+
 - **Description**: Lists repositories accessible to the authenticated GitHub user.
 - **Headers**: `Authorization: Bearer <JWT>`
 
 ### `POST /analyze`
+
 - **Description**: Runs the fast AI repository metadata analysis.
 - **Headers**: `Authorization: Bearer <JWT>`
 - **Request Body**:
@@ -54,6 +59,7 @@ This document catalogs all core RESTful API endpoints exposed by the DevPulse AP
 ## 3. Pipeline & Simulation Endpoints
 
 ### `POST /api/pipeline/simulate`
+
 - **Description**: Triggers an async CI/CD simulation with a real Trivy scan.
 - **Headers**: `Authorization: Bearer <JWT>`
 - **Request Body**:
@@ -72,6 +78,7 @@ This document catalogs all core RESTful API endpoints exposed by the DevPulse AP
   ```
 
 ### `GET /api/pipeline/simulate/status/:jobId`
+
 - **Description**: Fetches the current status and final record for an async simulation job.
 - **Headers**: `Authorization: Bearer <JWT>`
 - **Response `200 OK`**:
@@ -84,9 +91,11 @@ This document catalogs all core RESTful API endpoints exposed by the DevPulse AP
   ```
 
 ### `GET /api/pipeline/results`
+
 - **Description**: Lists stored pipeline results. Supports `repository`, `branch`, `limit`, and `offset` query params.
 
 ### `GET /api/pipeline/results/:runId`
+
 - **Description**: Fetches one pipeline result by numeric GitHub Actions run ID.
 
 ---
@@ -94,6 +103,7 @@ This document catalogs all core RESTful API endpoints exposed by the DevPulse AP
 ## 4. AI Copilot Endpoint
 
 ### `POST /api/ai/chat`
+
 - **Description**: Sends a contextual question to the AI Copilot. Falls back to heuristic responses if Groq is unavailable.
 - **Headers**: `Authorization: Bearer <JWT>`
 - **Request Body**:
@@ -112,6 +122,7 @@ This document catalogs all core RESTful API endpoints exposed by the DevPulse AP
 ## 5. Public Sharing Endpoints
 
 ### `POST /api/reports`
+
 - **Description**: Exports a static, read-only report snapshot and issues a shareable token.
 - **Headers**: `Authorization: Bearer <JWT>`
 - **Request Body**:
@@ -134,6 +145,7 @@ This document catalogs all core RESTful API endpoints exposed by the DevPulse AP
   ```
 
 ### `GET /api/reports/:token`
+
 - **Description**: Fetches a public, static report snapshot.
 - **Authentication**: None (Public Access).
 - **Response `200 OK`**:

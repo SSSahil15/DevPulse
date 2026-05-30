@@ -1,90 +1,90 @@
 version: 2
 updates:
   # ── Node.js Backend ──────────────────────────────────────────
-  - package-ecosystem: "npm"
-    directory: "/backend"
+  - package-ecosystem: 'npm'
+    directory: '/backend'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-      timezone: "UTC"
+      interval: 'weekly'
+      day: 'monday'
+      time: '06:00'
+      timezone: 'UTC'
     open-pull-requests-limit: 10
     labels:
-      - "dependencies"
-      - "backend"
-      - "security"
+      - 'dependencies'
+      - 'backend'
+      - 'security'
     commit-message:
-      prefix: "fix(deps)"
-      include: "scope"
+      prefix: 'fix(deps)'
+      include: 'scope'
     # Auto-merge minor + patch; block major for manual review
     groups:
       backend-minor-patch:
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
     ignore:
       # Block auto-merge for major updates — require manual review
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
 
   # ── Node.js Frontend ─────────────────────────────────────────
-  - package-ecosystem: "npm"
-    directory: "/frontend"
+  - package-ecosystem: 'npm'
+    directory: '/frontend'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-      timezone: "UTC"
+      interval: 'weekly'
+      day: 'monday'
+      time: '06:00'
+      timezone: 'UTC'
     open-pull-requests-limit: 10
     labels:
-      - "dependencies"
-      - "frontend"
-      - "security"
+      - 'dependencies'
+      - 'frontend'
+      - 'security'
     commit-message:
-      prefix: "fix(deps)"
-      include: "scope"
+      prefix: 'fix(deps)'
+      include: 'scope'
     groups:
       frontend-minor-patch:
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
     ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
 
   # ── Python AI Service ─────────────────────────────────────────
-  - package-ecosystem: "pip"
-    directory: "/ai"
+  - package-ecosystem: 'pip'
+    directory: '/ai'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-      timezone: "UTC"
+      interval: 'weekly'
+      day: 'monday'
+      time: '06:00'
+      timezone: 'UTC'
     open-pull-requests-limit: 10
     labels:
-      - "dependencies"
-      - "ai"
-      - "security"
+      - 'dependencies'
+      - 'ai'
+      - 'security'
     commit-message:
-      prefix: "fix(deps)"
-      include: "scope"
+      prefix: 'fix(deps)'
+      include: 'scope'
     ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
 
   # ── GitHub Actions ────────────────────────────────────────────
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-      timezone: "UTC"
+      interval: 'weekly'
+      day: 'monday'
+      time: '06:00'
+      timezone: 'UTC'
     open-pull-requests-limit: 5
     labels:
-      - "dependencies"
-      - "ci"
-      - "security"
+      - 'dependencies'
+      - 'ci'
+      - 'security'
     commit-message:
-      prefix: "chore(ci)"
-      include: "scope"
+      prefix: 'chore(ci)'
+      include: 'scope'

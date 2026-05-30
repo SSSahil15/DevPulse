@@ -7,13 +7,17 @@ Welcome to DevPulse! This 5-minute quick start guide will walk you through your 
 ## Step 1: Fire Up the Platform
 
 Ensure all docker containers are initialized and running:
+
 ```bash
 docker-compose up -d
 ```
+
 Then start the frontend development bundle:
+
 ```bash
 cd frontend && npm install && npm run dev
 ```
+
 Open your browser and navigate to: `http://localhost:5174`
 
 ---
@@ -50,7 +54,7 @@ Open your browser and navigate to: `http://localhost:5174`
 
 - **Vulnerabilities**: Look at the security vulnerabilities list.
 - **AI Remediation**: Click **AI Copilot** next to any vulnerability or in the chat drawer.
-- Ask the AI Copilot: *"Explain how to remediate the vulnerability in package X"*
+- Ask the AI Copilot: _"Explain how to remediate the vulnerability in package X"_
 - Look at the generated secure code block and remediation advice!
 
 ---

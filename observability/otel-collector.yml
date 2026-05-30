@@ -28,7 +28,7 @@ exporters:
 
   # Expose collector's own metrics to Prometheus
   prometheus:
-    endpoint: "0.0.0.0:8889"
+    endpoint: '0.0.0.0:8889'
     namespace: otelcol
 
   debug:

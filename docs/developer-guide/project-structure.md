@@ -48,6 +48,7 @@ Below is the directory architecture detailing critical routing, components, and 
 ## Architectural Guardrails
 
 To preserve this modular structure:
+
 1. **Never Import Cross-Directories**: Node modules or packages inside `backend` should never import from `frontend` or `ai`.
 2. **Decoupled API Routing**: All backend routers (`src/routes/*`) must delegate business execution logic completely to controllers (`src/controllers/*`), keeping routing files thin and readable.
 3. **No Direct SQLite calls**: The database abstraction has been migrated to standard `postgres.js`. Query operations must flow strictly through the pool APIs.

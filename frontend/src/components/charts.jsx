@@ -1,5 +1,17 @@
 import React from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart as RechartsBarChart, Bar, LineChart, Line, CartesianGrid } from 'recharts';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart as RechartsBarChart,
+  Bar,
+  LineChart,
+  Line,
+  CartesianGrid,
+} from 'recharts';
 
 const waveData = [
   { name: 'Mon', risk: 4000, baseline: 2400 },
@@ -13,10 +25,10 @@ const waveData = [
 
 export const WaveChart = () => {
   const [data, setData] = React.useState(waveData);
-  
+
   React.useEffect(() => {
     const interval = setInterval(() => {
-      setData(prev => {
+      setData((prev) => {
         const newData = [...prev.slice(1)];
         const last = prev[prev.length - 1];
         newData.push({
@@ -35,23 +47,44 @@ export const WaveChart = () => {
       <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
         <defs>
           <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-            <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
           </linearGradient>
           <linearGradient id="colorBaseline" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
         <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
         <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
-        <Tooltip 
-          contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+        <Tooltip
+          contentStyle={{
+            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderRadius: '8px',
+            color: '#fff',
+          }}
           itemStyle={{ color: '#e2e8f0' }}
         />
-        <Area type="monotone" dataKey="baseline" stroke="#3b82f6" fillOpacity={1} fill="url(#colorBaseline)" animationDuration={1000} isAnimationActive={false} />
-        <Area type="monotone" dataKey="risk" stroke="#ef4444" fillOpacity={1} fill="url(#colorRisk)" animationDuration={1000} isAnimationActive={false} />
+        <Area
+          type="monotone"
+          dataKey="baseline"
+          stroke="#3b82f6"
+          fillOpacity={1}
+          fill="url(#colorBaseline)"
+          animationDuration={1000}
+          isAnimationActive={false}
+        />
+        <Area
+          type="monotone"
+          dataKey="risk"
+          stroke="#ef4444"
+          fillOpacity={1}
+          fill="url(#colorRisk)"
+          animationDuration={1000}
+          isAnimationActive={false}
+        />
       </AreaChart>
     </ResponsiveContainer>
   );
@@ -70,15 +103,15 @@ const barData = [
 
 export const BarChart = () => {
   const [data, setData] = React.useState(barData);
-  
+
   React.useEffect(() => {
     const interval = setInterval(() => {
-      setData(prev => {
+      setData((prev) => {
         const newData = [...prev.slice(1)];
         const last = prev[prev.length - 1];
         newData.push({
           name: 'live',
-          scans: Math.max(20, Math.min(100, last.scans + (Math.random() * 40 - 20)))
+          scans: Math.max(20, Math.min(100, last.scans + (Math.random() * 40 - 20))),
         });
         return newData;
       });
@@ -92,9 +125,14 @@ export const BarChart = () => {
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
         <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
         <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
-        <Tooltip 
+        <Tooltip
           cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-          contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+          contentStyle={{
+            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderRadius: '8px',
+            color: '#fff',
+          }}
         />
         <Bar dataKey="scans" fill="#10b981" radius={[4, 4, 0, 0]} isAnimationActive={false} />
       </RechartsBarChart>
@@ -114,15 +152,15 @@ const securityData = [
 
 export const SecurityLineChart = () => {
   const [data, setData] = React.useState(securityData);
-  
+
   React.useEffect(() => {
     const interval = setInterval(() => {
-      setData(prev => {
+      setData((prev) => {
         const newData = [...prev.slice(1)];
         const last = prev[prev.length - 1];
         newData.push({
           time: 'live',
-          issues: Math.max(2, Math.min(25, last.issues + Math.floor(Math.random() * 5 - 2)))
+          issues: Math.max(2, Math.min(25, last.issues + Math.floor(Math.random() * 5 - 2))),
         });
         return newData;
       });
@@ -136,10 +174,23 @@ export const SecurityLineChart = () => {
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
         <XAxis dataKey="time" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
         <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
-        <Tooltip 
-          contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
+        <Tooltip
+          contentStyle={{
+            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderRadius: '8px',
+            color: '#fff',
+          }}
         />
-        <Line type="monotone" dataKey="issues" stroke="#f97316" strokeWidth={3} dot={{ r: 4, fill: '#f97316', strokeWidth: 0 }} activeDot={{ r: 6, fill: '#fff', stroke: '#f97316' }} isAnimationActive={false} />
+        <Line
+          type="monotone"
+          dataKey="issues"
+          stroke="#f97316"
+          strokeWidth={3}
+          dot={{ r: 4, fill: '#f97316', strokeWidth: 0 }}
+          activeDot={{ r: 6, fill: '#fff', stroke: '#f97316' }}
+          isAnimationActive={false}
+        />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -147,9 +198,9 @@ export const SecurityLineChart = () => {
 
 export const ActivityGrid = () => {
   const [offset, setOffset] = React.useState(0);
-  
+
   React.useEffect(() => {
-    const interval = setInterval(() => setOffset(prev => prev + 1), 1000);
+    const interval = setInterval(() => setOffset((prev) => prev + 1), 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -158,11 +209,12 @@ export const ActivityGrid = () => {
       {[...Array(4)].map((_, row) => (
         <div key={row} className="flex gap-2 justify-between flex-1">
           {[...Array(14)].map((_, col) => {
-            const isActive = (row * 14 + col + offset) % 3 === 0 || (row * 14 + col + offset) % 7 === 0;
+            const isActive =
+              (row * 14 + col + offset) % 3 === 0 || (row * 14 + col + offset) % 7 === 0;
             return (
-              <div 
-                key={col} 
-                className={`flex-1 rounded-sm transition-all duration-500 ${isActive ? 'bg-purple-500/40 shadow-[0_0_8px_rgba(168,85,247,0.5)] scale-110' : 'bg-white/5'}`} 
+              <div
+                key={col}
+                className={`flex-1 rounded-sm transition-all duration-500 ${isActive ? 'bg-purple-500/40 shadow-[0_0_8px_rgba(168,85,247,0.5)] scale-110' : 'bg-white/5'}`}
               />
             );
           })}

@@ -6,7 +6,7 @@ The DevPulse **AI Copilot** is a Socratic virtual assistant integrated directly 
 
 ## Key Capabilities
 
-- **Interactive Triage**: Explains *why* a specific CVE was triggered and the risks associated with the vulnerable dependency.
+- **Interactive Triage**: Explains _why_ a specific CVE was triggered and the risks associated with the vulnerable dependency.
 - **Remediation Code Generation**: Provides structural diffs and copy-paste commands (e.g. `npm install package@fixed-version`) to resolve findings.
 - **Socratic Code Explanations**: Ask natural language questions regarding file structures, PostgreSQL configurations, or test failures.
 
@@ -17,9 +17,11 @@ The DevPulse **AI Copilot** is a Socratic virtual assistant integrated directly 
 The Copilot can be accessed from two convenient interface handles:
 
 ### 1. Tabular Ask Buttons
+
 - Every vulnerability listed in the **Vulnerabilities Widget** features a direct **Ask Copilot** button. Clicking this automatically opens the chat sidebar, injects the CVE payload, and triggers an explanation request.
 
 ### 2. Floating AI Chat Sidebar
+
 - Click the floating brain icon in the bottom-right corner to toggle the full-screen chat drawer. You can hold contextual conversations here about the selected repository.
 
 ---

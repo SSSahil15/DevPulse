@@ -9,7 +9,6 @@ rule_files:
   - /etc/prometheus/alerting_rules.yml
 
 scrape_configs:
-
   # ── Prometheus self-monitoring ──────────────────────────────────────────────
   - job_name: 'prometheus'
     static_configs:

@@ -18,12 +18,12 @@ To test how DevPulse scores adapt to real-world code quality changes, you can us
 
 ### Simulation Presets
 
-| Preset Name | Simulated Vulnerability | Score Impact | Purpose |
-|-------------|-------------------------|--------------|---------|
-| **Standard PR Commit** | Clean build, passing unit tests | **+5 to +10** | Simulates a healthy pull request check |
-| **Vulnerable Dependency** | Introduces high-severity npm packages | **-20 to -35** | Simulates a developer installing compromised packages |
-| **Exposed Secret** | Injects mock AWS API keys into repository | **-40 to -50** | Simulates pushing sensitive credentials in plain text |
-| **Broken CI Build** | Failing pipeline checks | **-15 to -20** | Simulates build failures |
+| Preset Name               | Simulated Vulnerability                   | Score Impact   | Purpose                                               |
+| ------------------------- | ----------------------------------------- | -------------- | ----------------------------------------------------- |
+| **Standard PR Commit**    | Clean build, passing unit tests           | **+5 to +10**  | Simulates a healthy pull request check                |
+| **Vulnerable Dependency** | Introduces high-severity npm packages     | **-20 to -35** | Simulates a developer installing compromised packages |
+| **Exposed Secret**        | Injects mock AWS API keys into repository | **-40 to -50** | Simulates pushing sensitive credentials in plain text |
+| **Broken CI Build**       | Failing pipeline checks                   | **-15 to -20** | Simulates build failures                              |
 
 ### Triggering the Simulation
 

@@ -8,13 +8,25 @@ from .base import PredictorInterface
 from models.domain import RepositoryMetadata
 from models.config import settings
 
+
 class LLMPrediction(BaseModel):
-    riskScore: int = Field(description="A score from 0 to 100 where higher means higher risk of pipeline failure.")
+    riskScore: int = Field(
+        description="A score from 0 to 100 where higher means higher risk of pipeline failure."
+    )
     decision: str = Field(description="Must be 'BLOCK' or 'PASS'.")
-    failureProbability: float = Field(description="A float from 0 to 100 indicating failure probability.")
-    failureLabel: str = Field(description="A short label, e.g. 'High Risk', 'Safe', 'Warning'.")
-    rationale: str = Field(description="A detailed explanation for the score and decision.")
-    suggestions: List[str] = Field(description="A list of 2-3 specific, actionable remediation steps.")
+    failureProbability: float = Field(
+        description="A float from 0 to 100 indicating failure probability."
+    )
+    failureLabel: str = Field(
+        description="A short label, e.g. 'High Risk', 'Safe', 'Warning'."
+    )
+    rationale: str = Field(
+        description="A detailed explanation for the score and decision."
+    )
+    suggestions: List[str] = Field(
+        description="A list of 2-3 specific, actionable remediation steps."
+    )
+
 
 class AdvancedLLMPredictor(PredictorInterface):
     """
@@ -29,10 +41,12 @@ class AdvancedLLMPredictor(PredictorInterface):
             model=settings.MODEL_NAME,
             openai_api_key=api_key,
             openai_api_base=settings.OPENAI_API_BASE,
-            temperature=0.0
+            temperature=0.0,
         )
-        self.structured_llm = self.llm.with_structured_output(LLMPrediction, method="json_mode")
-        
+        self.structured_llm = self.llm.with_structured_output(
+            LLMPrediction, method="json_mode"
+        )
+
         self.prompt = PromptTemplate.from_template(
             """You are DevPulse, an elite DevSecOps AI. Analyze the provided GitHub repository metadata and CI/CD security scan results.
 Your job is to predict the likelihood of this codebase causing a CI/CD pipeline failure or introducing critical security/stability issues.
@@ -67,23 +81,29 @@ You MUST respond strictly in valid JSON matching the following schema:
 """
         )
 
-    def predict(self, repository: RepositoryMetadata, security_scan: Optional[dict] = None) -> dict[str, Any]:
+    def predict(
+        self, repository: RepositoryMetadata, security_scan: Optional[dict] = None
+    ) -> dict[str, Any]:
         """
         Produces an analysis result via LLM inference.
         """
-        scan_str = json.dumps(security_scan, indent=2) if security_scan else "No security scan provided."
-        
+        scan_str = (
+            json.dumps(security_scan, indent=2)
+            if security_scan
+            else "No security scan provided."
+        )
+
         prompt_text = self.prompt.format(
             name=repository.fullName,
             language=repository.language or "Unknown",
             stars=repository.stargazersCount,
             issues=repository.openIssuesCount,
-            security_scan=scan_str
+            security_scan=scan_str,
         )
-        
+
         # Invoke the LLM
         prediction: LLMPrediction = self.structured_llm.invoke(prompt_text)
-        
+
         # Map the Pydantic structured output back to the dictionary expected by AnalysisPipeline
         return {
             "riskScore": prediction.riskScore,
@@ -91,9 +111,9 @@ You MUST respond strictly in valid JSON matching the following schema:
             "failurePrediction": {
                 "probability": prediction.failureProbability,
                 "label": prediction.failureLabel,
-                "rationale": prediction.rationale
+                "rationale": prediction.rationale,
             },
-            "suggestions": prediction.suggestions
+            "suggestions": prediction.suggestions,
         }
 
     def model_info(self) -> dict[str, Any]:
@@ -101,5 +121,5 @@ You MUST respond strictly in valid JSON matching the following schema:
             "name": "AdvancedLLMPredictor",
             "version": "1.0",
             "type": "llm",
-            "model": settings.MODEL_NAME
+            "model": settings.MODEL_NAME,
         }

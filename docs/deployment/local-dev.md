@@ -59,6 +59,7 @@ docker-compose down -v
 ## 3. Persistent Volumes
 
 DevPulse creates a dedicated Docker volume named `devpulse_postgres_data` to ensure PostgreSQL transactions are persisted between docker restarts:
+
 - Mount Location: `/var/lib/postgresql/data`
 - To completely wipe database states and trigger clean migrations on boot, destroy the volume during shutdown:
   ```bash

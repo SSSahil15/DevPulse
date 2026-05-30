@@ -1,5 +1,5 @@
-const { pool, migrate } = require("./postgres");
-const logger = require("../utils/logger");
+const { pool, migrate } = require('./postgres');
+const logger = require('../utils/logger');
 
 // ─── Pipeline Results Helpers ─────────────────────────────────────────────────
 
@@ -64,24 +64,24 @@ const pipelineDB = {
    * @param {number} [opts.offset=0]           - pagination offset
    * @param {'full'|'summary'} [opts.columns='full'] - column set to select
    */
-  async findFiltered({ repository, branch, limit = 20, offset = 0, columns = "full" }) {
+  async findFiltered({ repository, branch, limit = 20, offset = 0, columns = 'full' }) {
     // Defensive caps: callers should not bypass the controller's own limit cap
-    const safeLimit  = Math.min(Math.max(Number(limit) || 20, 1), 100);
+    const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
     const safeOffset = Math.max(Number(offset) || 0, 0);
-    const cols       = PIPELINE_COLUMNS[columns] || PIPELINE_COLUMNS.full;
+    const cols = PIPELINE_COLUMNS[columns] || PIPELINE_COLUMNS.full;
 
     let query, params;
     if (repository && branch) {
       // Uses 3-column composite index idx_pipeline_repo_branch_received
-      query  = `SELECT ${cols} FROM pipeline_results WHERE repository = $1 AND branch = $2 ORDER BY received_at DESC LIMIT $3 OFFSET $4`;
+      query = `SELECT ${cols} FROM pipeline_results WHERE repository = $1 AND branch = $2 ORDER BY received_at DESC LIMIT $3 OFFSET $4`;
       params = [repository, branch, safeLimit, safeOffset];
     } else if (repository) {
       // Uses composite index idx_pipeline_repo_received
-      query  = `SELECT ${cols} FROM pipeline_results WHERE repository = $1 ORDER BY received_at DESC LIMIT $2 OFFSET $3`;
+      query = `SELECT ${cols} FROM pipeline_results WHERE repository = $1 ORDER BY received_at DESC LIMIT $2 OFFSET $3`;
       params = [repository, safeLimit, safeOffset];
     } else {
       // Full table scan intentional here (admin/dashboard view — no filter)
-      query  = `SELECT ${cols} FROM pipeline_results ORDER BY received_at DESC LIMIT $1 OFFSET $2`;
+      query = `SELECT ${cols} FROM pipeline_results ORDER BY received_at DESC LIMIT $1 OFFSET $2`;
       params = [safeLimit, safeOffset];
     }
 
@@ -98,10 +98,10 @@ const pipelineDB = {
    *
    * @param {object} opts - Same options as findFiltered
    */
-  async findFilteredWithCount({ repository, branch, limit = 20, offset = 0, columns = "full" }) {
-    const safeLimit  = Math.min(Math.max(Number(limit) || 20, 1), 100);
+  async findFilteredWithCount({ repository, branch, limit = 20, offset = 0, columns = 'full' }) {
+    const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
     const safeOffset = Math.max(Number(offset) || 0, 0);
-    const cols       = PIPELINE_COLUMNS[columns] || PIPELINE_COLUMNS.full;
+    const cols = PIPELINE_COLUMNS[columns] || PIPELINE_COLUMNS.full;
 
     // Wrap query in a CTE and add COUNT(*) OVER () as a window function.
     // Postgres computes the count without a second seq-scan — the planner
@@ -109,18 +109,18 @@ const pipelineDB = {
     let innerWhere, params;
     if (repository && branch) {
       innerWhere = `WHERE repository = $1 AND branch = $2`;
-      params     = [repository, branch, safeLimit, safeOffset];
+      params = [repository, branch, safeLimit, safeOffset];
     } else if (repository) {
       innerWhere = `WHERE repository = $1`;
-      params     = [repository, safeLimit, safeOffset];
+      params = [repository, safeLimit, safeOffset];
     } else {
       innerWhere = ``;
-      params     = [safeLimit, safeOffset];
+      params = [safeLimit, safeOffset];
     }
 
     // $N for limit/offset depends on how many filter params came before
-    const limitIdx  = params.length - 1;  // e.g. 3 if repo+branch
-    const offsetIdx = params.length;       // e.g. 4 if repo+branch
+    const limitIdx = params.length - 1; // e.g. 3 if repo+branch
+    const offsetIdx = params.length; // e.g. 4 if repo+branch
 
     const query = `
       SELECT ${cols}, COUNT(*) OVER () AS _total_count
@@ -135,7 +135,10 @@ const pipelineDB = {
 
     // Strip the internal _total_count column before returning parsed rows
     return {
-      rows:  rows.map((r) => { const { _total_count, ...rest } = r; return parsePipelineRow(rest); }),
+      rows: rows.map((r) => {
+        const { _total_count, ...rest } = r;
+        return parsePipelineRow(rest);
+      }),
       total,
     };
   },
@@ -147,7 +150,7 @@ const pipelineDB = {
   async findByRunId(runId) {
     const { rows } = await pool.query(
       `SELECT ${PIPELINE_COLUMNS.full} FROM pipeline_results WHERE run_id = $1 LIMIT 1`,
-      [runId]
+      [runId],
     );
     return rows.length ? parsePipelineRow(rows[0]) : null;
   },
@@ -205,33 +208,35 @@ const pipelineDB = {
       return { total: 0, successes: 0, avgScore: null, latest: null };
     }
 
-    const row   = rows[0];
+    const row = rows[0];
     const total = parseInt(row.total, 10);
 
     // Extract the latest pipeline row (columns prefixed from the CTE join)
-    const latestRaw = row.id ? {
-      id:             row.id,
-      repository:     row.repository,
-      commit_sha:     row.commit_sha,
-      commit_message: row.commit_message,
-      branch:         row.branch,
-      triggered_by:   row.triggered_by,
-      run_id:         row.run_id,
-      run_url:        row.run_url,
-      event:          row.event,
-      timestamp:      row.timestamp,
-      received_at:    row.received_at,
-      overall_status: row.overall_status,
-      stages:         row.stages,
-      devpulse_score: row.devpulse_score,
-      insights:       row.insights,
-    } : null;
+    const latestRaw = row.id
+      ? {
+          id: row.id,
+          repository: row.repository,
+          commit_sha: row.commit_sha,
+          commit_message: row.commit_message,
+          branch: row.branch,
+          triggered_by: row.triggered_by,
+          run_id: row.run_id,
+          run_url: row.run_url,
+          event: row.event,
+          timestamp: row.timestamp,
+          received_at: row.received_at,
+          overall_status: row.overall_status,
+          stages: row.stages,
+          devpulse_score: row.devpulse_score,
+          insights: row.insights,
+        }
+      : null;
 
     return {
       total,
       successes: parseInt(row.successes, 10),
-      avgScore:  total > 0 ? Math.round(parseFloat(row.avg_score) || 0) : null,
-      latest:    latestRaw ? parsePipelineRow(latestRaw) : null,
+      avgScore: total > 0 ? Math.round(parseFloat(row.avg_score) || 0) : null,
+      latest: latestRaw ? parsePipelineRow(latestRaw) : null,
     };
   },
 };
@@ -240,16 +245,16 @@ function parsePipelineRow(row) {
   if (!row) return null;
   return {
     ...row,
-    commitSha:     row.commit_sha,
+    commitSha: row.commit_sha,
     commitMessage: row.commit_message,
-    triggeredBy:   row.triggered_by,
-    runId:         row.run_id,
-    runUrl:        row.run_url,
-    receivedAt:    row.received_at,
+    triggeredBy: row.triggered_by,
+    runId: row.run_id,
+    runUrl: row.run_url,
+    receivedAt: row.received_at,
     overallStatus: row.overall_status,
-    stages:        row.stages,
+    stages: row.stages,
     devpulseScore: row.devpulse_score,
-    insights:      row.insights,
+    insights: row.insights,
   };
 }
 
@@ -258,10 +263,13 @@ function parsePipelineRow(row) {
 const scanJobDB = {
   async create(id, repository) {
     const now = new Date().toISOString();
-    await pool.query(`
+    await pool.query(
+      `
       INSERT INTO scan_jobs (id, repository, status, created_at, updated_at)
       VALUES ($1, $2, 'pending', $3, $3)
-    `, [id, repository, now]);
+    `,
+      [id, repository, now],
+    );
   },
 
   /**
@@ -275,41 +283,38 @@ const scanJobDB = {
    */
   async getById(id, { lite = false } = {}) {
     const cols = lite
-      ? "id, repository, status, created_at, updated_at, error"
-      : "id, repository, status, created_at, updated_at, result, error";
+      ? 'id, repository, status, created_at, updated_at, error'
+      : 'id, repository, status, created_at, updated_at, result, error';
 
-    const { rows } = await pool.query(
-      `SELECT ${cols} FROM scan_jobs WHERE id = $1 LIMIT 1`,
-      [id]
-    );
+    const { rows } = await pool.query(`SELECT ${cols} FROM scan_jobs WHERE id = $1 LIMIT 1`, [id]);
     if (!rows.length) return null;
     const row = rows[0];
     return {
       ...row,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-      result:    row.result ?? null,
+      result: row.result ?? null,
     };
   },
 
   async markProcessing(id) {
-    await pool.query(
-      `UPDATE scan_jobs SET status = 'processing', updated_at = $1 WHERE id = $2`,
-      [new Date().toISOString(), id]
-    );
+    await pool.query(`UPDATE scan_jobs SET status = 'processing', updated_at = $1 WHERE id = $2`, [
+      new Date().toISOString(),
+      id,
+    ]);
   },
 
   async markDone(id, result) {
     await pool.query(
       `UPDATE scan_jobs SET status = 'done', result = $1, updated_at = $2 WHERE id = $3`,
-      [result, new Date().toISOString(), id]
+      [result, new Date().toISOString(), id],
     );
   },
 
   async markFailed(id, errorMsg) {
     await pool.query(
       `UPDATE scan_jobs SET status = 'failed', error = $1, updated_at = $2 WHERE id = $3`,
-      [errorMsg, new Date().toISOString(), id]
+      [errorMsg, new Date().toISOString(), id],
     );
   },
 
@@ -324,7 +329,7 @@ const scanJobDB = {
   async cleanupOld(days = 7) {
     const { rowCount } = await pool.query(
       `DELETE FROM scan_jobs WHERE created_at < NOW() - ($1 || ' days')::INTERVAL`,
-      [days]
+      [days],
     );
     return rowCount;
   },
@@ -334,16 +339,25 @@ const scanJobDB = {
 
 const reportDB = {
   async insert(report) {
-    await pool.query(`
+    await pool.query(
+      `
       INSERT INTO reports
         (token, repository, repo_meta, devpulse_score, stages, insights, created_by, created_at, expires_at)
       VALUES
         ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-    `, [
-      report.token,       report.repository,   report.repoMeta,
-      report.devpulseScore, report.stages,      report.insights,
-      report.createdBy,   report.createdAt,    report.expiresAt,
-    ]);
+    `,
+      [
+        report.token,
+        report.repository,
+        report.repoMeta,
+        report.devpulseScore,
+        report.stages,
+        report.insights,
+        report.createdBy,
+        report.createdAt,
+        report.expiresAt,
+      ],
+    );
   },
 
   async getByToken(token) {
@@ -351,28 +365,27 @@ const reportDB = {
       `SELECT token, repository, repo_meta, devpulse_score, stages, insights,
               created_by, created_at, expires_at
        FROM reports WHERE token = $1 LIMIT 1`,
-      [token]
+      [token],
     );
     if (!rows.length) return null;
     const row = rows[0];
     return {
-      token:         row.token,
-      repository:    row.repository,
-      repoMeta:      row.repo_meta || {},
+      token: row.token,
+      repository: row.repository,
+      repoMeta: row.repo_meta || {},
       devpulseScore: row.devpulse_score || null,
-      stages:        row.stages || null,
-      insights:      row.insights || null,
-      createdBy:     row.created_by,
-      createdAt:     row.created_at,
-      expiresAt:     row.expires_at,
+      stages: row.stages || null,
+      insights: row.insights || null,
+      createdBy: row.created_by,
+      createdAt: row.created_at,
+      expiresAt: row.expires_at,
     };
   },
 
   async cleanupExpired() {
-    const { rowCount } = await pool.query(
-      `DELETE FROM reports WHERE expires_at < $1`,
-      [new Date().toISOString()]
-    );
+    const { rowCount } = await pool.query(`DELETE FROM reports WHERE expires_at < $1`, [
+      new Date().toISOString(),
+    ]);
     if (rowCount > 0) {
       logger.info(`[DB] Cleaned up ${rowCount} expired report(s).`);
     }
@@ -383,7 +396,8 @@ const reportDB = {
 
 const providerTokenDB = {
   async upsert({ userId, encryptedToken, githubLogin, profileUrl }) {
-    await pool.query(`
+    await pool.query(
+      `
       INSERT INTO provider_tokens (user_id, encrypted_token, github_login, profile_url, synced_at)
       VALUES ($1, $2, $3, $4, $5)
       ON CONFLICT(user_id) DO UPDATE SET
@@ -391,14 +405,16 @@ const providerTokenDB = {
         github_login    = EXCLUDED.github_login,
         profile_url     = EXCLUDED.profile_url,
         synced_at       = EXCLUDED.synced_at
-    `, [userId, encryptedToken, githubLogin || null, profileUrl || null, new Date().toISOString()]);
+    `,
+      [userId, encryptedToken, githubLogin || null, profileUrl || null, new Date().toISOString()],
+    );
   },
 
   async getByUserId(userId) {
     // user_id is the primary key — always an index seek, no full scan
     const { rows } = await pool.query(
       `SELECT user_id, encrypted_token, github_login, profile_url, synced_at FROM provider_tokens WHERE user_id = $1 LIMIT 1`,
-      [userId]
+      [userId],
     );
     return rows.length ? rows[0] : null;
   },
@@ -410,49 +426,133 @@ const providerTokenDB = {
 
 // ─── Initialize DB and background cleanup ────────────────────────────────────
 
-if (process.env.NODE_ENV !== "test") {
+if (process.env.NODE_ENV !== 'test') {
   (async () => {
     try {
       await migrate();
 
       // Hourly cleanup job — runs in background, does not block startup
-      const cleanupInterval = setInterval(async () => {
-        try {
-          await reportDB.cleanupExpired();
+      const cleanupInterval = setInterval(
+        async () => {
+          try {
+            await reportDB.cleanupExpired();
 
-          const { rowCount: pipelineDeleted } = await pool.query(
-            `DELETE FROM pipeline_results WHERE received_at < NOW() - INTERVAL '7 days'`
-          );
-          if (pipelineDeleted > 0) {
-            logger.info(`[DB] Cleaned up ${pipelineDeleted} pipeline result(s) older than 7 days.`);
-          }
+            const { rowCount: pipelineDeleted } = await pool.query(
+              `DELETE FROM pipeline_results WHERE received_at < NOW() - INTERVAL '7 days'`,
+            );
+            if (pipelineDeleted > 0) {
+              logger.info(
+                `[DB] Cleaned up ${pipelineDeleted} pipeline result(s) older than 7 days.`,
+              );
+            }
 
-          const scanDeleted = await scanJobDB.cleanupOld(7);
-          if (scanDeleted > 0) {
-            logger.info(`[DB] Cleaned up ${scanDeleted} scan job(s) older than 7 days.`);
+            const scanDeleted = await scanJobDB.cleanupOld(7);
+            if (scanDeleted > 0) {
+              logger.info(`[DB] Cleaned up ${scanDeleted} scan job(s) older than 7 days.`);
+            }
+          } catch (err) {
+            logger.error('[DB] Cleanup job error', { error: err.message });
           }
-        } catch (err) {
-          logger.error("[DB] Cleanup job error", { error: err.message });
-        }
-      }, 60 * 60 * 1000);
+        },
+        60 * 60 * 1000,
+      );
 
       cleanupInterval.unref?.();
     } catch (err) {
-      logger.error("Failed to initialize database", { error: err.message });
+      logger.error('Failed to initialize database', { error: err.message });
     }
   })();
 }
+
+// ─── Schedule Helpers ─────────────────────────────────────────────────────────
+
+const scheduleDB = {
+  async create({
+    id,
+    userId,
+    repository,
+    cronExpr,
+    label,
+    enabled,
+    lastRunAt,
+    nextRunAt,
+    createdAt,
+  }) {
+    await pool.query(
+      `
+      INSERT INTO scan_schedules
+        (id, user_id, repository, cron_expr, label, enabled, last_run_at, next_run_at, created_at)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+    `,
+      [
+        id,
+        userId,
+        repository,
+        cronExpr,
+        label || null,
+        enabled,
+        lastRunAt || null,
+        nextRunAt || null,
+        createdAt,
+      ],
+    );
+  },
+
+  async findByUser(userId) {
+    const { rows } = await pool.query(
+      `SELECT * FROM scan_schedules WHERE user_id = $1 ORDER BY created_at DESC`,
+      [userId],
+    );
+    return rows;
+  },
+
+  async findById(id) {
+    const { rows } = await pool.query(`SELECT * FROM scan_schedules WHERE id = $1 LIMIT 1`, [id]);
+    return rows[0] || null;
+  },
+
+  async findByUserAndRepo(userId, repository) {
+    const { rows } = await pool.query(
+      `SELECT * FROM scan_schedules WHERE user_id = $1 AND repository = $2 LIMIT 1`,
+      [userId, repository],
+    );
+    return rows[0] || null;
+  },
+
+  async update(id, { cronExpr, label, enabled, nextRunAt }) {
+    await pool.query(
+      `
+      UPDATE scan_schedules
+      SET cron_expr = $1, label = $2, enabled = $3, next_run_at = $4
+      WHERE id = $5
+    `,
+      [cronExpr, label, enabled, nextRunAt, id],
+    );
+  },
+
+  async markLastRun(id) {
+    await pool.query(`UPDATE scan_schedules SET last_run_at = NOW() WHERE id = $1`, [id]);
+  },
+
+  async delete(id) {
+    await pool.query(`DELETE FROM scan_schedules WHERE id = $1`, [id]);
+  },
+};
 
 // Compatibility shim: server.js and health/ready use `db.open` / `db.close()`
 // Pool is the actual pg connection pool — expose a thin wrapper.
 const db = {
   get open() {
     // pool.totalCount > 0 or pool hasn't errored means it's open
-    try { return pool.totalCount >= 0; } catch { return false; }
+    try {
+      return pool.totalCount >= 0;
+    } catch {
+      return false;
+    }
   },
   close() {
     return pool.end();
   },
 };
 
-module.exports = { db, pool, pipelineDB, scanJobDB, reportDB, providerTokenDB };
+module.exports = { db, pool, pipelineDB, scanJobDB, reportDB, providerTokenDB, scheduleDB };

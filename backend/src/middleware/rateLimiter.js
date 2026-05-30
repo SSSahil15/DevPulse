@@ -1,9 +1,9 @@
-const rateLimit = require("express-rate-limit");
-const RedisStore = require("rate-limit-redis").default;
-const Sentry = require("@sentry/node");
-const config = require("../config/env");
-const redisService = require("../services/redis.service");
-const logger = require("../utils/logger");
+const rateLimit = require('express-rate-limit');
+const RedisStore = require('rate-limit-redis').default;
+const Sentry = require('@sentry/node');
+const config = require('../config/env');
+const redisService = require('../services/redis.service');
+const logger = require('../utils/logger');
 
 /**
  * Custom skip mechanism:
@@ -12,9 +12,12 @@ const logger = require("../utils/logger");
  * 3. Bypass in development mode (effectively disabled) unless testing limits
  */
 const skipHandler = (req) => {
-  if (config.nodeEnv === "test" && !process.env.TEST_RATE_LIMIT) return true;
-  if (config.nodeEnv === "development" && !process.env.TEST_RATE_LIMIT) return true;
-  if (config.internalServiceSecret && req.headers["x-internal-secret"] === config.internalServiceSecret) {
+  if (config.nodeEnv === 'test' && !process.env.TEST_RATE_LIMIT) return true;
+  if (config.nodeEnv === 'development' && !process.env.TEST_RATE_LIMIT) return true;
+  if (
+    config.internalServiceSecret &&
+    req.headers['x-internal-secret'] === config.internalServiceSecret
+  ) {
     return true;
   }
   return false;
@@ -59,7 +62,7 @@ function createLimiter({ windowMs, max, name, useUserId = false }) {
         ? redisService.isConnected()
         : Boolean(redisService.isConnected);
 
-    return (connected && redisService.client)
+    return connected && redisService.client
       ? new RedisStore({
           sendCommand: (...args) => redisService.client.sendCommand(args),
           prefix: `rl_${name.replace(/\s+/g, '_')}:`,
@@ -71,22 +74,27 @@ function createLimiter({ windowMs, max, name, useUserId = false }) {
     windowMs,
     max,
     standardHeaders: true,
-    legacyHeaders:   false,
-    validate:        { keyGeneratorIpFallback: false },
-    store:           getStore(),
-    skip:            skipHandler,
-    keyGenerator:    useUserId ? userKeyGenerator : ipKeyGenerator,
+    legacyHeaders: false,
+    validate: { keyGeneratorIpFallback: false },
+    store: getStore(),
+    skip: skipHandler,
+    keyGenerator: useUserId ? userKeyGenerator : ipKeyGenerator,
     handler(req, res) {
-      logger.warn(`[RateLimit] Limit hit for ${name} by ${useUserId && req.user ? 'User ' + req.user.id : 'IP ' + req.ip}`);
+      logger.warn(
+        `[RateLimit] Limit hit for ${name} by ${useUserId && req.user ? 'User ' + req.user.id : 'IP ' + req.ip}`,
+      );
 
       // If it's the auth endpoint, log heavily and report to Sentry (potential abuse)
-      if (name === "GitHub auth") {
-        Sentry.captureMessage(`[RateLimit] Potential abuse on auth endpoint by IP ${req.ip}`, "warning");
+      if (name === 'GitHub auth') {
+        Sentry.captureMessage(
+          `[RateLimit] Potential abuse on auth endpoint by IP ${req.ip}`,
+          'warning',
+        );
       }
 
       res.status(429).json({
-        message:           `Rate limit exceeded for ${name}. Please try again later.`,
-        resetTime:         new Date(Date.now() + windowMs).toISOString(),
+        message: `Rate limit exceeded for ${name}. Please try again later.`,
+        resetTime: new Date(Date.now() + windowMs).toISOString(),
         retryAfterSeconds: Math.ceil(windowMs / 1000),
       });
     },
@@ -99,7 +107,7 @@ function createLimiter({ windowMs, max, name, useUserId = false }) {
 const generalApiLimiter = createLimiter({
   windowMs: 60 * 1000,
   max: 100,
-  name: "API",
+  name: 'API',
   useUserId: false,
 });
 
@@ -107,7 +115,7 @@ const generalApiLimiter = createLimiter({
 const authLimiter = createLimiter({
   windowMs: 60 * 1000,
   max: 10,
-  name: "GitHub auth",
+  name: 'GitHub auth',
   useUserId: false,
 });
 
@@ -115,7 +123,7 @@ const authLimiter = createLimiter({
 const publicReportLimiter = createLimiter({
   windowMs: 60 * 1000,
   max: 100,
-  name: "Public Reports",
+  name: 'Public Reports',
   useUserId: false,
 });
 
@@ -123,7 +131,7 @@ const publicReportLimiter = createLimiter({
 const analyzeLimiter = createLimiter({
   windowMs: 24 * 60 * 60 * 1000, // 24 hours
   max: 100,
-  name: "Repository Analysis",
+  name: 'Repository Analysis',
   useUserId: true,
 });
 
@@ -131,7 +139,7 @@ const analyzeLimiter = createLimiter({
 const aiChatLimiter = createLimiter({
   windowMs: 60 * 1000,
   max: 30,
-  name: "AI Copilot",
+  name: 'AI Copilot',
   useUserId: true,
 });
 
@@ -139,7 +147,7 @@ const aiChatLimiter = createLimiter({
 const repoLimiter = createLimiter({
   windowMs: 60 * 1000,
   max: 100,
-  name: "Repository Listing",
+  name: 'Repository Listing',
   useUserId: true,
 });
 
@@ -147,7 +155,7 @@ const repoLimiter = createLimiter({
 const simulateLimiter = createLimiter({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 5,
-  name: "Pipeline Simulation",
+  name: 'Pipeline Simulation',
   useUserId: true,
 });
 

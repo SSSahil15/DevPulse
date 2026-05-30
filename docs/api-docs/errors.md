@@ -23,14 +23,14 @@ Validation failures additionally include an `errors` array with `field` and `mes
 
 Here are the standard error code classifications used across DevPulse:
 
-| HTTP Status | Error Code Tag | Common Trigger Scenario |
-|-------------|----------------|-------------------------|
-| `400 Bad Request` | `VALIDATION_ERROR` | Missing or invalid parameters in request body (e.g. wrong sharing token format) |
-| `401 Unauthorized` | `UNAUTHORIZED` | Missing, malformed, or expired JWT in HTTP Authorization header |
-| `403 Forbidden` | `INSUFFICIENT_PERMISSIONS` | Requesting access to a private repository not authorized by OAuth scopes |
-| `404 Not Found` | `RESOURCE_NOT_FOUND` | Repository metadata, simulation job, or report snapshot does not exist |
-| `429 Too Many Requests` | `RATE_LIMIT_EXCEEDED` | Exceeded typical client query limits on authentication or scan trigger routes |
-| `500 Internal Server` | `INTERNAL_SERVER_ERROR` | Connection failures with PostgreSQL or unexpected server-side process errors |
+| HTTP Status             | Error Code Tag             | Common Trigger Scenario                                                         |
+| ----------------------- | -------------------------- | ------------------------------------------------------------------------------- |
+| `400 Bad Request`       | `VALIDATION_ERROR`         | Missing or invalid parameters in request body (e.g. wrong sharing token format) |
+| `401 Unauthorized`      | `UNAUTHORIZED`             | Missing, malformed, or expired JWT in HTTP Authorization header                 |
+| `403 Forbidden`         | `INSUFFICIENT_PERMISSIONS` | Requesting access to a private repository not authorized by OAuth scopes        |
+| `404 Not Found`         | `RESOURCE_NOT_FOUND`       | Repository metadata, simulation job, or report snapshot does not exist          |
+| `429 Too Many Requests` | `RATE_LIMIT_EXCEEDED`      | Exceeded typical client query limits on authentication or scan trigger routes   |
+| `500 Internal Server`   | `INTERNAL_SERVER_ERROR`    | Connection failures with PostgreSQL or unexpected server-side process errors    |
 
 ---
 

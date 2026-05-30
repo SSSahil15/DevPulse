@@ -41,10 +41,10 @@ components:
       properties:
         message:
           type: string
-          example: "Unauthorized access"
+          example: 'Unauthorized access'
         details:
           type: string
-          example: "Token expired"
+          example: 'Token expired'
 
   responses:
     UnauthorizedError:
@@ -267,7 +267,7 @@ paths:
               properties:
                 query:
                   type: string
-                  example: "How do I fix the SQL injection vulnerability?"
+                  example: 'How do I fix the SQL injection vulnerability?'
                 context:
                   type: object
                 history:

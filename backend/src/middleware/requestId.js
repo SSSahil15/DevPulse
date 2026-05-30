@@ -1,4 +1,4 @@
-const crypto = require("crypto");
+const crypto = require('crypto');
 
 /**
  * requestId middleware
@@ -18,13 +18,14 @@ const crypto = require("crypto");
 function requestId(req, res, next) {
   // Accept a forwarded ID from a trusted upstream proxy (e.g. Vercel → Render),
   // or generate a fresh one if none is present.
-  const incomingId = req.headers["x-request-id"];
-  const id = incomingId && /^[\w-]{4,64}$/.test(incomingId)
-    ? incomingId
-    : `req-${crypto.randomBytes(4).toString("hex")}`;
+  const incomingId = req.headers['x-request-id'];
+  const id =
+    incomingId && /^[\w-]{4,64}$/.test(incomingId)
+      ? incomingId
+      : `req-${crypto.randomBytes(4).toString('hex')}`;
 
   req.requestId = id;
-  res.setHeader("X-Request-ID", id);
+  res.setHeader('X-Request-ID', id);
   next();
 }
 

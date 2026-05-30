@@ -4,7 +4,7 @@ repos:
     rev: v1.4.0
     hooks:
       - id: detect-secrets
-        name: "🔐 detect-secrets"
+        name: '🔐 detect-secrets'
         args: ['--baseline', '.secrets.baseline']
 
   # ── General pre-commit checks ──
@@ -12,12 +12,12 @@ repos:
     rev: v4.6.0
     hooks:
       - id: check-added-large-files
-        name: "📦 No large files (>1MB)"
+        name: '📦 No large files (>1MB)'
         args: ['--maxkb=1024']
       - id: check-merge-conflict
-        name: "🔀 No merge conflict markers"
+        name: '🔀 No merge conflict markers'
       - id: detect-private-key
-        name: "🔑 No private keys"
+        name: '🔑 No private keys'
       - id: end-of-file-fixer
       - id: trailing-whitespace
 
@@ -25,14 +25,14 @@ repos:
   - repo: local
     hooks:
       - id: npm-audit-backend
-        name: "📦 npm audit (backend)"
+        name: '📦 npm audit (backend)'
         entry: bash -c 'cd backend && npm audit --audit-level=critical'
         language: system
         pass_filenames: false
         stages: [pre-push]
 
       - id: npm-audit-frontend
-        name: "📦 npm audit (frontend)"
+        name: '📦 npm audit (frontend)'
         entry: bash -c 'cd frontend && npm audit --audit-level=critical'
         language: system
         pass_filenames: false

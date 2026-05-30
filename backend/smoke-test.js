@@ -8,25 +8,28 @@
  * Default budget: 500ms
  */
 
-const http           = require("http");
-const P99_BUDGET_MS  = parseInt(process.argv[2] || "500", 10);
-const BACKEND_PORT   = 4099; // high port — unlikely to conflict
-const ITERATIONS     = 20;   // 20 × 2 endpoints = 40 requests total
+const http = require('http');
+const P99_BUDGET_MS = parseInt(process.argv[2] || '500', 10);
+const BACKEND_PORT = 4099; // high port — unlikely to conflict
+const ITERATIONS = 20; // 20 × 2 endpoints = 40 requests total
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function measure(port, path) {
   return new Promise((resolve, reject) => {
     const start = process.hrtime.bigint();
-    const req   = http.get(`http://localhost:${port}${path}`, (res) => {
+    const req = http.get(`http://localhost:${port}${path}`, (res) => {
       res.resume();
-      res.on("end", () => {
+      res.on('end', () => {
         const ms = Number(process.hrtime.bigint() - start) / 1_000_000;
         resolve({ path, status: res.statusCode, ms });
       });
     });
-    req.on("error", reject);
-    req.setTimeout(5000, () => { req.destroy(); reject(new Error(`Timeout on ${path}`)); });
+    req.on('error', reject);
+    req.setTimeout(5000, () => {
+      req.destroy();
+      reject(new Error(`Timeout on ${path}`));
+    });
   });
 }
 
@@ -38,26 +41,26 @@ function percentile(sorted, p) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 (async () => {
-  const app    = require("./src/app");
+  const app = require('./src/app');
   const server = app.listen(BACKEND_PORT, () => {
     console.log(`[Smoke] Backend listening on :${BACKEND_PORT}`);
   });
 
   // Give the server 500ms to fully initialise
-  await new Promise(r => setTimeout(r, 500));
+  await new Promise((r) => setTimeout(r, 500));
 
   // Warm-up (discard result)
-  await measure(BACKEND_PORT, "/health/live").catch(() => {});
+  await measure(BACKEND_PORT, '/health/live').catch(() => {});
 
   const results = [];
   for (let i = 0; i < ITERATIONS; i++) {
-    results.push(await measure(BACKEND_PORT, "/health/live"));
-    results.push(await measure(BACKEND_PORT, "/health/startup"));
+    results.push(await measure(BACKEND_PORT, '/health/live'));
+    results.push(await measure(BACKEND_PORT, '/health/startup'));
   }
 
   server.close();
 
-  const durations = results.map(r => r.ms).sort((a, b) => a - b);
+  const durations = results.map((r) => r.ms).sort((a, b) => a - b);
   const p50 = percentile(durations, 50).toFixed(1);
   const p95 = percentile(durations, 95).toFixed(1);
   const p99 = percentile(durations, 99).toFixed(1);
@@ -76,7 +79,7 @@ function percentile(sorted, p) {
   }
 
   console.log(`[Smoke] ✅ PASS — p99 (${p99}ms) within budget (${P99_BUDGET_MS}ms)`);
-})().catch(err => {
-  console.error("[Smoke] Fatal:", err.message);
+})().catch((err) => {
+  console.error('[Smoke] Fatal:', err.message);
   process.exit(1);
 });

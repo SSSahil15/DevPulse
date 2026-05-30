@@ -39,29 +39,32 @@ Full observability for DevPulse using the **Grafana LGTM stack** (Loki, Grafana,
 ## Quick Start
 
 ### Start everything together (recommended)
+
 ```bash
 # From the /DevPulse root directory:
 docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d
 ```
 
 ### Start only the observability stack (against an already running app)
+
 ```bash
 docker compose -f docker-compose.observability.yml up -d
 ```
 
 ### Stop the observability stack only
+
 ```bash
 docker compose -f docker-compose.observability.yml down
 ```
 
 ## Access Points
 
-| Service    | URL                        | Credentials      |
-|------------|----------------------------|------------------|
-| Grafana    | http://localhost:3001       | admin / devpulse |
-| Prometheus | http://localhost:9090       | —                |
-| Loki API   | http://localhost:3100       | —                |
-| Tempo API  | http://localhost:3200       | —                |
+| Service    | URL                   | Credentials      |
+| ---------- | --------------------- | ---------------- |
+| Grafana    | http://localhost:3001 | admin / devpulse |
+| Prometheus | http://localhost:9090 | —                |
+| Loki API   | http://localhost:3100 | —                |
+| Tempo API  | http://localhost:3200 | —                |
 
 ## Grafana Dashboards
 
@@ -93,21 +96,22 @@ Or:
 
 Alerting rules are defined in `observability/alerting_rules.yml`:
 
-| Alert                 | Threshold              | Severity |
-|-----------------------|------------------------|----------|
-| HighErrorRate         | 5xx > 5% for 5m        | critical |
-| HighLatency           | p99 > 2s for 5m        | warning  |
-| QueueDepthHigh        | > 50 waiting jobs      | warning  |
-| AIInferenceErrors     | > 10% error rate       | critical |
-| AIInferenceSlow       | p95 > 10s              | warning  |
-| RedisHighMemory       | > 80% max memory       | warning  |
-| RedisDown             | Unreachable for 1m     | critical |
-| PostgresDown          | Unreachable for 1m     | critical |
+| Alert                   | Threshold             | Severity |
+| ----------------------- | --------------------- | -------- |
+| HighErrorRate           | 5xx > 5% for 5m       | critical |
+| HighLatency             | p99 > 2s for 5m       | warning  |
+| QueueDepthHigh          | > 50 waiting jobs     | warning  |
+| AIInferenceErrors       | > 10% error rate      | critical |
+| AIInferenceSlow         | p95 > 10s             | warning  |
+| RedisHighMemory         | > 80% max memory      | warning  |
+| RedisDown               | Unreachable for 1m    | critical |
+| PostgresDown            | Unreachable for 1m    | critical |
 | PostgresHighConnections | > 80% max_connections | warning  |
 
 ## Metrics Exposed
 
 ### Backend (`:4000/metrics`)
+
 - `http_requests_total` — by method, route, status_code
 - `http_request_duration_seconds` — histogram with buckets
 - `bullmq_queue_waiting` / `bullmq_queue_active` — queue depth gauges
@@ -116,12 +120,14 @@ Alerting rules are defined in `observability/alerting_rules.yml`:
 - `nodejs_*` — default Node.js process metrics (heap, GC, event loop lag)
 
 ### AI Service (`:8000/metrics`)
+
 - `ai_analysis_requests_total` — by status (success/error)
 - `ai_analysis_duration_seconds` — end-to-end pipeline timing
 - `http_requests_total` — by method, route, status_code
 - `http_request_duration_seconds` — histogram
 
 ### Infrastructure
+
 - **Redis** — via `redis_exporter` at `:9121`
 - **PostgreSQL** — via `postgres_exporter` at `:9187`
 

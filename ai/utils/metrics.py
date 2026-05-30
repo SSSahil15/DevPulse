@@ -9,12 +9,8 @@ from prometheus_client import (
     CollectorRegistry,
     Counter,
     Histogram,
-    Gauge,
     generate_latest,
-    CONTENT_TYPE_LATEST,
-    multiprocess,
 )
-import os
 
 # ─── Registry ─────────────────────────────────────────────────────────────────
 # Use the default global registry (works fine for a single-process uvicorn service)
@@ -25,7 +21,7 @@ registry = CollectorRegistry(auto_describe=True)
 ai_analysis_requests_total = Counter(
     "ai_analysis_requests_total",
     "Total number of AI analysis requests",
-    ["status"],          # status: success | error | fallback
+    ["status"],  # status: success | error | fallback
     registry=registry,
 )
 
@@ -39,7 +35,7 @@ ai_analysis_duration_seconds = Histogram(
 ai_llm_calls_total = Counter(
     "ai_llm_calls_total",
     "Total LLM API calls made by the AI service",
-    ["model", "status"],   # status: success | error | ratelimited
+    ["model", "status"],  # status: success | error | ratelimited
     registry=registry,
 )
 

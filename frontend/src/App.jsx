@@ -1,36 +1,43 @@
-import { useEffect, useState, lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
-import { Loader2 } from "lucide-react";
-import * as Sentry from "@sentry/react";
-import { getStoredToken, clearToken, isTokenExpired, decodeJWTPayload } from "./api";
-import ErrorBoundary from "./components/ErrorBoundary";
+import { useEffect, useState, lazy, Suspense } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import * as Sentry from '@sentry/react';
+import { getStoredToken, clearToken, isTokenExpired, decodeJWTPayload } from './api';
+import ErrorBoundary from './components/ErrorBoundary';
 
-const AuthCallbackPage = lazy(() => import("./pages/AuthCallbackPage"));
-const DashboardPage = lazy(() => import("./pages/DashboardPage"));
-const LoginPage = lazy(() => import("./pages/LoginPage"));
-const SharedReportPage = lazy(() => import("./pages/SharedReportPage"));
-const ChangelogPage = lazy(() => import("./pages/ChangelogPage"));
-const DocsPage = lazy(() => import("./pages/DocsPage"));
-const ApiPage = lazy(() => import("./pages/ApiPage"));
-const BlogPage = lazy(() => import("./pages/BlogPage"));
-const CommunityPage = lazy(() => import("./pages/CommunityPage"));
-const ContactPage = lazy(() => import("./pages/ContactPage"));
-const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
-const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
-const RoadmapPage = lazy(() => import("./pages/RoadmapPage"));
-const ContributingPage = lazy(() => import("./pages/ContributingPage"));
-const FeaturesPage = lazy(() => import("./pages/FeaturesPage"));
-const SecurityPage = lazy(() => import("./pages/SecurityPage"));
-const AboutUsPage = lazy(() => import("./pages/AboutUsPage"));
+const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const ChangelogPage = lazy(() => import('./pages/ChangelogPage'));
+const DocsPage = lazy(() => import('./pages/DocsPage'));
+const ApiPage = lazy(() => import('./pages/ApiPage'));
+const BlogPage = lazy(() => import('./pages/BlogPage'));
+const CommunityPage = lazy(() => import('./pages/CommunityPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
+const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage'));
+const RoadmapPage = lazy(() => import('./pages/RoadmapPage'));
+const ContributingPage = lazy(() => import('./pages/ContributingPage'));
+const FeaturesPage = lazy(() => import('./pages/FeaturesPage'));
+const SecurityPage = lazy(() => import('./pages/SecurityPage'));
+const AboutUsPage = lazy(() => import('./pages/AboutUsPage'));
+const SharedReportPage = lazy(() => import('./pages/SharedReportPage'));
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
 function LoadingScreen() {
   return (
     <div className="min-h-screen bg-[#080b14] flex flex-col items-center justify-center gap-6">
-        <div className="animate-pulse w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden shrink-0">
-          <img src="/Logo.png" alt="DevPulse" className="w-full h-full object-cover" width="64" height="64" loading="eager" />
-        </div>
+      <div className="animate-pulse w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden shrink-0">
+        <img
+          src="/Logo.png"
+          alt="DevPulse"
+          className="w-full h-full object-cover"
+          width="64"
+          height="64"
+          loading="eager"
+        />
+      </div>
       <div className="flex items-center gap-2 text-slate-400 text-sm">
         <Loader2 className="w-4 h-4 animate-spin" />
         Loading your DevPulse workspace...
@@ -46,7 +53,7 @@ function LoadingScreen() {
 function useKeepAlive() {
   useEffect(() => {
     const ping = () => {
-      fetch(`${API_BASE}/health`, { method: "GET" }).catch(() => {});
+      fetch(`${API_BASE}/health`, { method: 'GET' }).catch(() => {});
     };
     ping(); // Ping immediately on mount
     const id = setInterval(ping, 10 * 60 * 1000); // Then every 10 minutes
@@ -55,7 +62,12 @@ function useKeepAlive() {
 }
 
 function App() {
-  const [session, setSession] = useState({ status: "loading", user: null, accessToken: "", error: "" });
+  const [session, setSession] = useState({
+    status: 'loading',
+    user: null,
+    accessToken: '',
+    error: '',
+  });
 
   // Keep Render free tier warm
   useKeepAlive();
@@ -66,7 +78,7 @@ function App() {
 
       if (!token || isTokenExpired(token)) {
         clearToken();
-        setSession({ status: "anonymous", user: null, accessToken: "", error: "" });
+        setSession({ status: 'anonymous', user: null, accessToken: '', error: '' });
         return;
       }
 
@@ -85,13 +97,13 @@ function App() {
         privateRepos: payload.privateRepos || 0,
       };
 
-      setSession({ status: "authenticated", user, accessToken: token, error: "" });
+      setSession({ status: 'authenticated', user, accessToken: token, error: '' });
 
       // Identify user in Sentry so all frontend errors are attributed correctly
       Sentry.setUser({
-        id:       user.id,
+        id: user.id,
         username: user.username,
-        email:    user.email,
+        email: user.email,
       });
     }
 
@@ -100,17 +112,22 @@ function App() {
 
   function handleLogout() {
     clearToken();
-    Sentry.setUser(null);   // Clear user from Sentry scope on logout
-    setSession({ status: "anonymous", user: null, accessToken: "", error: "" });
+    Sentry.setUser(null); // Clear user from Sentry scope on logout
+    setSession({ status: 'anonymous', user: null, accessToken: '', error: '' });
   }
 
   function handleSessionExpired(message) {
     clearToken();
-    Sentry.setUser(null);   // Clear user from Sentry scope on session expiry
-    setSession({ status: "anonymous", user: null, accessToken: "", error: message || "Your session expired. Please sign in again." });
+    Sentry.setUser(null); // Clear user from Sentry scope on session expiry
+    setSession({
+      status: 'anonymous',
+      user: null,
+      accessToken: '',
+      error: message || 'Your session expired. Please sign in again.',
+    });
   }
 
-  if (session.status === "loading") return <LoadingScreen />;
+  if (session.status === 'loading') return <LoadingScreen />;
 
   return (
     <ErrorBoundary>
@@ -118,16 +135,21 @@ function App() {
         <Routes>
           <Route
             path="/login"
-            element={session.status === "authenticated"
-              ? <Navigate replace to="/dashboard" />
-              : <LoginPage sessionError={session.error} />}
+            element={
+              session.status === 'authenticated' ? (
+                <Navigate replace to="/dashboard" />
+              ) : (
+                <LoginPage sessionError={session.error} />
+              )
+            }
           />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route
             path="/dashboard"
-            element={session.status !== "authenticated"
-              ? <Navigate replace to="/login" />
-              : (
+            element={
+              session.status !== 'authenticated' ? (
+                <Navigate replace to="/login" />
+              ) : (
                 <ErrorBoundary>
                   <DashboardPage
                     accessToken={session.accessToken}
@@ -136,13 +158,9 @@ function App() {
                     user={session.user}
                   />
                 </ErrorBoundary>
-              )}
+              )
+            }
           />
-          <Route path="/report/:token" element={
-            <ErrorBoundary>
-              <SharedReportPage />
-            </ErrorBoundary>
-          } />
           <Route path="/changelog" element={<ChangelogPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/reference" element={<ApiPage />} />
@@ -156,7 +174,14 @@ function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsOfServicePage />} />
-          <Route path="*" element={<Navigate replace to={session.status === "authenticated" ? "/dashboard" : "/login"} />} />
+          {/* Public shared report route — no auth required */}
+          <Route path="/report/:token" element={<SharedReportPage />} />
+          <Route
+            path="*"
+            element={
+              <Navigate replace to={session.status === 'authenticated' ? '/dashboard' : '/login'} />
+            }
+          />
         </Routes>
       </Suspense>
     </ErrorBoundary>

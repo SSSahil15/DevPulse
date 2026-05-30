@@ -5,96 +5,125 @@ import { GithubIcon } from '../components/icons';
 import StaticPageLayout from '../components/StaticPageLayout';
 
 const PrivacyPolicyPage = () => {
-  const lastUpdated = "May 26, 2026";
+  const lastUpdated = 'May 26, 2026';
 
   const sections = [
     {
-      id: "data-collection",
+      id: 'data-collection',
       icon: <Database className="w-6 h-6 text-indigo-400" />,
-      title: "1. Data Collection & Usage",
+      title: '1. Data Collection & Usage',
       content: (
         <div className="space-y-4">
           <p className="text-slate-300 leading-relaxed">
-            At DevPulse, we believe in minimizing data collection to only what's necessary to provide our deployment intelligence services. We collect the following types of information:
+            At DevPulse, we believe in minimizing data collection to only what's necessary to
+            provide our deployment intelligence services. We collect the following types of
+            information:
           </p>
           <ul className="list-disc list-inside text-slate-300 space-y-2 ml-4">
-            <li><strong>Account Information:</strong> Name, email address, and profile picture provided via OAuth.</li>
-            <li><strong>Usage Telemetry:</strong> Anonymized interaction data to help us improve the platform's user experience.</li>
-            <li><strong>Device Information:</strong> Browser type, operating system, and IP address for security and audit logs.</li>
+            <li>
+              <strong>Account Information:</strong> Name, email address, and profile picture
+              provided via OAuth.
+            </li>
+            <li>
+              <strong>Usage Telemetry:</strong> Anonymized interaction data to help us improve the
+              platform's user experience.
+            </li>
+            <li>
+              <strong>Device Information:</strong> Browser type, operating system, and IP address
+              for security and audit logs.
+            </li>
           </ul>
         </div>
-      )
+      ),
     },
     {
-      id: "github-oauth",
+      id: 'github-oauth',
       icon: <GithubIcon className="w-6 h-6 text-slate-300" />,
-      title: "2. GitHub OAuth & Repository Metadata",
+      title: '2. GitHub OAuth & Repository Metadata',
       content: (
         <div className="space-y-4">
           <p className="text-slate-300 leading-relaxed">
-            Our core product relies on GitHub integrations to analyze your deployment pipelines. By authorizing DevPulse via GitHub OAuth, you grant us permission to:
+            Our core product relies on GitHub integrations to analyze your deployment pipelines. By
+            authorizing DevPulse via GitHub OAuth, you grant us permission to:
           </p>
           <ul className="list-disc list-inside text-slate-300 space-y-2 ml-4">
-            <li>Access your repository metadata (e.g., repository names, languages, commit frequencies).</li>
+            <li>
+              Access your repository metadata (e.g., repository names, languages, commit
+              frequencies).
+            </li>
             <li>Read package dependencies to identify CVEs and vulnerabilities.</li>
             <li>Submit automated Pull Requests to remediate discovered vulnerabilities.</li>
           </ul>
           <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-200 text-sm">
-            <strong>Note:</strong> We do NOT clone or store your source code on our servers. All analysis is performed ephemerally or via metadata APIs.
+            <strong>Note:</strong> We do NOT clone or store your source code on our servers. All
+            analysis is performed ephemerally or via metadata APIs.
           </div>
         </div>
-      )
+      ),
     },
     {
-      id: "analytics",
+      id: 'analytics',
       icon: <Activity className="w-6 h-6 text-emerald-400" />,
-      title: "3. Analytics & Telemetry",
+      title: '3. Analytics & Telemetry',
       content: (
         <p className="text-slate-300 leading-relaxed">
-          We utilize strictly necessary telemetry to monitor the health, performance, and reliability of our platform. We track aggregate usage patterns (e.g., popular features, error rates) using privacy-friendly analytics tools. We do not sell or share this telemetry with external marketing agencies or ad networks.
+          We utilize strictly necessary telemetry to monitor the health, performance, and
+          reliability of our platform. We track aggregate usage patterns (e.g., popular features,
+          error rates) using privacy-friendly analytics tools. We do not sell or share this
+          telemetry with external marketing agencies or ad networks.
         </p>
-      )
+      ),
     },
     {
-      id: "cookies",
+      id: 'cookies',
       icon: <Box className="w-6 h-6 text-amber-400" />,
-      title: "4. Cookies and Local Storage",
+      title: '4. Cookies and Local Storage',
       content: (
         <p className="text-slate-300 leading-relaxed">
-          DevPulse uses minimal cookies and local storage tokens strictly for authentication and session management. By using DevPulse, you consent to the placement of these essential tokens on your device. We do not use cross-site tracking cookies.
+          DevPulse uses minimal cookies and local storage tokens strictly for authentication and
+          session management. By using DevPulse, you consent to the placement of these essential
+          tokens on your device. We do not use cross-site tracking cookies.
         </p>
-      )
+      ),
     },
     {
-      id: "data-retention",
+      id: 'data-retention',
       icon: <RefreshCw className="w-6 h-6 text-purple-400" />,
-      title: "5. Data Retention",
+      title: '5. Data Retention',
       content: (
         <p className="text-slate-300 leading-relaxed">
-          We retain your account and repository metadata as long as your account remains active. Vulnerability reports and deployment intelligence logs are stored for up to 90 days before being automatically purged. If you choose to delete your account, all associated data is permanently erased within 14 days.
+          We retain your account and repository metadata as long as your account remains active.
+          Vulnerability reports and deployment intelligence logs are stored for up to 90 days before
+          being automatically purged. If you choose to delete your account, all associated data is
+          permanently erased within 14 days.
         </p>
-      )
+      ),
     },
     {
-      id: "security",
+      id: 'security',
       icon: <Lock className="w-6 h-6 text-rose-400" />,
-      title: "6. Security Practices",
+      title: '6. Security Practices',
       content: (
         <p className="text-slate-300 leading-relaxed">
-          Security is at the heart of our DevSecOps platform. We employ industry-standard encryption for data at rest (AES-256) and data in transit (TLS 1.3). Our infrastructure is actively monitored, and access to production environments is strictly limited to authorized engineering personnel using zero-trust networking principles.
+          Security is at the heart of our DevSecOps platform. We employ industry-standard encryption
+          for data at rest (AES-256) and data in transit (TLS 1.3). Our infrastructure is actively
+          monitored, and access to production environments is strictly limited to authorized
+          engineering personnel using zero-trust networking principles.
         </p>
-      )
+      ),
     },
     {
-      id: "third-party",
+      id: 'third-party',
       icon: <Server className="w-6 h-6 text-sky-400" />,
-      title: "7. Third-Party Integrations",
+      title: '7. Third-Party Integrations',
       content: (
         <p className="text-slate-300 leading-relaxed">
-          In order to provide our service, we may share minimal required data with trusted sub-processors (such as cloud hosting providers and logging services). All third-party providers are vetted for strict compliance with data privacy regulations (GDPR, CCPA).
+          In order to provide our service, we may share minimal required data with trusted
+          sub-processors (such as cloud hosting providers and logging services). All third-party
+          providers are vetted for strict compliance with data privacy regulations (GDPR, CCPA).
         </p>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -121,11 +150,10 @@ const PrivacyPolicyPage = () => {
                 Privacy Policy
               </h1>
               <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-                We are committed to protecting your privacy and being transparent about how we handle your data. Here is everything you need to know.
+                We are committed to protecting your privacy and being transparent about how we
+                handle your data. Here is everything you need to know.
               </p>
-              <p className="text-sm text-slate-500 mt-4 font-mono">
-                Last Updated: {lastUpdated}
-              </p>
+              <p className="text-sm text-slate-500 mt-4 font-mono">Last Updated: {lastUpdated}</p>
             </motion.div>
           </div>
 
@@ -136,7 +164,7 @@ const PrivacyPolicyPage = () => {
                 key={section.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
+                viewport={{ once: true, margin: '-100px' }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
                 className="bg-[#0d1117] border border-white/10 rounded-3xl p-8 md:p-10 hover:border-white/20 transition-colors"
               >
@@ -144,9 +172,7 @@ const PrivacyPolicyPage = () => {
                   <div className="p-3 bg-white/5 rounded-xl shadow-inner border border-white/5">
                     {section.icon}
                   </div>
-                  <h2 className="text-2xl font-bold text-white">
-                    {section.title}
-                  </h2>
+                  <h2 className="text-2xl font-bold text-white">{section.title}</h2>
                 </div>
                 <div className="prose prose-invert max-w-none prose-p:text-slate-300 prose-li:text-slate-300 prose-strong:text-white">
                   {section.content}
@@ -167,15 +193,15 @@ const PrivacyPolicyPage = () => {
                   <Mail className="w-8 h-8 text-indigo-400" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-4">
-                Questions or Concerns?
-              </h2>
+              <h2 className="text-2xl font-bold text-white mb-4">Questions or Concerns?</h2>
               <p className="text-indigo-200/80 mb-8 max-w-xl mx-auto">
-                If you have any questions about this Privacy Policy or how we handle your data, please don't hesitate to reach out to our privacy team.
+                If you have any questions about this Privacy Policy or how we handle your data,
+                please don't hesitate to reach out to our privacy team.
               </p>
-              <a 
+              <a
                 href="https://discord.gg/EesqADdSFt"
-                target="_blank" rel="noreferrer"
+                target="_blank"
+                rel="noreferrer"
                 className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-white text-indigo-950 font-bold hover:bg-slate-200 transition-colors shadow-lg shadow-white/10"
               >
                 Contact Privacy Team

@@ -1,6 +1,6 @@
-import { Component } from "react";
-import { AlertTriangle, RefreshCw, ExternalLink } from "lucide-react";
-import * as Sentry from "@sentry/react";
+import { Component } from 'react';
+import { AlertTriangle, RefreshCw, ExternalLink } from 'lucide-react';
+import * as Sentry from '@sentry/react';
 
 /**
  * ErrorBoundary — catches React render errors and shows a styled fallback UI.
@@ -31,14 +31,14 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    const boundaryName = this.props.name || "unknown";
+    const boundaryName = this.props.name || 'unknown';
 
     // Capture to Sentry with rich context
     const eventId = Sentry.captureException(error, {
       contexts: {
         react: {
           componentStack: info.componentStack,
-          boundary:       boundaryName,
+          boundary: boundaryName,
         },
       },
       tags: {
@@ -50,11 +50,7 @@ export default class ErrorBoundary extends Component {
 
     // Also log to console for local debugging
     if (import.meta.env.DEV) {
-      console.error(
-        `[ErrorBoundary:${boundaryName}] Caught error:`,
-        error,
-        info.componentStack
-      );
+      console.error(`[ErrorBoundary:${boundaryName}] Caught error:`, error, info.componentStack);
     }
   }
 
@@ -64,7 +60,7 @@ export default class ErrorBoundary extends Component {
 
   render() {
     if (this.state.hasError) {
-      const name    = this.props.name || "panel";
+      const name = this.props.name || 'panel';
       const eventId = this.state.eventId;
 
       return (
@@ -78,7 +74,7 @@ export default class ErrorBoundary extends Component {
               {name} encountered an error
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              {this.state.error?.message || "An unexpected error occurred in this panel."}
+              {this.state.error?.message || 'An unexpected error occurred in this panel.'}
             </p>
             {eventId && (
               <p className="text-xs text-slate-600 mt-1 font-mono">

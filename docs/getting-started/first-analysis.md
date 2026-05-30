@@ -29,14 +29,17 @@ graph LR
 Once your first analysis completes, you will see three main metric gauges:
 
 ### 1. The DevPulse Score (0-100)
+
 - **90-100 (Green / Excellent)**: Perfectly secure, recent developer activity, clean security configurations.
 - **70-80 (Yellow / Moderate)**: Minor low-severity CVEs or slightly delayed commit cycles.
 - **&lt;70 (Red / Critical)**: Outdated, high-severity CVEs, or exposed API credentials/secrets.
 
 ### 2. Security Audit Breakdown
+
 - Displays vulnerabilities classified by severity: **CRITICAL**, **HIGH**, **MEDIUM**, and **LOW**.
 
 ### 3. Pipeline Telemetry Log
+
 - Shows the real-time build and execution logs in an interactive, terminal-like UI.
 
 ---
