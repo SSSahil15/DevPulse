@@ -239,7 +239,7 @@ export default function RemediationPage({ accessToken, repositoryFullName, scanD
     setShowTimeline(true);
     setActivePanel('vulns');
     setRemediationTargets([vuln.id]);
-    rem.startDryRun(repositoryFullName, scanData, [vuln.id]);
+    rem.startDryRun(repositoryFullName, { vulnerabilities: allVulns }, [vuln.id]);
   }
 
   // Handle "Fix All" — batch all fixable critical+high
@@ -248,13 +248,14 @@ export default function RemediationPage({ accessToken, repositoryFullName, scanD
       .filter((v) => v.hasFixedVersion && (v.severity === 'CRITICAL' || v.severity === 'HIGH'))
       .map((v) => v.id);
     setShowTimeline(true);
+    setActivePanel('vulns');
     setRemediationTargets(targets);
-    rem.startDryRun(repositoryFullName, scanData, targets);
+    rem.startDryRun(repositoryFullName, { vulnerabilities: allVulns }, targets);
   }
 
   // Handle confirm (after dry-run review)
   function handleConfirmPR() {
-    rem.confirmAndCreatePR(repositoryFullName, scanData, remediationTargets);
+    rem.confirmAndCreatePR(repositoryFullName, { vulnerabilities: allVulns }, remediationTargets);
     setActivePanel('preview');
   }
 
