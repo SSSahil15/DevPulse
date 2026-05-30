@@ -424,44 +424,42 @@ const providerTokenDB = {
   },
 };
 
-// ─── Initialize DB and background cleanup ────────────────────────────────────
+async function initDb() {
+  if (process.env.NODE_ENV === 'test') return;
+  try {
+    await migrate();
 
-if (process.env.NODE_ENV !== 'test') {
-  (async () => {
-    try {
-      await migrate();
+    // Hourly cleanup job — runs in background, does not block startup
+    const cleanupInterval = setInterval(
+      async () => {
+        try {
+          await reportDB.cleanupExpired();
 
-      // Hourly cleanup job — runs in background, does not block startup
-      const cleanupInterval = setInterval(
-        async () => {
-          try {
-            await reportDB.cleanupExpired();
-
-            const { rowCount: pipelineDeleted } = await pool.query(
-              `DELETE FROM pipeline_results WHERE received_at < NOW() - INTERVAL '7 days'`,
+          const { rowCount: pipelineDeleted } = await pool.query(
+            `DELETE FROM pipeline_results WHERE received_at < NOW() - INTERVAL '7 days'`,
+          );
+          if (pipelineDeleted > 0) {
+            logger.info(
+              `[DB] Cleaned up ${pipelineDeleted} pipeline result(s) older than 7 days.`,
             );
-            if (pipelineDeleted > 0) {
-              logger.info(
-                `[DB] Cleaned up ${pipelineDeleted} pipeline result(s) older than 7 days.`,
-              );
-            }
-
-            const scanDeleted = await scanJobDB.cleanupOld(7);
-            if (scanDeleted > 0) {
-              logger.info(`[DB] Cleaned up ${scanDeleted} scan job(s) older than 7 days.`);
-            }
-          } catch (err) {
-            logger.error('[DB] Cleanup job error', { error: err.message });
           }
-        },
-        60 * 60 * 1000,
-      );
 
-      cleanupInterval.unref?.();
-    } catch (err) {
-      logger.error('Failed to initialize database', { error: err.message });
-    }
-  })();
+          const scanDeleted = await scanJobDB.cleanupOld(7);
+          if (scanDeleted > 0) {
+            logger.info(`[DB] Cleaned up ${scanDeleted} scan job(s) older than 7 days.`);
+          }
+        } catch (err) {
+          logger.error('[DB] Cleanup job error', { error: err.message });
+        }
+      },
+      60 * 60 * 1000,
+    );
+
+    cleanupInterval.unref?.();
+  } catch (err) {
+    logger.error('Failed to initialize database', { error: err.message });
+    throw err; // crash the startup if database can't be initialized
+  }
 }
 
 // ─── Schedule Helpers ─────────────────────────────────────────────────────────
@@ -555,4 +553,4 @@ const db = {
   },
 };
 
-module.exports = { db, pool, pipelineDB, scanJobDB, reportDB, providerTokenDB, scheduleDB };
+module.exports = { db, initDb, pool, pipelineDB, scanJobDB, reportDB, providerTokenDB, scheduleDB };
