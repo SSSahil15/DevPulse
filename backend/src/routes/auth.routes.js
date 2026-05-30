@@ -113,7 +113,7 @@ router.get(
         error: err.message,
         requestId: req.requestId,
       });
-      return res.redirect(`${config.frontendUrl}/login?error=auth_failed`);
+      return res.redirect(`${config.frontendUrl}/login?error=auth_failed&msg=${encodeURIComponent(err.message)}`);
     }
   }),
 );
