@@ -279,9 +279,9 @@ app.use((req, res, next) => {
 });
 // 50 KB body cap — prevents large-payload DoS before validation runs.
 // Webhooks send compact JSON payloads; nothing legitimate needs more than this.
-// Support up to 50MB payloads to handle large Trivy JSON scan results during AI remediation
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// Support up to 10MB payloads to handle Trivy JSON scan results (50MB is too generous and risks memory exhaustion)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ─── Request Timing (p50/p95/p99 histogram) ─────────────────────────────────────
 // Mount early so ALL routes are timed including health checks
