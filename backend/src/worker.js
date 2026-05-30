@@ -389,3 +389,14 @@ scheduledScanWorker.on('failed', (job, err) => {
   logger.error(`[ScheduledWorker] Job ${job.id} failed: ${err.message}`);
   Sentry.captureException(err);
 });
+
+// ─── Graceful shutdown ────────────────────────────────────────────────────────
+async function shutdownWorkers() {
+  await Promise.allSettled([
+    scanWorker.close(),
+    scheduledScanWorker.close(),
+  ]);
+  logger.info('[Worker] All workers shut down.');
+}
+
+module.exports = { scanWorker, scheduledScanWorker, shutdownWorkers };

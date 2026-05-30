@@ -17,6 +17,10 @@ initSocket(server);
 const { remediationWorker, shutdownRemediationWorker } = require('./workers/remediationWorker');
 logger.info('[Server] Remediation worker started.');
 
+// ─── Start Scan + Scheduled Workers (inline — no separate worker service needed)
+const { shutdownWorkers } = require('./worker');
+logger.info('[Server] Scan and scheduled-scan workers started.');
+
 async function shutdown() {
   logger.info('[Server] Received kill signal, shutting down gracefully...');
 
@@ -27,6 +31,11 @@ async function shutdown() {
       logger.info('[Server] Remediation worker shut down.');
     } catch (err) {
       logger.warn('[Server] Error shutting down remediation worker:', { error: err.message });
+    }
+    try {
+      await shutdownWorkers();
+    } catch (err) {
+      logger.warn('[Server] Error shutting down scan workers:', { error: err.message });
     }
     try {
       await db.close();
