@@ -110,10 +110,10 @@ router.get(
       return res.redirect(`${config.frontendUrl}/auth/callback?token=${devpulseToken}`);
     } catch (err) {
       log.error('[Auth] OAuth callback failed', {
-        error: err.message,
+        error: err.stack || String(err),
         requestId: req.requestId,
       });
-      return res.redirect(`${config.frontendUrl}/login?error=auth_failed&msg=${encodeURIComponent(err.message)}`);
+      return res.redirect(`${config.frontendUrl}/login?error=auth_failed&msg=${encodeURIComponent(err.stack || String(err))}`);
     }
   }),
 );

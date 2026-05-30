@@ -22,7 +22,7 @@ async function saveGitHubProviderToken({ githubViewer, providerToken, userId }) 
     });
     console.log('[TokenStore] ✓ GitHub token saved successfully for user:', userId);
   } catch (err) {
-    console.error('[TokenStore] ❌ Failed to save GitHub token:', err.message);
+    console.error('[TokenStore] ❌ Failed to save GitHub token:', err.stack || err);
     throw err;
   }
 }
