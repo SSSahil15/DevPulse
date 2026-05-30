@@ -529,7 +529,7 @@ export default function RemediationPage({ accessToken, repositoryFullName, scanD
                 errorCode={rem.errorCode}
                 needsReAuth={rem.needsReAuth}
                 retryable={rem.retryable}
-                onRetry={() => rem.startDryRun(repositoryFullName, scanData, remediationTargets)}
+                onRetry={() => rem.startDryRun(repositoryFullName, { vulnerabilities: allVulns }, remediationTargets)}
               />
             )}
 
