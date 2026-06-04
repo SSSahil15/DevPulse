@@ -9,15 +9,15 @@
     "preview": "vite preview --host"
   },
   "dependencies": {
-    "@sentry/react": "^10.55.0",
+    "@sentry/react": "^10.56.0",
     "framer-motion": "^12.40.0",
-    "fuse.js": "^7.4.0",
+    "fuse.js": "^7.4.1",
     "lucide-react": "^1.17.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.4",
     "recharts": "^3.8.1",
-    "shiki": "^4.1.0",
+    "shiki": "^4.2.0",
     "socket.io-client": "^4.8.3",
     "web-vitals": "^4.2.4"
   },
