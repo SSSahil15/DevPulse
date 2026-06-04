@@ -1,14 +1,15 @@
 /**
- * Admin Routes — User Ban Management
+ * Admin Routes — User Management
  *
  * ALL endpoints require the ADMIN_SECRET header:
  *   X-Admin-Secret: <your ADMIN_SECRET env var value>
  *
- * Set ADMIN_SECRET in your Vercel / backend environment variables.
+ * Set ADMIN_SECRET in your Render backend environment variables.
  * Never expose this value publicly.
  *
  * Endpoints:
- *   GET    /admin/banned              → list all banned users
+ *   GET    /admin/users               → list ALL users who have logged into DevPulse
+ *   GET    /admin/banned              → list only banned users
  *   POST   /admin/ban                 → ban a user
  *   DELETE /admin/unban/:userId       → unban a user
  */
@@ -42,7 +43,37 @@ function requireAdminSecret(req, res, next) {
 // Apply admin auth to all routes in this router
 router.use(requireAdminSecret);
 
-// ─── GET /admin/banned — list all banned users ────────────────────────────────
+// ─── GET /admin/users — list ALL users who have logged into DevPulse ──────────
+// Pulls from provider_tokens (every login creates/updates a row here)
+// and joins with banned_users so you can see ban status in one call.
+router.get(
+  '/users',
+  asyncHandler(async (req, res) => {
+    const { pool } = require('../db/database');
+    const { rows } = await pool.query(`
+      SELECT
+        pt.user_id,
+        pt.github_login,
+        pt.profile_url,
+        pt.synced_at          AS last_seen_at,
+        CASE WHEN bu.user_id IS NOT NULL THEN true ELSE false END AS is_banned,
+        bu.reason             AS ban_reason,
+        bu.banned_at,
+        bu.banned_by
+      FROM provider_tokens pt
+      LEFT JOIN banned_users bu ON bu.user_id = pt.user_id
+      ORDER BY pt.synced_at DESC
+    `);
+
+    return res.status(200).json({
+      total: rows.length,
+      users: rows,
+    });
+  }),
+);
+
+// ─── GET /admin/banned — list only banned users ───────────────────────────────
+
 router.get(
   '/banned',
   asyncHandler(async (req, res) => {
