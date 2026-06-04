@@ -1,15 +1,12 @@
 // Vercel Serverless Function: /api/discord-proposal
 // Proxies feature proposal submissions to the Discord webhook server-side to avoid CORS.
 
-const FALLBACK_WEBHOOK_URL =
-  'https://discord.com/api/webhooks/1508858557913628864/vrZTzXb1ZjTmIpo39ZI93C_vv3yZuOYuJH86GCIPYjRQooMHu9GevYMIIwYW6ajp1CuW';
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const webhookUrl = process.env.DISCORD_PROPOSAL_WEBHOOK_URL || FALLBACK_WEBHOOK_URL;
+  const webhookUrl = process.env.DISCORD_PROPOSAL_WEBHOOK_URL;
   if (!webhookUrl) {
     return res.status(500).json({ error: 'Discord proposal webhook URL is not configured on the server.' });
   }
