@@ -67,7 +67,12 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
             docker: getSlimStage(pipelineData.stages?.docker),
             security: {
               ...pipelineData.stages?.security,
-              vulnerabilities: pipelineData.stages?.security?.vulnerabilities?.slice(0, 15) || []
+              vulnerabilities: pipelineData.stages?.security?.vulnerabilities?.slice(0, 15).map(v => ({
+                id: v.id,
+                severity: v.severity,
+                pkgName: v.pkgName,
+                fixedVersion: v.fixedVersion
+              })) || []
             }
           }
         } : null
