@@ -216,7 +216,7 @@ function DashboardContent({ accessToken, onLogout, user }) {
   async function createShareLink(record) {
     setSharingId(record.id);
     try {
-      const res = await fetch('/api/reports', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/api/reports`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -224,17 +224,32 @@ function DashboardContent({ accessToken, onLogout, user }) {
         },
         body: JSON.stringify({ resultId: record.id }),
       });
-      if (!res.ok) throw new Error('Failed to create share link');
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || 'Failed to create share link');
+      }
       const { shareUrl } = await res.json();
-      await navigator.clipboard.writeText(shareUrl);
-      setShareToast({ message: 'Share link copied to clipboard!', ok: true });
-    } catch {
-      setShareToast({ message: 'Failed to create share link', ok: false });
+
+      // shareUrl from backend is a path like /report/TOKEN — make it a full URL
+      const fullUrl = shareUrl.startsWith('http')
+        ? shareUrl
+        : `${window.location.origin}${shareUrl}`;
+
+      try {
+        await navigator.clipboard.writeText(fullUrl);
+        setShareToast({ message: 'Share link copied to clipboard!', ok: true });
+      } catch {
+        // Clipboard permission denied (e.g. non-HTTPS or browser policy)
+        setShareToast({ message: `Share link: ${fullUrl}`, ok: true });
+      }
+    } catch (err) {
+      setShareToast({ message: err.message || 'Failed to create share link', ok: false });
     } finally {
       setSharingId(null);
-      setTimeout(() => setShareToast(null), 3000);
+      setTimeout(() => setShareToast(null), 5000);
     }
   }
+
 
   // PDF generator — matches SharedReportPage visual format
   function downloadPDF(record) {
