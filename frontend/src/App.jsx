@@ -22,6 +22,7 @@ const FeaturesPage = lazy(() => import('./pages/FeaturesPage'));
 const SecurityPage = lazy(() => import('./pages/SecurityPage'));
 const AboutUsPage = lazy(() => import('./pages/AboutUsPage'));
 const SharedReportPage = lazy(() => import('./pages/SharedReportPage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
@@ -176,6 +177,8 @@ function App() {
           <Route path="/terms" element={<TermsOfServicePage />} />
           {/* Public shared report route — no auth required */}
           <Route path="/report/:token" element={<SharedReportPage />} />
+          {/* Admin panel — secret-gated, not linked anywhere in the UI */}
+          <Route path="/admin" element={<AdminPage />} />
           <Route
             path="*"
             element={
