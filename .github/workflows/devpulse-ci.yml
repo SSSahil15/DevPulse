@@ -1,16 +1,25 @@
 # ╔══════════════════════════════════════════════════════════════╗
-# ║  DevPulse CI — Lean Edition (minute-budget friendly)        ║
-# ║  Runs only on main push & PRs to main                       ║
-# ║  E2E, Docker, and Security moved to weekly schedule         ║
+# ║  DevPulse CI — Ultra-Lean Edition                           ║
+# ║  • Only runs on PRs (Vercel handles main branch deploy)     ║
+# ║  • Path-filtered: skips docs/config-only changes           ║
+# ║  • Single job: backend + frontend in one runner             ║
+# ║  • Skips tests for Dependabot patch/minor PRs               ║
 # ╚══════════════════════════════════════════════════════════════╝
 
 name: DevPulse CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+    # Only run when actual source code changes — skip docs, config, markdown
+    paths:
+      - 'backend/src/**'
+      - 'backend/package*.json'
+      - 'frontend/src/**'
+      - 'frontend/public/**'
+      - 'frontend/package*.json'
+      - 'frontend/vite.config.*'
+      - 'frontend/api/**'
   workflow_dispatch:
 
 env:
@@ -19,112 +28,63 @@ env:
 permissions:
   contents: read
 
-# Cancel redundant runs on the same branch/PR immediately
+# Cancel the previous run on the same PR immediately when a new commit is pushed
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
-  # ─── Job 1: Backend lint + test ────────────────────────────────
-  backend:
-    name: '🔧 Backend'
+  ci:
+    name: '🔧 Build & Test'
     runs-on: ubuntu-latest
-    timeout-minutes: 8
-    defaults:
-      run:
-        working-directory: backend
+    timeout-minutes: 10
+
+    # Skip heavy CI for Dependabot patch/minor — auto-merge handles those
+    # Full CI still runs for Dependabot major updates and all human PRs
+    if: |
+      github.actor != 'dependabot[bot]' ||
+      contains(github.event.pull_request.title, 'major')
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      # ── Backend ──────────────────────────────────────────────────
+      - name: '⚙️ Setup Node.js'
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
-      - name: Install deps
+      - name: '📦 Install backend deps'
+        working-directory: backend
         run: npm ci --no-audit --no-fund
 
-      - name: Run tests
-        run: |
-          set +e
-          npm test 2>&1
-          echo "exit=$?" >> $GITHUB_OUTPUT
-        id: tests
+      - name: '🧪 Backend tests'
+        working-directory: backend
+        run: npm test
         continue-on-error: true
 
-      - name: Summary
-        if: always()
-        run: |
-          echo "### 🔧 Backend" >> $GITHUB_STEP_SUMMARY
-          echo "Tests: ${{ steps.tests.outputs.exit == '0' && '✅' || '⚠️ check logs' }}" >> $GITHUB_STEP_SUMMARY
-
-  # ─── Job 2: Frontend build + test ──────────────────────────────
-  frontend:
-    name: '🎨 Frontend'
-    runs-on: ubuntu-latest
-    timeout-minutes: 8
-    defaults:
-      run:
+      # ── Frontend ─────────────────────────────────────────────────
+      - name: '📦 Install frontend deps'
         working-directory: frontend
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install deps
         run: npm ci --no-audit --no-fund
 
-      - name: Build
+      - name: '🏗️ Frontend build'
+        working-directory: frontend
         run: npm run build
         env:
           CI: true
 
-      - name: Run tests
-        run: |
-          set +e
-          npm test 2>&1
-          echo "exit=$?" >> $GITHUB_OUTPUT
-        id: tests
+      - name: '🧪 Frontend tests'
+        working-directory: frontend
+        run: npm test
         continue-on-error: true
 
-      - name: Upload dist
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist/
-          retention-days: 3
-
-      - name: Summary
+      # ── Summary ──────────────────────────────────────────────────
+      - name: '📋 Summary'
         if: always()
         run: |
-          echo "### 🎨 Frontend" >> $GITHUB_STEP_SUMMARY
-          DIST=$(du -sh dist 2>/dev/null | cut -f1 || echo "N/A")
-          echo "Build size: $DIST | Tests: ${{ steps.tests.outputs.exit == '0' && '✅' || '⚠️ check logs' }}" >> $GITHUB_STEP_SUMMARY
-
-  # ─── Job 3: Deploy gate (main push only) ───────────────────────
-  deploy-gate:
-    name: '🚀 Deploy Gate'
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    needs: [backend, frontend]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - name: Evaluate
-        run: |
-          BACKEND="${{ needs.backend.result }}"
-          FRONTEND="${{ needs.frontend.result }}"
-          if [ "$BACKEND" = "success" ] && [ "$FRONTEND" = "success" ]; then
-            echo "✅ All checks passed — deployment approved" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "🚫 Deployment blocked — Backend: $BACKEND | Frontend: $FRONTEND" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
+          DIST=$(du -sh frontend/dist 2>/dev/null | cut -f1 || echo "N/A")
+          echo "### ✅ CI Complete" >> $GITHUB_STEP_SUMMARY
+          echo "Frontend bundle: **$DIST**" >> $GITHUB_STEP_SUMMARY

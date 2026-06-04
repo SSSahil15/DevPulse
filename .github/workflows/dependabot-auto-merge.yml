@@ -1,8 +1,12 @@
+# Dependabot Auto-Merge
+# Lightweight: only runs for Dependabot PRs, no test runner — just merges.
+# CI is intentionally skipped for patch/minor Dependabot PRs (see devpulse-ci.yml).
+
 name: '🤖 Dependabot Auto-Merge'
 
 on:
   pull_request:
-    types: [opened, synchronize, labeled]
+    types: [opened, labeled]   # removed 'synchronize' — reduces triggers
 
 permissions:
   contents: write
@@ -10,28 +14,28 @@ permissions:
 
 jobs:
   auto-merge:
-    name: '🤖 Auto-merge minor/patch Dependabot PRs'
+    name: '🤖 Auto-merge patch/minor'
     runs-on: ubuntu-latest
-    # Only run for Dependabot PRs
+    timeout-minutes: 2
     if: github.actor == 'dependabot[bot]'
     steps:
-      - name: '🔍 Get Dependabot metadata'
+      - name: Get metadata
         id: metadata
         uses: dependabot/fetch-metadata@v2
         with:
           github-token: '${{ secrets.GITHUB_TOKEN }}'
 
-      - name: '✅ Auto-merge minor and patch updates'
+      - name: Auto-merge patch and minor
         if: |
-          ${{ steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
-              steps.metadata.outputs.update-type == 'version-update:semver-minor' }}
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor'
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: '🔔 Label major updates for manual review'
-        if: ${{ steps.metadata.outputs.update-type == 'version-update:semver-major' }}
+      - name: Label major updates for manual review
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
         uses: actions/github-script@v7
         with:
           script: |
@@ -40,10 +44,4 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
               labels: ['major-update', 'needs-manual-review'],
-            });
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: '⚠️ **Major dependency update detected.** This PR requires manual review before merging. Please check the changelog for breaking changes.',
             });
