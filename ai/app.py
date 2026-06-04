@@ -16,15 +16,16 @@ try:
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
-    _OTEL_ENDPOINT = os.getenv(
-        "OTEL_EXPORTER_OTLP_ENDPOINT", "http://devpulse_otel_collector:4318"
-    )
-    _provider = TracerProvider()
-    _provider.add_span_processor(
-        BatchSpanProcessor(OTLPSpanExporter(endpoint=f"{_OTEL_ENDPOINT}/v1/traces"))
-    )
-    trace.set_tracer_provider(_provider)
-    _OTEL_ENABLED = True
+    _OTEL_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+    if _OTEL_ENDPOINT:
+        _provider = TracerProvider()
+        _provider.add_span_processor(
+            BatchSpanProcessor(OTLPSpanExporter(endpoint=f"{_OTEL_ENDPOINT}/v1/traces"))
+        )
+        trace.set_tracer_provider(_provider)
+        _OTEL_ENABLED = True
+    else:
+        _OTEL_ENABLED = False
 except Exception:
     _OTEL_ENABLED = False
 
