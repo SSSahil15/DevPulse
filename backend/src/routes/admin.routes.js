@@ -43,26 +43,29 @@ function requireAdminSecret(req, res, next) {
 // Apply admin auth to all routes in this router
 router.use(requireAdminSecret);
 
-// ─── GET /admin/users — list ALL users who have logged into DevPulse ──────────
-// Pulls from provider_tokens (every login creates/updates a row here)
-// and joins with banned_users so you can see ban status in one call.
+// ─── GET /admin/users — list ALL users (active + banned) ─────────────────────
+// Uses FULL OUTER JOIN between provider_tokens and banned_users.
+// WHY: When a user is banned we DELETE their provider_token row (to wipe
+// cached credentials). A simple LEFT JOIN would then make them vanish from
+// this list entirely. FULL OUTER JOIN keeps them visible from the
+// banned_users side even after their token row is gone.
 router.get(
   '/users',
   asyncHandler(async (req, res) => {
     const { pool } = require('../db/database');
     const { rows } = await pool.query(`
       SELECT
-        pt.user_id,
-        pt.github_login,
+        COALESCE(pt.user_id,     bu.user_id)     AS user_id,
+        COALESCE(pt.github_login, bu.github_login) AS github_login,
         pt.profile_url,
-        pt.synced_at          AS last_seen_at,
+        pt.synced_at                              AS last_seen_at,
         CASE WHEN bu.user_id IS NOT NULL THEN true ELSE false END AS is_banned,
-        bu.reason             AS ban_reason,
+        bu.reason    AS ban_reason,
         bu.banned_at,
         bu.banned_by
       FROM provider_tokens pt
-      LEFT JOIN banned_users bu ON bu.user_id = pt.user_id
-      ORDER BY pt.synced_at DESC
+      FULL OUTER JOIN banned_users bu ON bu.user_id = pt.user_id
+      ORDER BY COALESCE(pt.synced_at, bu.banned_at) DESC
     `);
 
     return res.status(200).json({
