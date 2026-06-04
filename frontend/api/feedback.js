@@ -1,12 +1,15 @@
 // Vercel Serverless Function: /api/feedback
 // Receives "Send us a message" form submissions and forwards to Discord or logs them.
 
+const FALLBACK_WEBHOOK_URL =
+  'https://discord.com/api/webhooks/1508857983096852640/7UmsNebZaMK_l1aIOqX5dplCZ8KUhVk9UDXjaeK0SPiqxbeDhxe817Dr0IZ_lIOdLvyt';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL || FALLBACK_WEBHOOK_URL;
 
   try {
     const { text } = req.body;
