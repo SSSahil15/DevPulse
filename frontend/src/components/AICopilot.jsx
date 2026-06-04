@@ -55,13 +55,16 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
 
     try {
       // Create a lightweight context object so we don't blow up the payload size.
-      // Large repos can have hundreds of CVEs, so we only send the top 15.
+      // Explicitly drop large terminal logs and only keep build/test status and top 15 CVEs.
+      const getSlimStage = (stage) => stage ? { build: stage.build, tests: stage.tests } : undefined;
       const slimContext = {
         analysisResult,
         pipelineData: pipelineData ? {
           devpulseScore: pipelineData.devpulseScore,
           stages: {
-            ...pipelineData.stages,
+            backend: getSlimStage(pipelineData.stages?.backend),
+            frontend: getSlimStage(pipelineData.stages?.frontend),
+            docker: getSlimStage(pipelineData.stages?.docker),
             security: {
               ...pipelineData.stages?.security,
               vulnerabilities: pipelineData.stages?.security?.vulnerabilities?.slice(0, 15) || []
