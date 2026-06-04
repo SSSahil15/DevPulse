@@ -25,12 +25,12 @@ const chatSchema = z.object({
       (val) => {
         if (val === undefined || val === null) return true;
         try {
-          return JSON.stringify(val).length <= 8000;
+          return JSON.stringify(val).length <= 64000;
         } catch {
           return false;
         }
       },
-      { message: 'context payload is too large (max 8 KB).' },
+      { message: 'context payload is too large (max 64 KB).' },
     ),
 
   // History window — cap at 20 messages to limit token consumption.

@@ -54,12 +54,28 @@ export default function AICopilot({ pipelineData, analysisResult, accessToken })
     setIsTyping(true);
 
     try {
+      // Create a lightweight context object so we don't blow up the payload size.
+      // Large repos can have hundreds of CVEs, so we only send the top 15.
+      const slimContext = {
+        analysisResult,
+        pipelineData: pipelineData ? {
+          devpulseScore: pipelineData.devpulseScore,
+          stages: {
+            ...pipelineData.stages,
+            security: {
+              ...pipelineData.stages?.security,
+              vulnerabilities: pipelineData.stages?.security?.vulnerabilities?.slice(0, 15) || []
+            }
+          }
+        } : null
+      };
+
       const response = await apiRequest('/api/ai/chat', {
         method: 'POST',
         accessToken,
         body: JSON.stringify({
           query: userMessage.text,
-          context: { pipelineData, analysisResult },
+          context: slimContext,
           history: messages,
         }),
       });
