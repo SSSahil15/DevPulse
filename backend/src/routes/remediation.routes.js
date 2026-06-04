@@ -30,7 +30,8 @@ const GenerateFixSchema = z.object({
   repositoryFullName: z
     .string()
     .regex(/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/, 'Invalid repository name'),
-  scanData: z.object({}).passthrough(), // Full Trivy JSON output
+  scanData: z.object({}).passthrough().optional(), // Fallback for old clients
+  encodedScanData: z.string().optional(),
   targetVulnIds: z.array(z.string()).optional(), // Optional: specific CVEs to fix
   isDryRun: z.boolean().default(true), // Default: dry-run first
 });
@@ -74,7 +75,17 @@ router.post(
         });
       }
 
-      const { repositoryFullName, scanData, targetVulnIds, isDryRun } = parsed.data;
+      let { repositoryFullName, scanData, encodedScanData, targetVulnIds, isDryRun } = parsed.data;
+
+      if (encodedScanData) {
+        try {
+          scanData = JSON.parse(decodeURIComponent(Buffer.from(encodedScanData, 'base64').toString('utf8')));
+        } catch (e) {
+          return res.status(400).json({ message: 'Invalid encodedScanData format' });
+        }
+      } else if (!scanData) {
+        return res.status(400).json({ message: 'scanData or encodedScanData is required' });
+      }
 
       // Retrieve and verify the GitHub token
       const githubAccessToken = getGitHubToken(req);
@@ -136,7 +147,18 @@ router.post(
         });
       }
 
-      const { repositoryFullName, scanData, targetVulnIds } = parsed.data;
+      let { repositoryFullName, scanData, encodedScanData, targetVulnIds } = parsed.data;
+
+      if (encodedScanData) {
+        try {
+          scanData = JSON.parse(decodeURIComponent(Buffer.from(encodedScanData, 'base64').toString('utf8')));
+        } catch (e) {
+          return res.status(400).json({ message: 'Invalid encodedScanData format' });
+        }
+      } else if (!scanData) {
+        return res.status(400).json({ message: 'scanData or encodedScanData is required' });
+      }
+
       const githubAccessToken = getGitHubToken(req);
 
       // Strict scope check for live PR creation
@@ -207,10 +229,16 @@ router.get('/status/:jobId', ensureAuthenticated, async (req, res, next) => {
  */
 router.post('/analyse', ensureAuthenticated, async (req, res, next) => {
   try {
-    const { scanData, targetVulnIds } = req.body;
+    let { scanData, encodedScanData, targetVulnIds } = req.body;
 
-    if (!scanData) {
-      return res.status(400).json({ message: 'scanData is required.' });
+    if (encodedScanData) {
+      try {
+        scanData = JSON.parse(decodeURIComponent(Buffer.from(encodedScanData, 'base64').toString('utf8')));
+      } catch (e) {
+        return res.status(400).json({ message: 'Invalid encodedScanData format' });
+      }
+    } else if (!scanData) {
+      return res.status(400).json({ message: 'scanData or encodedScanData is required.' });
     }
 
     const scanResult = parseTrivyVulnerabilities(scanData);

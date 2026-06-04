@@ -152,10 +152,12 @@ export function useRemediation(accessToken) {
       setState({ ...initialState, status: 'running', isDryRun: true });
 
       try {
+        const encodedScanData = btoa(encodeURIComponent(JSON.stringify(scanData)));
+
         const response = await apiRequest('/api/remediation/generate', {
           accessToken,
           method: 'POST',
-          body: JSON.stringify({ repositoryFullName, scanData, targetVulnIds, isDryRun: true }),
+          body: JSON.stringify({ repositoryFullName, encodedScanData, targetVulnIds, isDryRun: true }),
           retry: false,
         });
 
@@ -186,10 +188,12 @@ export function useRemediation(accessToken) {
       }));
 
       try {
+        const encodedScanData = btoa(encodeURIComponent(JSON.stringify(scanData)));
+
         const response = await apiRequest('/api/remediation/confirm', {
           accessToken,
           method: 'POST',
-          body: JSON.stringify({ repositoryFullName, scanData, targetVulnIds }),
+          body: JSON.stringify({ repositoryFullName, encodedScanData, targetVulnIds }),
           retry: false,
         });
 
@@ -212,10 +216,12 @@ export function useRemediation(accessToken) {
   const analyseVulnerabilities = useCallback(
     async (scanData, targetVulnIds = []) => {
       try {
+        const encodedScanData = btoa(encodeURIComponent(JSON.stringify(scanData)));
+
         return await apiRequest('/api/remediation/analyse', {
           accessToken,
           method: 'POST',
-          body: JSON.stringify({ scanData, targetVulnIds }),
+          body: JSON.stringify({ encodedScanData, targetVulnIds }),
           retry: false,
         });
       } catch {
