@@ -507,6 +507,32 @@ export default function AdminPage() {
     setSecret('');
   }
 
+  useEffect(() => {
+    if (!secret) return; // Only track inactivity when logged in
+
+    let timeoutId;
+    
+    function resetTimer() {
+      clearTimeout(timeoutId);
+      // Auto-logout after 5 minutes (300000 ms) of inactivity
+      timeoutId = setTimeout(() => {
+        handleLogout();
+      }, 5 * 60 * 1000);
+    }
+
+    // Set initial timer
+    resetTimer();
+
+    // Listen for activity events
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    events.forEach((event) => document.addEventListener(event, resetTimer, { passive: true }));
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach((event) => document.removeEventListener(event, resetTimer));
+    };
+  }, [secret]);
+
   if (!secret) return <SecretGate onUnlock={handleUnlock} />;
   return <AdminPanel secret={secret} onLogout={handleLogout} />;
 }
