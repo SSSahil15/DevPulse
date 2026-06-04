@@ -62,8 +62,8 @@ Instructions:
 
 Expected JSON schema:
 {
-  "issue": "Clear 1-2 line description of the problem. If none, state 'No issues found.'",
-  "fix": "Immediate actionable steps to resolve. Use bullet points or commands. If none needed, state 'No action required.'",
+  "issue": "Clear 1-2 line description of the problem. If responding to a greeting or non-technical query, put your polite response here. If no problem found otherwise, state 'No issues found.'",
+  "fix": "Immediate actionable steps to resolve. Use bullet points or commands. If none needed or if responding to a greeting, state 'No action required.'",
   "explanation": "Short, precise technical explanation of why it matters.",
   "risk": "LOW", "MEDIUM", or "HIGH",
   "confidence": "HIGH" (since you have full data access),
