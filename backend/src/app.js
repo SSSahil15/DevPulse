@@ -85,6 +85,7 @@ const aiChatRoutes = require('./routes/aiChat.routes');
 const dbStatsRoutes = require('./routes/db-stats.routes');
 const remediationRoutes = require('./routes/remediation.routes');
 const schedulesRoutes = require('./routes/schedules.routes');
+const adminRoutes = require('./routes/admin.routes');
 const { generalApiLimiter, authLimiter } = require('./middleware/rateLimiter');
 
 const { httpMetricsMiddleware, metricsHandler, getMetrics } = require('./utils/metrics');
@@ -164,7 +165,7 @@ app.use(
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 
     // Headers the browser is allowed to send
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'X-Internal-Secret'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'X-Internal-Secret', 'X-Admin-Secret', 'X-Admin-Actor'],
 
     // Headers the browser JS is allowed to READ from responses
     // Without this, frontend cannot read X-Request-ID or RateLimit-* headers
@@ -399,6 +400,7 @@ app.use('/api/ai', aiChatRoutes);
 app.use('/api/remediation', remediationRoutes);
 app.use('/api/schedules', schedulesRoutes);
 app.use('/api/admin/db-stats', dbStatsRoutes); // DB observability — auth-gated
+app.use('/api/admin', adminRoutes);             // User ban management — ADMIN_SECRET protected
 
 // ─── Public Share Report Endpoint (no auth required) ────────────────────────
 // GET /api/reports/:token  — retrieve a shared report snapshot by its token

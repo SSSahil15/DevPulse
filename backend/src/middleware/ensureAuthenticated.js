@@ -1,6 +1,8 @@
 const asyncHandler = require('../utils/asyncHandler');
 const { verifyDevPulseJWT } = require('../services/githubAuth.service');
+const { bannedUserDB } = require('../db/database');
 const Sentry = require('@sentry/node');
+const logger = require('../utils/logger');
 
 function extractBearerToken(authorizationHeader) {
   if (!authorizationHeader) return null;
@@ -20,6 +22,22 @@ const ensureAuthenticated = asyncHandler(async (req, res, next) => {
 
   const payload = verifyDevPulseJWT(token);
 
+  // ── Ban check ────────────────────────────────────────────────────────────────
+  // Fast PRIMARY KEY lookup — negligible overhead per request.
+  const banReason = await bannedUserDB.isBanned(payload.sub);
+  if (banReason) {
+    logger.warn('[Auth] Banned user attempted access', {
+      userId: payload.sub,
+      username: payload.username,
+      reason: banReason,
+      path: req.path,
+    });
+    return res.status(403).json({
+      message: 'Your account has been suspended. Contact support if you believe this is an error.',
+      reason: banReason,
+    });
+  }
+
   // Attach standardised user to every authenticated request
   req.user = {
     id: payload.sub,
@@ -36,11 +54,10 @@ const ensureAuthenticated = asyncHandler(async (req, res, next) => {
 
   // Bind user identity to the current Sentry scope so every error or
   // performance transaction captured downstream includes who triggered it.
-  // Sentry isolates scopes per-request automatically with Node AsyncLocalStorage.
   Sentry.setUser({
     id: req.user.id,
     username: req.user.username,
-    email: req.user.email, // may be null if user keeps email private on GitHub
+    email: req.user.email,
   });
 
   return next();

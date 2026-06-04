@@ -175,6 +175,20 @@ async function migrate() {
       `CREATE UNIQUE INDEX IF NOT EXISTS idx_schedule_user_repo ON scan_schedules(user_id, repository);`,
     );
 
+    // ── Banned Users ─────────────────────────────────────────────────────────
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS banned_users (
+        user_id     VARCHAR(255) PRIMARY KEY,
+        github_login VARCHAR(255),
+        reason      TEXT        NOT NULL,
+        banned_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        banned_by   VARCHAR(255) NOT NULL
+      );
+    `);
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_banned_users_login ON banned_users(github_login);`,
+    );
+
     await client.query('COMMIT');
     logger.info('[DB] PostgreSQL database ready and migrated.');
   } catch (err) {

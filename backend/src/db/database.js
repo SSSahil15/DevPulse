@@ -553,4 +553,56 @@ const db = {
   },
 };
 
-module.exports = { db, initDb, pool, pipelineDB, scanJobDB, reportDB, providerTokenDB, scheduleDB };
+// ─── Banned Users Helpers ─────────────────────────────────────────────────────
+
+const bannedUserDB = {
+  /**
+   * Ban a user. Idempotent — re-banning updates reason + banned_by.
+   */
+  async ban({ userId, githubLogin, reason, bannedBy }) {
+    await pool.query(
+      `
+      INSERT INTO banned_users (user_id, github_login, reason, banned_at, banned_by)
+      VALUES ($1, $2, $3, NOW(), $4)
+      ON CONFLICT (user_id) DO UPDATE SET
+        github_login = EXCLUDED.github_login,
+        reason       = EXCLUDED.reason,
+        banned_at    = NOW(),
+        banned_by    = EXCLUDED.banned_by
+      `,
+      [userId, githubLogin || null, reason, bannedBy],
+    );
+  },
+
+  /** Remove a ban — returns true if a row was actually deleted. */
+  async unban(userId) {
+    const { rowCount } = await pool.query(
+      `DELETE FROM banned_users WHERE user_id = $1`,
+      [userId],
+    );
+    return rowCount > 0;
+  },
+
+  /**
+   * Fast ban check — called on every authenticated request.
+   * Uses the PRIMARY KEY (user_id) so it's always an index seek.
+   */
+  async isBanned(userId) {
+    const { rows } = await pool.query(
+      `SELECT reason FROM banned_users WHERE user_id = $1 LIMIT 1`,
+      [userId],
+    );
+    return rows.length > 0 ? rows[0].reason : null; // null = not banned
+  },
+
+  /** List all banned users for the admin panel. */
+  async list() {
+    const { rows } = await pool.query(
+      `SELECT user_id, github_login, reason, banned_at, banned_by
+       FROM banned_users ORDER BY banned_at DESC`,
+    );
+    return rows;
+  },
+};
+
+module.exports = { db, initDb, pool, pipelineDB, scanJobDB, reportDB, providerTokenDB, scheduleDB, bannedUserDB };
