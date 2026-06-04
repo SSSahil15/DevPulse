@@ -258,18 +258,21 @@ function AdminPanel({ secret }) {
   const [banTarget, setBanTarget] = useState(null);
   const [toast, setToast] = useState(null); // { type: 'success'|'error', msg }
 
-  const headers = { 'X-Admin-Secret': secret, 'Content-Type': 'application/json' };
-
   const showToast = (type, msg) => {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 3500);
   };
 
+  // Build headers fresh each call — avoids stale closure bug with useCallback
+  const makeHeaders = () => ({ 'X-Admin-Secret': secret, 'Content-Type': 'application/json' });
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_BASE}/api/admin/users`, { headers });
+      const res = await fetch(`${API_BASE}/api/admin/users`, {
+        headers: { 'X-Admin-Secret': secret },
+      });
       if (!res.ok) throw new Error('Failed to fetch users');
       const data = await res.json();
       setUsers(data.users || []);
@@ -286,13 +289,22 @@ function AdminPanel({ secret }) {
     try {
       const res = await fetch(`${API_BASE}/api/admin/ban`, {
         method: 'POST',
-        headers,
+        headers: makeHeaders(),
         body: JSON.stringify({ userId: user.user_id, githubLogin: user.github_login, reason }),
       });
       if (!res.ok) throw new Error('Ban failed');
+
+      // Optimistic update — immediately mark as banned in local state
+      setUsers(prev => prev.map(u =>
+        u.user_id === user.user_id
+          ? { ...u, is_banned: true, ban_reason: reason, banned_at: new Date().toISOString() }
+          : u
+      ));
       showToast('success', `@${user.github_login} has been banned.`);
       setBanTarget(null);
-      await fetchUsers();
+
+      // Then sync with server to get accurate data
+      fetchUsers();
     } catch {
       showToast('error', 'Failed to ban user. Try again.');
       setBanTarget(null);
@@ -302,11 +314,21 @@ function AdminPanel({ secret }) {
   async function handleUnban(user) {
     try {
       const res = await fetch(`${API_BASE}/api/admin/unban/${user.user_id}`, {
-        method: 'DELETE', headers,
+        method: 'DELETE',
+        headers: makeHeaders(),
       });
       if (!res.ok) throw new Error('Unban failed');
+
+      // Optimistic update — immediately mark as active in local state
+      setUsers(prev => prev.map(u =>
+        u.user_id === user.user_id
+          ? { ...u, is_banned: false, ban_reason: null, banned_at: null }
+          : u
+      ));
       showToast('success', `@${user.github_login} has been unbanned.`);
-      await fetchUsers();
+
+      // Then sync with server
+      fetchUsers();
     } catch {
       showToast('error', 'Failed to unban user. Try again.');
     }
