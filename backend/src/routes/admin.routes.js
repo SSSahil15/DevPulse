@@ -105,8 +105,11 @@ router.post(
 
     await bannedUserDB.ban({ userId, githubLogin, reason, bannedBy });
 
-    // Also delete their stored provider token so they can't use cached credentials
-    await providerTokenDB.deleteByUserId(userId);
+    // Null out their GitHub token so GitHub API calls fail,
+    // but KEEP the provider_tokens row so the user stays visible
+    // in the admin panel (for unban). The ban middleware already
+    // blocks all their API access regardless.
+    await providerTokenDB.wipeTokenByUserId(userId);
 
     logger.info('[Admin] User banned', { userId, githubLogin, reason, bannedBy });
 

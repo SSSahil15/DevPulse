@@ -422,6 +422,20 @@ const providerTokenDB = {
   async deleteByUserId(userId) {
     await pool.query(`DELETE FROM provider_tokens WHERE user_id = $1`, [userId]);
   },
+
+  /**
+   * Wipe the encrypted token WITHOUT deleting the row.
+   * Used on ban: keeps the user visible in the admin panel
+   * (so you can see who is banned and unban them), while
+   * making their GitHub token permanently unusable.
+   * The ban middleware already blocks all API access anyway.
+   */
+  async wipeTokenByUserId(userId) {
+    await pool.query(
+      `UPDATE provider_tokens SET encrypted_token = NULL, synced_at = NOW() WHERE user_id = $1`,
+      [userId],
+    );
+  },
 };
 
 async function initDb() {

@@ -36,6 +36,12 @@ async function getGitHubProviderToken(userId) {
     return null;
   }
 
+  // Token was wiped on ban (set to NULL) — treat as no token
+  if (!record.encrypted_token) {
+    console.warn('[TokenStore] ⚠ Token is null for user (banned?):', userId);
+    return null;
+  }
+
   console.log('[TokenStore] Found token record for user:', userId);
 
   try {
@@ -47,6 +53,7 @@ async function getGitHubProviderToken(userId) {
     return null;
   }
 }
+
 
 async function getGitHubProviderTokenStatus(userId) {
   const record = await providerTokenDB.getByUserId(userId);
