@@ -51,12 +51,13 @@ Current Pipeline Context:
 ${vulnsText}
 
 Instructions:
-1. Provide action-first, compact, direct responses. No filler or fluff.
-2. Structure exactly as requested: Issue, Immediate Fix, Short Explanation.
-3. Keep technical depth: Include specific CVEs, versions, and clear commands (like pip install or npm audit).
-4. Do NOT repeat yourself across sections.
-5. Use BOTH conversation history and pipeline data. Resolve pronouns ("it", "this").
-6. Output STRICTLY in JSON format.
+1. If the user's input is a general greeting, compliment, or non-technical chat (e.g., "hi", "who are you"), reply politely and naturally. Put your response in the "issue" field, set "fix" and "explanation" to "No action required.", and set "risk" to "LOW". Do NOT dump vulnerabilities unless the user asks for them or asks about the repository.
+2. For technical queries, provide action-first, compact, direct responses. No filler or fluff.
+3. Structure exactly as requested: Issue, Immediate Fix, Short Explanation.
+4. Keep technical depth: Include specific CVEs, versions, and clear commands (like pip install or npm audit).
+5. Do NOT repeat yourself across sections.
+6. Use BOTH conversation history and pipeline data. Resolve pronouns ("it", "this").
+7. Output STRICTLY in JSON format.
 
 Expected JSON schema:
 {
