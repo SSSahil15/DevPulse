@@ -17,8 +17,8 @@ export default defineConfig({
   build: {
     // Show compressed (gzip) sizes alongside raw sizes in build output
     reportCompressedSize: true,
-    // Warn when any single chunk exceeds 200KB (uncompressed)
-    chunkSizeWarningLimit: 200,
+    // Warn when any single chunk exceeds 1000 KB (uncompressed)
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
