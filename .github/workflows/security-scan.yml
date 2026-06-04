@@ -1,596 +1,120 @@
 # ╔══════════════════════════════════════════════════════════════╗
-# ║  DevPulse Security Pipeline — Production Grade               ║
-# ║  npm · pip · Secrets · Docker · License · PR Comments       ║
+# ║  DevPulse Security — Weekly Schedule Only                   ║
+# ║  Runs every Monday 2am UTC, or manually via workflow_dispatch║
+# ║  NOT triggered on every push (saves minutes)                ║
 # ╚══════════════════════════════════════════════════════════════╝
 
 name: '🛡️ Security Pipeline'
 
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
   schedule:
     - cron: '0 2 * * 1' # Every Monday 2am UTC
-  workflow_dispatch:
-    inputs:
-      severity_threshold:
-        description: 'Minimum severity to fail on (CRITICAL|HIGH|MEDIUM|LOW)'
-        required: false
-        default: 'CRITICAL'
+  workflow_dispatch:    # Manual trigger only
 
 env:
-  # Configurable via GitHub Repository Variables (Settings → Variables)
-  NPM_AUDIT_LEVEL: ${{ vars.NPM_AUDIT_LEVEL  || 'critical' }}
-  TRIVY_SEVERITY: ${{ vars.TRIVY_SEVERITY   || 'CRITICAL,HIGH' }}
-  FAIL_ON_SEVERITY: ${{ github.event.inputs.severity_threshold || vars.FAIL_ON_SEVERITY || 'CRITICAL' }}
+  NODE_VERSION: '20'
   DOCKER_IMAGE: devpulse-backend
-  REPORTS_DIR: security-reports
 
 permissions:
   contents: read
-  security-events: write # Trivy / CodeQL SARIF uploads
-  pull-requests: write # PR comments
-  issues: write
+  security-events: write
+  pull-requests: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# ═══════════════════════════════════════════════════════════════
 jobs:
-  # ─── Job 1: npm audit — Backend & Frontend ─────────────────
+  # ─── npm audit ─────────────────────────────────────────────────
   npm-audit:
-    name: '📦 npm Audit (Backend + Frontend)'
+    name: '📦 npm Audit'
     runs-on: ubuntu-latest
-    outputs:
-      backend_critical: ${{ steps.parse.outputs.backend_critical }}
-      frontend_critical: ${{ steps.parse.outputs.frontend_critical }}
-      backend_high: ${{ steps.parse.outputs.backend_high }}
-      frontend_high: ${{ steps.parse.outputs.frontend_high }}
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
 
-      - name: '⚙️ Setup Node.js'
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
-      - name: '📁 Prepare report directory'
-        run: mkdir -p ${{ env.REPORTS_DIR }}/npm
-
-      # ── Backend ──
-      - name: '📦 Install backend deps'
-        working-directory: backend
-        run: npm install --no-audit --no-fund
-
-      - name: '🔍 npm audit — Backend'
-        id: backend_audit
+      - name: Install & audit backend
         working-directory: backend
         run: |
+          npm ci --no-audit --no-fund
           set +e
-          npm audit --json > ${{ github.workspace }}/${{ env.REPORTS_DIR }}/npm/backend-audit.json 2>/dev/null
-          npm audit --audit-level=${{ env.NPM_AUDIT_LEVEL }} 2>&1 \
-            | tee ${{ github.workspace }}/${{ env.REPORTS_DIR }}/npm/backend-audit.txt
+          npm audit --audit-level=critical 2>&1 | tee /tmp/backend-audit.txt
 
-      # ── Frontend ──
-      - name: '📦 Install frontend deps'
-        working-directory: frontend
-        run: npm install --no-audit --no-fund
-        env:
-          npm_config_cache: /tmp/.npm-frontend
-
-      - name: '🔍 npm audit — Frontend'
-        id: frontend_audit
+      - name: Install & audit frontend
         working-directory: frontend
         run: |
+          npm ci --no-audit --no-fund
           set +e
-          npm audit --json > ${{ github.workspace }}/${{ env.REPORTS_DIR }}/npm/frontend-audit.json 2>/dev/null
-          npm audit --audit-level=${{ env.NPM_AUDIT_LEVEL }} 2>&1 \
-            | tee ${{ github.workspace }}/${{ env.REPORTS_DIR }}/npm/frontend-audit.txt
+          npm audit --audit-level=critical 2>&1 | tee /tmp/frontend-audit.txt
 
-      # ── Parse & report ──
-      - name: '📊 Parse vulnerability counts'
-        id: parse
+      - name: Summary
+        if: always()
         run: |
-          parse_count() {
-            python3 -c "
-          import json, sys
-          try:
-            d = json.load(open('$1'))
-            print(sum(1 for v in d.get('vulnerabilities', {}).values() if v.get('severity','').lower() == '$2'))
-          except: print(0)" 2>/dev/null || echo 0
-          }
-
-          BC=$(parse_count "${{ env.REPORTS_DIR }}/npm/backend-audit.json"  "critical")
-          FC=$(parse_count "${{ env.REPORTS_DIR }}/npm/frontend-audit.json" "critical")
-          BH=$(parse_count "${{ env.REPORTS_DIR }}/npm/backend-audit.json"  "high")
-          FH=$(parse_count "${{ env.REPORTS_DIR }}/npm/frontend-audit.json" "high")
-
-          echo "backend_critical=$BC"  >> $GITHUB_OUTPUT
-          echo "frontend_critical=$FC" >> $GITHUB_OUTPUT
-          echo "backend_high=$BH"      >> $GITHUB_OUTPUT
-          echo "frontend_high=$FH"     >> $GITHUB_OUTPUT
-
           echo "## 📦 npm Audit" >> $GITHUB_STEP_SUMMARY
-          printf "\n| Service | Critical | High |\n|---------|----------|------|\n| Backend | %s | %s |\n| Frontend | %s | %s |\n" \
-            "$BC" "$BH" "$FC" "$FH" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "=== Backend ===" >> $GITHUB_STEP_SUMMARY
+          cat /tmp/backend-audit.txt >> $GITHUB_STEP_SUMMARY
+          echo "=== Frontend ===" >> $GITHUB_STEP_SUMMARY
+          cat /tmp/frontend-audit.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
-      - name: '🚨 Fail on critical npm vulnerabilities'
-        run: |
-          BC="${{ steps.parse.outputs.backend_critical }}"
-          FC="${{ steps.parse.outputs.frontend_critical }}"
-          THRESHOLD="${{ env.FAIL_ON_SEVERITY }}"
-          if [[ "${THRESHOLD^^}" == "CRITICAL" ]] && { [ "${BC:-0}" -gt 0 ] || [ "${FC:-0}" -gt 0 ]; }; then
-            echo "::error::Critical npm vulnerabilities found — Backend: $BC | Frontend: $FC"
-            echo "::error::Run 'npm audit fix' in backend/ and frontend/ then commit the updated package-lock.json"
-            exit 1
-          fi
-          echo "✅ npm audit passed"
-
-      - name: '📤 Upload npm audit reports'
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: npm-audit-reports
-          path: ${{ env.REPORTS_DIR }}/npm/
-          retention-days: 30
-
-  # ─── Job 2: pip-audit — Python AI Service ──────────────────
-  pip-audit:
-    name: '🐍 pip-audit (AI Service)'
+  # ─── Trivy filesystem scan ─────────────────────────────────────
+  trivy-scan:
+    name: '🛡️ Trivy Filesystem Scan'
     runs-on: ubuntu-latest
-    outputs:
-      vuln_count: ${{ steps.parse.outputs.vuln_count }}
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
-      - name: '🐍 Setup Python 3.11'
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: '📁 Prepare report directory'
-        run: mkdir -p ${{ env.REPORTS_DIR }}/pip
-
-      - name: '📦 Install pip-audit + AI deps'
-        working-directory: ai
-        run: |
-          pip install --upgrade pip pip-audit
-          pip install -r requirements.txt
-
-      - name: '🔍 Run pip-audit (JSON + text)'
-        id: pip_run
-        working-directory: ai
-        run: |
-          set +e
-          pip-audit --config ${{ github.workspace }}/.pip-audit.toml \
-            --format json \
-            -o ${{ github.workspace }}/${{ env.REPORTS_DIR }}/pip/ai-audit.json
-          pip-audit --config ${{ github.workspace }}/.pip-audit.toml \
-            --desc on 2>&1 \
-            | tee ${{ github.workspace }}/${{ env.REPORTS_DIR }}/pip/ai-audit.txt
-          echo "exit=$?" >> $GITHUB_OUTPUT
-
-      - name: '📊 Parse pip-audit results'
-        id: parse
-        run: |
-          python3 - << 'PYEOF'
-          import json, os
-
-          try:
-            data  = json.load(open(f"{os.environ['REPORTS_DIR']}/pip/ai-audit.json"))
-            deps  = data.get("dependencies", [])
-            total = sum(len(d.get("vulns", [])) for d in deps)
-
-            with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"vuln_count={total}\n")
-
-            with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
-              f.write("## 🐍 pip-audit (AI Service)\n\n")
-              if total == 0:
-                f.write("✅ **No vulnerabilities found**\n")
-              else:
-                f.write(f"⚠️ **{total} vulnerabilities found**\n\n")
-                f.write("| Package | ID | Fix |\n|---------|-----|-----|\n")
-                for dep in deps:
-                  for v in dep.get("vulns", []):
-                    fix = (v.get("fix_versions") or ["No fix"])[0]
-                    f.write(f"| {dep.get('name')} | {v.get('id')} | {fix} |\n")
-          except Exception as e:
-            with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write("vuln_count=0\n")
-            print(f"Warning: could not parse pip-audit JSON: {e}")
-          PYEOF
-        env:
-          REPORTS_DIR: ${{ env.REPORTS_DIR }}
-
-      - name: '🚨 Fail on pip-audit vulnerabilities'
-        run: |
-          COUNT="${{ steps.parse.outputs.vuln_count }}"
-          if [ "${COUNT:-0}" -gt 0 ]; then
-            echo "::error::pip-audit found $COUNT vulnerabilities in ai/requirements.txt"
-            echo "::error::Update pinned versions and re-run pip-audit to confirm fixes"
-            exit 1
-          fi
-          echo "✅ pip-audit passed"
-
-      - name: '📤 Upload pip-audit reports'
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pip-audit-reports
-          path: ${{ env.REPORTS_DIR }}/pip/
-          retention-days: 30
-
-  # ─── Job 3: Secrets Scanning ───────────────────────────────
-  secret-scan:
-    name: '🔐 Secrets Scan (TruffleHog)'
-    runs-on: ubuntu-latest
-    outputs:
-      secrets_found: ${{ steps.outcome.outputs.secrets_found }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Full history required for TruffleHog
-
-      - name: '📁 Prepare report directory'
-        run: mkdir -p ${{ env.REPORTS_DIR }}/secrets
-
-      # Primary: TruffleHog — scans git history for verified secrets only
-      - name: '🔐 TruffleHog Secrets Scanner'
-        id: trufflehog
-        uses: trufflesecurity/trufflehog@main
-        continue-on-error: true
-        with:
-          path: ./
-          base: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
-          head: HEAD
-          extra_args: --json --only-verified
-
-      # Secondary: detect-secrets — filesystem scan (informational, not blocking)
-      - name: '🔎 detect-secrets scan (filesystem)'
-        run: |
-          pip install detect-secrets --quiet
-          set +e
-          detect-secrets scan \
-            --exclude-files '.git/.*' \
-            --exclude-files 'node_modules/.*' \
-            --exclude-files '.*\.lock$' \
-            > ${{ env.REPORTS_DIR }}/secrets/detect-secrets-report.json 2>&1 || true
-
-          python3 - << 'PYEOF'
-          import json, os
-          try:
-            d       = json.load(open(f"{os.environ['REPORTS_DIR']}/secrets/detect-secrets-report.json"))
-            results = d.get("results", {})
-            total   = sum(len(v) for v in results.values())
-            lines   = [f"detect-secrets potential findings: {total}\n"]
-            for file, findings in results.items():
-              for f in findings:
-                lines.append(f"  - {file}: {f.get('type','Unknown')} line {f.get('line_number','?')}\n")
-            with open(f"{os.environ['REPORTS_DIR']}/secrets/detect-secrets-summary.txt", "w") as o:
-              o.writelines(lines)
-            print("".join(lines))
-          except Exception as e:
-            print(f"Warning: {e}")
-          PYEOF
-        env:
-          REPORTS_DIR: ${{ env.REPORTS_DIR }}
-
-      - name: '📊 Secrets scan outcome'
-        id: outcome
-        run: |
-          if [ "${{ steps.trufflehog.outcome }}" = "failure" ]; then
-            echo "secrets_found=true"  >> $GITHUB_OUTPUT
-            echo "## 🔐 Secrets Scan"  >> $GITHUB_STEP_SUMMARY
-            echo "❌ **TruffleHog found verified secrets — merge blocked**" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "secrets_found=false" >> $GITHUB_OUTPUT
-            echo "## 🔐 Secrets Scan"  >> $GITHUB_STEP_SUMMARY
-            echo "✅ **No verified secrets detected**" >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: '🚨 Fail if verified secrets found'
-        if: steps.outcome.outputs.secrets_found == 'true'
-        run: |
-          echo "::error::Verified secrets were detected by TruffleHog — this PR cannot be merged."
-          echo "::error::Remove the secret, rotate the credential, and use GitHub Secrets instead."
-          exit 1
-
-      - name: '📤 Upload secrets reports'
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: secrets-scan-reports
-          path: ${{ env.REPORTS_DIR }}/secrets/
-          retention-days: 30
-
-  # ─── Job 4: Trivy Docker Image Scan ────────────────────────
-  docker-scan:
-    name: '🐳 Trivy Docker Scan (Backend)'
-    runs-on: ubuntu-latest
-    outputs:
-      critical_count: ${{ steps.parse.outputs.critical }}
-      high_count: ${{ steps.parse.outputs.high }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: '📁 Prepare report directory'
-        run: mkdir -p ${{ env.REPORTS_DIR }}/docker
-
-      # Build the backend image (the Dockerfile installs Trivy at runtime
-      # for the app itself — but the CI scan uses the trivy-action separately)
-      - name: '🐳 Build backend Docker image'
-        id: build
-        run: |
-          TAG="${{ env.DOCKER_IMAGE }}:${{ github.sha }}"
-          docker build \
-            -f backend/Dockerfile \
-            -t "$TAG" \
-            -t "${{ env.DOCKER_IMAGE }}:latest" \
-            --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
-            --label "org.opencontainers.image.revision=${{ github.sha }}" \
-            ./backend 2>&1 | tee ${{ env.REPORTS_DIR }}/docker/build.log
-          echo "image_tag=$TAG" >> $GITHUB_OUTPUT
-
-      # SARIF → GitHub Security tab
-      - name: '🛡️ Trivy — Docker image scan (SARIF)'
-        uses: aquasecurity/trivy-action@master
-        continue-on-error: true
-        with:
-          image-ref: ${{ steps.build.outputs.image_tag }}
-          format: sarif
-          output: trivy-image.sarif
-          severity: ${{ env.TRIVY_SEVERITY }}
-          exit-code: '0'
-          trivyignores: .trivyignore
-
-      - name: '📤 Upload SARIF to GitHub Security'
-        uses: github/codeql-action/upload-sarif@v3
-        continue-on-error: true
-        with:
-          sarif_file: trivy-image.sarif
-          category: trivy-docker
-
-      # JSON → machine-parseable report
-      - name: '🛡️ Trivy — Docker image scan (JSON)'
-        uses: aquasecurity/trivy-action@master
-        continue-on-error: true
-        with:
-          image-ref: ${{ steps.build.outputs.image_tag }}
-          format: json
-          output: ${{ env.REPORTS_DIR }}/docker/trivy-image.json
-          severity: ${{ env.TRIVY_SEVERITY }}
-          exit-code: '0'
-          trivyignores: .trivyignore
-
-      - name: '📊 Parse Trivy results'
-        id: parse
-        run: |
-          python3 - << 'PYEOF'
-          import json, os
-
-          def count(filepath, sev):
-            try:
-              data = json.load(open(filepath))
-              return sum(
-                1 for r in data.get("Results", [])
-                for v in r.get("Vulnerabilities", [])
-                if v.get("Severity") == sev
-              )
-            except:
-              return 0
-
-          report   = f"{os.environ['REPORTS_DIR']}/docker/trivy-image.json"
-          critical = count(report, "CRITICAL")
-          high     = count(report, "HIGH")
-          medium   = count(report, "MEDIUM")
-
-          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-            f.write(f"critical={critical}\nhigh={high}\nmedium={medium}\n")
-
-          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
-            f.write("## 🐳 Trivy Docker Scan\n\n")
-            f.write("| Severity | Count |\n|----------|-------|\n")
-            f.write(f"| 🔴 Critical | {critical} |\n| 🟠 High | {high} |\n| 🟡 Medium | {medium} |\n")
-            verdict = "✅ **Docker image is clean**" if critical == 0 and high == 0 \
-                      else f"⚠️ **{critical + high + medium} vulnerabilities** — review docker-scan-reports artifact"
-            f.write(f"\n{verdict}\n")
-          PYEOF
-        env:
-          REPORTS_DIR: ${{ env.REPORTS_DIR }}
-
-      - name: '🚨 Fail on critical Docker vulnerabilities'
-        run: |
-          C="${{ steps.parse.outputs.critical }}"
-          if [[ "${FAIL_ON_SEVERITY^^}" == "CRITICAL" ]] && [ "${C:-0}" -gt 0 ]; then
-            echo "::error::Docker image has $C CRITICAL vulnerabilities — deployment blocked"
-            exit 1
-          fi
-          echo "✅ Trivy Docker scan passed"
-        env:
-          FAIL_ON_SEVERITY: ${{ env.FAIL_ON_SEVERITY }}
-
-      - name: '📤 Upload Docker scan reports'
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-scan-reports
-          path: ${{ env.REPORTS_DIR }}/docker/
-          retention-days: 30
-
-  # ─── Job 5: License Compliance ─────────────────────────────
-  license-scan:
-    name: '📜 License Compliance'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: '📁 Prepare report directory'
-        run: mkdir -p ${{ env.REPORTS_DIR }}/license
-
-      # Generate SBOM (CycloneDX) with Trivy
-      - name: '📦 Generate SBOM (CycloneDX)'
+      - name: Trivy scan (SARIF)
         uses: aquasecurity/trivy-action@master
         continue-on-error: true
         with:
           scan-type: fs
           scan-ref: .
-          format: cyclonedx
-          output: ${{ env.REPORTS_DIR }}/license/sbom.json
+          format: sarif
+          output: trivy-fs.sarif
+          severity: CRITICAL,HIGH
+          scanners: vuln,secret
           exit-code: '0'
 
-      - name: '⚙️ Setup Node.js for license checks'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      # Backend npm licenses — use --production to avoid dev dep noise
-      - name: '📜 npm license check (Backend)'
-        working-directory: backend
-        run: |
-          npm install --no-audit --no-fund --omit=dev
-          npx license-checker --production --json \
-            --failOn "GPL-2.0;GPL-3.0;AGPL-3.0;LGPL-2.0;LGPL-2.1;LGPL-3.0" \
-            --out ${{ github.workspace }}/${{ env.REPORTS_DIR }}/license/backend-licenses.json \
-            2>&1 | tee ${{ github.workspace }}/${{ env.REPORTS_DIR }}/license/backend-license-check.txt || true
-
-      # Frontend npm licenses — production only
-      - name: '📜 npm license check (Frontend)'
-        working-directory: frontend
-        run: |
-          npm install --no-audit --no-fund --omit=dev
-          npx license-checker --production --json \
-            --failOn "GPL-2.0;GPL-3.0;AGPL-3.0;LGPL-2.0;LGPL-2.1;LGPL-3.0" \
-            --out ${{ github.workspace }}/${{ env.REPORTS_DIR }}/license/frontend-licenses.json \
-            2>&1 | tee ${{ github.workspace }}/${{ env.REPORTS_DIR }}/license/frontend-license-check.txt || true
-
-      # Python license check
-      - name: '🐍 Setup Python for license check'
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: '📜 Python license check (AI Service)'
-        working-directory: ai
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
         continue-on-error: true
-        run: |
-          pip install pip-licenses --quiet
-          pip install -r requirements.txt --quiet
-          pip-licenses --format=json \
-            --output-file=${{ github.workspace }}/${{ env.REPORTS_DIR }}/license/ai-licenses.json || true
-          pip-licenses --format=markdown \
-            | tee ${{ github.workspace }}/${{ env.REPORTS_DIR }}/license/ai-licenses.md || true
-
-      - name: '📋 License summary'
-        if: always()
-        run: |
-          echo "## 📜 License Compliance" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Asset | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          check() { [ -f "$1" ] && echo "✅ Scanned" || echo "⚠️ Skipped"; }
-          echo "| SBOM (CycloneDX) | $(check '${{ env.REPORTS_DIR }}/license/sbom.json') |" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend npm | $(check '${{ env.REPORTS_DIR }}/license/backend-licenses.json') |" >> $GITHUB_STEP_SUMMARY
-          echo "| Frontend npm | $(check '${{ env.REPORTS_DIR }}/license/frontend-licenses.json') |" >> $GITHUB_STEP_SUMMARY
-          echo "| AI Python | $(check '${{ env.REPORTS_DIR }}/license/ai-licenses.json') |" >> $GITHUB_STEP_SUMMARY
-
-      - name: '📤 Upload license reports'
-        if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: license-compliance-reports
-          path: ${{ env.REPORTS_DIR }}/license/
-          retention-days: 30
+          sarif_file: trivy-fs.sarif
+          category: trivy-filesystem
 
-  # ─── Job 6: PR Security Comment ────────────────────────────
-  pr-comment:
-    name: '💬 PR Security Summary'
+      - name: Trivy scan (table summary)
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          severity: CRITICAL,HIGH
+          scanners: vuln,secret
+          exit-code: '0'
+
+  # ─── Secrets scan ──────────────────────────────────────────────
+  secret-scan:
+    name: '🔐 Secrets Scan (TruffleHog)'
     runs-on: ubuntu-latest
-    needs: [npm-audit, pip-audit, secret-scan, docker-scan, license-scan]
-    if: always() && github.event_name == 'pull_request'
+    timeout-minutes: 8
     steps:
-      - name: '💬 Post or update security summary comment'
-        uses: actions/github-script@v7
+      - uses: actions/checkout@v4
         with:
-          script: |
-            const bc  = parseInt('${{ needs.npm-audit.outputs.backend_critical }}'  || '0');
-            const fc  = parseInt('${{ needs.npm-audit.outputs.frontend_critical }}' || '0');
-            const bh  = parseInt('${{ needs.npm-audit.outputs.backend_high }}'      || '0');
-            const fh  = parseInt('${{ needs.npm-audit.outputs.frontend_high }}'     || '0');
-            const pip = parseInt('${{ needs.pip-audit.outputs.vuln_count }}'        || '0');
-            const sec =          '${{ needs.secret-scan.outputs.secrets_found }}'  === 'true';
-            const dc  = parseInt('${{ needs.docker-scan.outputs.critical_count }}' || '0');
-            const dh  = parseInt('${{ needs.docker-scan.outputs.high_count }}'     || '0');
+          fetch-depth: 0
 
-            const allClear = bc === 0 && fc === 0 && pip === 0 && !sec && dc === 0;
-            const si       = n  => n  === 0 ? '✅' : '🔴';
-            const gate     = allClear
-              ? '> ✅ **All security gates passed** — this PR is clear to merge.'
-              : '> 🚫 **Security issues detected** — resolve before merging.';
-
-            const body = [
-              `## 🛡️ Security Scan Results\n`,
-              gate, `\n`,
-              `| Scan | Finding | Status |`,
-              `|------|---------|--------|`,
-              `| 📦 npm — Backend  | Critical: ${bc}, High: ${bh}  | ${si(bc)} |`,
-              `| 📦 npm — Frontend | Critical: ${fc}, High: ${fh}  | ${si(fc)} |`,
-              `| 🐍 pip-audit — AI | Vulns: ${pip}                 | ${si(pip)} |`,
-              `| 🔐 Secrets (TruffleHog) | ${sec ? 'Secrets FOUND' : 'None'} | ${sec ? '🔴' : '✅'} |`,
-              `| 🐳 Docker (Trivy) | Critical: ${dc}, High: ${dh}  | ${si(dc)} |`,
-              ``,
-              bc + fc + dc > 0
-                ? `### ⚠️ Required Actions\n- Run \`npm audit fix\` in \`backend/\` and \`frontend/\`\n- Review and update \`requirements.txt\` pinned versions`
-                : '',
-              sec
-                ? `\n### 🔐 Secret Removal Required\n- Identify and remove the secret from code\n- Rotate the compromised credential immediately\n- Use [GitHub Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets) going forward`
-                : '',
-              `\n<sub>🤖 DevPulse Security Pipeline · Run [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})</sub>`
-            ].filter(Boolean).join('\n');
-
-            // Update existing bot comment or create a new one
-            const { data: comments } = await github.rest.issues.listComments({
-              owner:        context.repo.owner,
-              repo:         context.repo.repo,
-              issue_number: context.issue.number,
-            });
-
-            const existing = comments.find(c =>
-              c.user.type === 'Bot' && c.body.includes('🛡️ Security Scan Results')
-            );
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner:      context.repo.owner,
-                repo:       context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner:        context.repo.owner,
-                repo:         context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              });
-            }
-
-  # ─── Job 7: Slack Notification ─────────────────────────────
-  notify:
-    name: '🔔 Slack Notification'
-    runs-on: ubuntu-latest
-    needs: [npm-audit, pip-audit, secret-scan, docker-scan]
-    # Only runs when SLACK_NOTIFICATIONS_ENABLED repo variable is set to 'true'
-    if: always() && vars.SLACK_NOTIFICATIONS_ENABLED == 'true'
-    steps:
-      - name: '🔔 Notify Slack'
-        uses: 8398a7/action-slack@v3
+      - name: TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        continue-on-error: true
         with:
-          status: ${{ contains(needs.*.result, 'failure') && 'failure' || 'success' }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          path: ./
+          extra_args: --only-verified

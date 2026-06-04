@@ -4,26 +4,20 @@ updates:
   - package-ecosystem: 'npm'
     directory: '/backend'
     schedule:
-      interval: 'weekly'
-      day: 'monday'
-      time: '06:00'
-      timezone: 'UTC'
-    open-pull-requests-limit: 10
+      interval: 'monthly'   # Was 'weekly' — monthly = ~4x fewer PRs = ~4x fewer CI runs
+    open-pull-requests-limit: 3
     labels:
       - 'dependencies'
       - 'backend'
-      - 'security'
     commit-message:
       prefix: 'fix(deps)'
       include: 'scope'
-    # Auto-merge minor + patch; block major for manual review
     groups:
       backend-minor-patch:
         update-types:
           - 'minor'
           - 'patch'
     ignore:
-      # Block auto-merge for major updates — require manual review
       - dependency-name: '*'
         update-types: ['version-update:semver-major']
 
@@ -31,15 +25,11 @@ updates:
   - package-ecosystem: 'npm'
     directory: '/frontend'
     schedule:
-      interval: 'weekly'
-      day: 'monday'
-      time: '06:00'
-      timezone: 'UTC'
-    open-pull-requests-limit: 10
+      interval: 'monthly'   # Was 'weekly'
+    open-pull-requests-limit: 3
     labels:
       - 'dependencies'
       - 'frontend'
-      - 'security'
     commit-message:
       prefix: 'fix(deps)'
       include: 'scope'
@@ -56,15 +46,11 @@ updates:
   - package-ecosystem: 'pip'
     directory: '/ai'
     schedule:
-      interval: 'weekly'
-      day: 'monday'
-      time: '06:00'
-      timezone: 'UTC'
-    open-pull-requests-limit: 10
+      interval: 'monthly'   # Was 'weekly'
+    open-pull-requests-limit: 2
     labels:
       - 'dependencies'
       - 'ai'
-      - 'security'
     commit-message:
       prefix: 'fix(deps)'
       include: 'scope'
@@ -76,15 +62,11 @@ updates:
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
-      interval: 'weekly'
-      day: 'monday'
-      time: '06:00'
-      timezone: 'UTC'
-    open-pull-requests-limit: 5
+      interval: 'monthly'   # Was 'weekly'
+    open-pull-requests-limit: 2
     labels:
       - 'dependencies'
       - 'ci'
-      - 'security'
     commit-message:
       prefix: 'chore(ci)'
       include: 'scope'

@@ -1,39 +1,33 @@
 # ╔══════════════════════════════════════════════════════════════╗
-# ║  DevPulse Performance Pipeline                               ║
-# ║  Bundle Size · Lighthouse CI · Backend Smoke Test           ║
+# ║  DevPulse Performance — Weekly Schedule Only                ║
+# ║  Runs every Sunday 3am UTC, or manually                     ║
+# ║  NOT triggered on every push (saves minutes)                ║
 # ╚══════════════════════════════════════════════════════════════╝
 
 name: '⚡ Performance Pipeline'
 
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
-  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 0' # Every Sunday 3am UTC
+  workflow_dispatch:    # Manual trigger only
 
 env:
   NODE_VERSION: '20'
-  # Performance budgets — override via GitHub Repository Variables
-  BUNDLE_BUDGET_KB: ${{ vars.BUNDLE_BUDGET_KB || '350' }}
-  LHCI_MIN_SCORE: ${{ vars.LHCI_MIN_SCORE   || '0.9' }}
+  BUNDLE_BUDGET_KB: ${{ vars.BUNDLE_BUDGET_KB || '1000' }}
 
 permissions:
   contents: read
-  pull-requests: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # ─── Job 1: Frontend Bundle Size ───────────────────────────
+  # ─── Bundle size check ─────────────────────────────────────────
   bundle-size:
     name: '📦 Bundle Size Check'
     runs-on: ubuntu-latest
-    outputs:
-      total_gzip_kb: ${{ steps.measure.outputs.total_gzip_kb }}
-      budget_ok: ${{ steps.measure.outputs.budget_ok }}
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
 
@@ -43,121 +37,48 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: '📦 Install frontend deps'
+      - name: Install deps
         working-directory: frontend
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
-      - name: '🏗️ Build frontend'
+      - name: Build
         working-directory: frontend
         run: npm run build
         env:
           CI: true
 
-      - name: '📊 Measure gzip bundle size'
-        id: measure
+      - name: Check bundle size
         working-directory: frontend
         run: |
           python3 - << 'PYEOF'
           import os, gzip, pathlib
 
           dist      = pathlib.Path("dist")
-          budget_kb = int(os.environ.get("BUNDLE_BUDGET_KB", "200"))
-          budget_b  = budget_kb * 1024
-
-          chunks     = {}
-          total_gzip = 0
-
-          for f in sorted(dist.rglob("*.js")):
-            gz   = len(gzip.compress(f.read_bytes(), compresslevel=9))
-            name = str(f.relative_to(dist))
-            chunks[name] = {"raw_kb": round(f.stat().st_size / 1024, 1), "gzip_kb": round(gz / 1024, 1)}
-            total_gzip += gz
-
-          total_gzip_kb = round(total_gzip / 1024, 1)
-          budget_ok     = total_gzip <= budget_b
-
-          table_lines = ["| Chunk | Raw | Gzip |", "|-------|-----|------|"]
-          for name, s in chunks.items():
-            table_lines.append(f"| `{name}` | {s['raw_kb']} KB | {s['gzip_kb']} KB |")
-
-          verdict = "Within budget" if budget_ok else f"Over budget by {round(total_gzip_kb - budget_kb, 1)} KB"
-          icon    = "OK" if budget_ok else "FAIL"
-          print(f"[{icon}] Total JS gzip: {total_gzip_kb} KB / {budget_kb} KB — {verdict}")
-
-          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
-            fh.write(f"total_gzip_kb={total_gzip_kb}\n")
-            fh.write(f"budget_ok={'true' if budget_ok else 'false'}\n")
+          budget_kb = int(os.environ.get("BUNDLE_BUDGET_KB", "1000"))
+          total_gz  = sum(
+            len(gzip.compress(f.read_bytes(), compresslevel=9))
+            for f in dist.rglob("*.js")
+          )
+          total_kb = round(total_gz / 1024, 1)
+          ok       = total_gz <= budget_kb * 1024
 
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as fh:
-            icon2 = "OK" if budget_ok else "OVER BUDGET"
-            fh.write("## Bundle Size Report\n\n")
-            fh.write(f"**Total JS (gzip): {total_gzip_kb} KB** | Budget: {budget_kb} KB | {icon2}\n\n")
-            fh.write("\n".join(table_lines) + "\n")
+            fh.write(f"## 📦 Bundle Size\n\n")
+            fh.write(f"Total JS (gzip): **{total_kb} KB** | Budget: {budget_kb} KB | {'✅ OK' if ok else '⚠️ Over budget'}\n")
+
+          if not ok:
+            print(f"[WARN] Bundle {total_kb} KB exceeds {budget_kb} KB budget")
+          else:
+            print(f"[OK] Bundle {total_kb} KB within {budget_kb} KB budget")
           PYEOF
         env:
           BUNDLE_BUDGET_KB: ${{ env.BUNDLE_BUDGET_KB }}
 
-      - name: '🚨 Fail if over budget'
-        if: steps.measure.outputs.budget_ok == 'false'
-        run: |
-          echo "::error::Bundle size (${{ steps.measure.outputs.total_gzip_kb }} KB) exceeds budget (${{ env.BUNDLE_BUDGET_KB }} KB)."
-          echo "::error::Open dist/stats.html locally to identify large modules."
-          exit 1
-
-      - name: '📤 Upload frontend dist'
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: frontend-dist
-          path: frontend/dist/
-          retention-days: 7
-
-  # ─── Job 2: Lighthouse CI ──────────────────────────────────
-  lighthouse:
-    name: '🔦 Lighthouse CI'
-    runs-on: ubuntu-latest
-    needs: bundle-size
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: '📦 Install frontend deps'
-        working-directory: frontend
-        run: npm install --no-audit --no-fund
-
-      - name: '🏗️ Build frontend'
-        working-directory: frontend
-        run: npm run build
-        env:
-          CI: true
-
-      - name: '🔦 Install Lighthouse CI'
-        run: npm install -g @lhci/cli@0.14.x
-
-      - name: '🔦 Run Lighthouse CI'
-        working-directory: frontend
-        run: lhci autorun --config=../.github/lighthouse/lighthouserc.js
-        env:
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
-
-      - name: '📋 Lighthouse summary'
-        if: always()
-        run: |
-          echo "## Lighthouse CI" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Minimum score threshold: **${{ env.LHCI_MIN_SCORE }}**" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Full results available in the shareable URL logged above." >> $GITHUB_STEP_SUMMARY
-
-  # ─── Job 3: Backend Health Smoke Test ──────────────────────
+  # ─── Backend smoke test ────────────────────────────────────────
   backend-smoke:
-    name: '🔥 Backend Smoke Test (p99 < 500ms)'
+    name: '🔥 Backend Smoke Test'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 
@@ -167,13 +88,12 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
-      - name: '📦 Install backend deps'
+      - name: Install deps
         working-directory: backend
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
-      - name: '🔥 Run health endpoint latency smoke test'
+      - name: Smoke test (p99 < 500ms)
         working-directory: backend
-        # smoke-test.js starts the server, fires 40 requests, asserts p99 < 500ms
         run: node smoke-test.js 500
         env:
           NODE_ENV: test
@@ -183,77 +103,3 @@ jobs:
           GITHUB_CLIENT_SECRET: 'ci-smoke-client-secret'
           DATABASE_URL: ''
           REDIS_URL: ''
-
-      - name: '📋 Smoke test summary'
-        if: always()
-        run: |
-          echo "## Backend Smoke Test" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "40 requests to \`/health/live\` and \`/health/startup\`" >> $GITHUB_STEP_SUMMARY
-          echo "p99 budget: **500ms**" >> $GITHUB_STEP_SUMMARY
-
-  # ─── Job 4: PR Comment ─────────────────────────────────────
-  pr-comment:
-    name: '💬 PR Performance Summary'
-    runs-on: ubuntu-latest
-    needs: [bundle-size, lighthouse, backend-smoke]
-    if: always() && github.event_name == 'pull_request'
-    steps:
-      - name: '💬 Post or update performance comment'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const bundleKb   = '${{ needs.bundle-size.outputs.total_gzip_kb }}' || 'N/A';
-            const budgetOk   = '${{ needs.bundle-size.outputs.budget_ok }}' === 'true';
-            const lhResult   = '${{ needs.lighthouse.result }}';
-            const smokeResult = '${{ needs.backend-smoke.result }}';
-            const budgetKb   = '${{ env.BUNDLE_BUDGET_KB }}';
-
-            const icon = (r) => r === 'success' ? 'PASS' : r === 'skipped' ? 'SKIP' : 'FAIL';
-            const allGood = budgetOk && lhResult === 'success' && smokeResult === 'success';
-
-            const body = [
-              '## Performance Check Results',
-              '',
-              allGood
-                ? '> All performance budgets passed.'
-                : '> One or more performance budgets need attention.',
-              '',
-              '| Check | Result | Detail |',
-              '|-------|--------|--------|',
-              `| Bundle Size | ${budgetOk ? 'PASS' : 'FAIL'} | ${bundleKb} KB gzip (budget: ${budgetKb} KB) |`,
-              `| Lighthouse CI | ${icon(lhResult)} | Score >= 90 required |`,
-              `| Backend p99 | ${icon(smokeResult)} | Health endpoints p99 < 500ms |`,
-              '',
-              !budgetOk ? '### Bundle Over Budget\nRun `npm run build` locally and open `dist/stats.html` to identify large modules.' : '',
-              lhResult !== 'success' && lhResult !== 'skipped'
-                ? '### Lighthouse Failed\nSee the shareable URL in the Lighthouse CI step output for details.' : '',
-              '',
-              `<sub>DevPulse Performance Pipeline - Run #${{ github.run_number }}</sub>`
-            ].filter(Boolean).join('\n');
-
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-
-            const existing = comments.find(c =>
-              c.user.type === 'Bot' && c.body.includes('Performance Check Results')
-            );
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              });
-            }

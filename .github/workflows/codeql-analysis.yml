@@ -1,13 +1,9 @@
 name: 'CodeQL SAST'
 
 on:
-  push:
-    branches: ['main', 'master']
-  pull_request:
-    # The branches below must be a subset of the branches above
-    branches: ['main', 'master']
   schedule:
-    - cron: '30 1 * * 0' # Run weekly on Sundays
+    - cron: '30 1 * * 0' # Weekly Sunday only — NOT on every push
+  workflow_dispatch:
 
 jobs:
   analyze:
@@ -22,22 +18,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['javascript-typescript', 'python']
-        # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
+        language: ['javascript-typescript']
+        # Removed 'python' — pip install of AI deps was slow and expensive
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-          # If you wish to specify custom queries, you can do so here.
-          # queries: security-extended,security-and-quality
 
-      # Autobuild attempts to build any compiled languages  (C/C++, C#, Go, Java, or Swift).
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
 

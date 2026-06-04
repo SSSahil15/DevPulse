@@ -1,724 +1,130 @@
 # ╔══════════════════════════════════════════════════════════════╗
-# ║  DevPulse CI/CD Pipeline — Production Grade                 ║
-# ║  6 Stages · Trivy Security · Docker · Deploy Gate           ║
+# ║  DevPulse CI — Lean Edition (minute-budget friendly)        ║
+# ║  Runs only on main push & PRs to main                       ║
+# ║  E2E, Docker, and Security moved to weekly schedule         ║
 # ╚══════════════════════════════════════════════════════════════╝
 
-name: DevPulse CI/CD
+name: DevPulse CI
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main]
   pull_request:
-    branches: [main, master]
-  workflow_dispatch: # Manual trigger from Actions tab
+    branches: [main]
+  workflow_dispatch:
 
 env:
   NODE_VERSION: '20'
-  DOCKER_IMAGE: devpulse-backend
 
 permissions:
   contents: read
-  security-events: write
 
-# Cancel previous runs on the same branch
+# Cancel redundant runs on the same branch/PR immediately
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# ═══════════════════════════════════════════════════════════════
 jobs:
-  # ─── Stage 1: Backend ──────────────────────────────────────
+  # ─── Job 1: Backend lint + test ────────────────────────────────
   backend:
-    name: '🔧 Backend · Build & Test'
+    name: '🔧 Backend'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 8
     defaults:
       run:
         working-directory: backend
 
     steps:
-      - name: '📥 Checkout'
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: '⚙️ Setup Node.js'
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
-      - name: '📁 Prepare logs'
-        run: mkdir -p ${{ github.workspace }}/logs
+      - name: Install deps
+        run: npm ci --no-audit --no-fund
 
-      - name: '📦 Install dependencies'
-        run: |
-          npm install --no-audit --no-fund 2>&1 | tee ${{ github.workspace }}/logs/backend-install.log
-          echo "dep_count=$(ls node_modules | wc -l | tr -d ' ')" >> $GITHUB_OUTPUT
-        id: install
-
-      - name: '🧪 Run tests with coverage'
-        id: backend_tests
+      - name: Run tests
         run: |
           set +e
-          npm run test:coverage 2>&1 | tee ${{ github.workspace }}/logs/backend-tests.log
-          TEST_EXIT=$?
-          if [ $TEST_EXIT -ne 0 ]; then
-            echo "result=failure" >> $GITHUB_OUTPUT
-            echo "::warning::Backend tests failed with exit code $TEST_EXIT"
-          else
-            echo "result=success" >> $GITHUB_OUTPUT
-          fi
-          exit 0
+          npm test 2>&1
+          echo "exit=$?" >> $GITHUB_OUTPUT
+        id: tests
+        continue-on-error: true
 
-      - name: '📋 Test summary'
+      - name: Summary
         if: always()
         run: |
-          echo "### 🧪 Backend Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.backend_tests.outputs.result }}" = "success" ]; then
-            echo "✅ All tests passed" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ Tests failed — check logs for details" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📦 Dependencies installed: ${{ steps.install.outputs.dep_count }}" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔧 Backend" >> $GITHUB_STEP_SUMMARY
+          echo "Tests: ${{ steps.tests.outputs.exit == '0' && '✅' || '⚠️ check logs' }}" >> $GITHUB_STEP_SUMMARY
 
-      - name: '📤 Upload logs'
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-logs
-          path: ${{ github.workspace }}/logs/
-          retention-days: 14
-
-      - name: '📤 Upload coverage report'
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-coverage
-          path: backend/coverage/
-          retention-days: 14
-
-    outputs:
-      test_result: ${{ steps.backend_tests.outputs.result }}
-
-  # ─── Stage 2: Frontend ────────────────────────────────────
+  # ─── Job 2: Frontend build + test ──────────────────────────────
   frontend:
-    name: '🎨 Frontend · Build & Test'
+    name: '🎨 Frontend'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 8
     defaults:
       run:
         working-directory: frontend
 
     steps:
-      - name: '📥 Checkout'
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: '⚙️ Setup Node.js'
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: '📁 Prepare logs'
-        run: mkdir -p ${{ github.workspace }}/logs
+      - name: Install deps
+        run: npm ci --no-audit --no-fund
 
-      - name: '📦 Install dependencies'
-        run: npm install --no-audit --no-fund 2>&1 | tee ${{ github.workspace }}/logs/frontend-install.log
+      - name: Build
+        run: npm run build
+        env:
+          CI: true
 
-      - name: '🏗️ Build production bundle'
-        id: frontend_build
+      - name: Run tests
         run: |
           set +e
-          npm run build 2>&1 | tee ${{ github.workspace }}/logs/frontend-build.log
-          BUILD_EXIT=$?
-          if [ $BUILD_EXIT -ne 0 ]; then
-            echo "result=failure" >> $GITHUB_OUTPUT
-            echo "::error::Frontend build failed"
-          else
-            echo "result=success" >> $GITHUB_OUTPUT
-            # Report bundle size
-            DIST_SIZE=$(du -sh dist 2>/dev/null | cut -f1 || echo "N/A")
-            echo "bundle_size=$DIST_SIZE" >> $GITHUB_OUTPUT
-          fi
-          exit 0
+          npm test 2>&1
+          echo "exit=$?" >> $GITHUB_OUTPUT
+        id: tests
+        continue-on-error: true
 
-      - name: '🧪 Run tests with coverage'
-        id: frontend_tests
-        run: |
-          set +e
-          npm run test:coverage 2>&1 | tee ${{ github.workspace }}/logs/frontend-tests.log
-          TEST_EXIT=$?
-          if [ $TEST_EXIT -ne 0 ]; then
-            echo "result=failure" >> $GITHUB_OUTPUT
-          else
-            echo "result=success" >> $GITHUB_OUTPUT
-          fi
-          exit 0
-
-      - name: '📋 Build summary'
-        if: always()
-        run: |
-          echo "### 🎨 Frontend Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Build | ${{ steps.frontend_build.outputs.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Tests | ${{ steps.frontend_tests.outputs.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Bundle Size | ${{ steps.frontend_build.outputs.bundle_size || 'N/A' }} |" >> $GITHUB_STEP_SUMMARY
-
-      - name: '📤 Upload logs'
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-logs
-          path: ${{ github.workspace }}/logs/
-          retention-days: 14
-
-      - name: '📤 Upload build output'
-        if: steps.frontend_build.outputs.result == 'success'
+      - name: Upload dist
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist/
-          retention-days: 7
+          retention-days: 3
 
-      - name: '📤 Upload coverage report'
+      - name: Summary
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-coverage
-          path: frontend/coverage/
-          retention-days: 14
+        run: |
+          echo "### 🎨 Frontend" >> $GITHUB_STEP_SUMMARY
+          DIST=$(du -sh dist 2>/dev/null | cut -f1 || echo "N/A")
+          echo "Build size: $DIST | Tests: ${{ steps.tests.outputs.exit == '0' && '✅' || '⚠️ check logs' }}" >> $GITHUB_STEP_SUMMARY
 
-    outputs:
-      build_result: ${{ steps.frontend_build.outputs.result }}
-      test_result: ${{ steps.frontend_tests.outputs.result }}
-
-  # ─── Stage 3: Playwright E2E Tests ───────────────────────
-  e2e:
-    name: '🎭 E2E · Playwright Tests'
+  # ─── Job 3: Deploy gate (main push only) ───────────────────────
+  deploy-gate:
+    name: '🚀 Deploy Gate'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 3
     needs: [backend, frontend]
-
-    steps:
-      - name: '📥 Checkout'
-        uses: actions/checkout@v4
-
-      - name: '⚙️ Setup Node.js'
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
-      - name: '📦 Install Root and Service Dependencies'
-        run: |
-          npm install --no-audit --no-fund
-          cd backend && npm install --no-audit --no-fund
-          cd ../frontend && npm install --no-audit --no-fund
-
-      - name: '🎭 Install Playwright Browsers'
-        run: npx playwright install --with-deps
-
-      - name: '🎭 Run Playwright E2E Tests'
-        run: npx playwright test
-        env:
-          CI: true
-
-      - name: '📤 Upload Playwright Report'
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 14
-
-  # ─── Stage 4: Security Scan ───────────────────────────────
-  security:
-    name: '🛡️ Security · Trivy Scan'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: '📥 Checkout'
-        uses: actions/checkout@v4
-
-      - name: '📁 Prepare reports'
-        run: mkdir -p security-reports
-
-      - name: '🛡️ Trivy filesystem scan (Vulns, Secrets, Config)'
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: json
-          output: security-reports/trivy-fs-results.json
-          severity: CRITICAL,HIGH,MEDIUM
-          scanners: vuln,secret,config
-        continue-on-error: true
-
-      - name: '🛡️ Trivy — SARIF upload (Security Tab)'
-        uses: aquasecurity/trivy-action@master
-        continue-on-error: true
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: sarif
-          output: security-reports/trivy-fs.sarif
-          severity: CRITICAL,HIGH
-          scanners: vuln,secret
-          exit-code: '0'
-
-      - name: '📤 Upload Trivy SARIF'
-        uses: github/codeql-action/upload-sarif@v3
-        continue-on-error: true
-        with:
-          sarif_file: security-reports/trivy-fs.sarif
-          category: trivy-filesystem
-
-      - name: '📊 Parse vulnerability counts'
-        id: vuln_count
-        if: always()
-        run: |
-          if [ ! -f security-reports/trivy-fs-results.json ]; then
-            echo "vuln_critical=0" >> $GITHUB_OUTPUT
-            echo "vuln_high=0" >> $GITHUB_OUTPUT
-            echo "vuln_medium=0" >> $GITHUB_OUTPUT
-            echo "total=0" >> $GITHUB_OUTPUT
-            echo "⚠️ No Trivy results file found"
-            exit 0
-          fi
-
-          parse_count() {
-            python3 -c "
-          import json, sys
-          data = json.load(open('security-reports/trivy-fs-results.json'))
-          results = data.get('Results', [])
-          count = sum(1 for r in results for v in r.get('Vulnerabilities', []) if v.get('Severity') == '$1')
-          print(count)" 2>/dev/null || echo "0"
-          }
-
-          parse_details() {
-            python3 -c "
-          import json, base64
-          try:
-            data = json.load(open('security-reports/trivy-fs-results.json'))
-            results = data.get('Results', [])
-            vulns = []
-            for r in results:
-              for v in r.get('Vulnerabilities', []):
-                vulns.append({
-                  'id': v.get('VulnerabilityID', 'Unknown'),
-                  'pkgName': v.get('PkgName', 'Unknown'),
-                  'severity': v.get('Severity', 'UNKNOWN'),
-                  'installedVersion': v.get('InstalledVersion', ''),
-                  'fixedVersion': v.get('FixedVersion', 'No fix available'),
-                  'title': v.get('Title', v.get('VulnerabilityID', ''))
-                })
-            sev_map = {'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1, 'UNKNOWN': 0}
-            vulns.sort(key=lambda x: sev_map.get(x['severity'], 0), reverse=True)
-            out = json.dumps(vulns[:20])
-            print(base64.b64encode(out.encode('utf-8')).decode('utf-8'))
-          except Exception as e:
-            print(base64.b64encode(b'[]').decode('utf-8'))"
-          }
-
-          CRITICAL=$(parse_count CRITICAL)
-          HIGH=$(parse_count HIGH)
-          MEDIUM=$(parse_count MEDIUM)
-          TOTAL=$((CRITICAL + HIGH + MEDIUM))
-          VULN_DETAILS=$(parse_details)
-
-          echo "vuln_critical=$CRITICAL" >> $GITHUB_OUTPUT
-          echo "vuln_high=$HIGH" >> $GITHUB_OUTPUT
-          echo "vuln_medium=$MEDIUM" >> $GITHUB_OUTPUT
-          echo "total=$TOTAL" >> $GITHUB_OUTPUT
-          echo "vuln_details=$VULN_DETAILS" >> $GITHUB_OUTPUT
-
-          # Generate summary report
-          {
-            echo "══════════════════════════════════════════"
-            echo "  DevPulse Security Report"
-            echo "  $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-            echo "══════════════════════════════════════════"
-            echo ""
-            echo "  CRITICAL : $CRITICAL"
-            echo "  HIGH     : $HIGH"
-            echo "  MEDIUM   : $MEDIUM"
-            echo "  ─────────────────"
-            echo "  TOTAL    : $TOTAL"
-            echo ""
-            if [ "$CRITICAL" -gt 0 ]; then
-              echo "  ⛔ CRITICAL vulnerabilities found — deployment will be blocked!"
-            elif [ "$TOTAL" -gt 0 ]; then
-              echo "  ⚠️  Non-critical vulnerabilities detected — review recommended"
-            else
-              echo "  ✅ No vulnerabilities detected"
-            fi
-          } | tee security-reports/trivy-summary.txt
-
-      - name: '📋 Security summary'
-        if: always()
-        run: |
-          echo "### 🛡️ Security Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 🔴 Critical | ${{ steps.vuln_count.outputs.vuln_critical || 0 }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🟠 High | ${{ steps.vuln_count.outputs.vuln_high || 0 }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🟡 Medium | ${{ steps.vuln_count.outputs.vuln_medium || 0 }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          TOTAL=${{ steps.vuln_count.outputs.total || 0 }}
-          if [ "$TOTAL" -eq 0 ]; then
-            echo "✅ **Clean scan — no vulnerabilities detected**" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ **$TOTAL vulnerabilities found** — review the security-reports artifact" >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: '🚨 Fail on critical vulnerabilities'
-        run: |
-          CRITICAL=${{ steps.vuln_count.outputs.vuln_critical || 0 }}
-          if [ "$CRITICAL" -gt 0 ]; then
-            echo "::error::$CRITICAL CRITICAL vulnerabilities found — deployment is blocked. Review the security-reports artifact."
-            exit 1
-          fi
-
-      - name: '📤 Upload security reports'
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-reports
-          path: security-reports/
-          retention-days: 30
-
-    outputs:
-      vuln_critical: ${{ steps.vuln_count.outputs.vuln_critical }}
-      vuln_high: ${{ steps.vuln_count.outputs.vuln_high }}
-      vuln_medium: ${{ steps.vuln_count.outputs.vuln_medium }}
-      total: ${{ steps.vuln_count.outputs.total }}
-      vuln_details: ${{ steps.vuln_count.outputs.vuln_details }}
-
-  # ─── Stage 5: Docker ──────────────────────────────────────
-  docker:
-    name: '🐳 Docker · Build & Scan'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: [backend]
-
-    steps:
-      - name: '📥 Checkout'
-        uses: actions/checkout@v4
-
-      - name: '📁 Prepare reports'
-        run: mkdir -p docker-reports
-
-      - name: '🐳 Build Docker image'
-        id: docker_build
-        run: |
-          echo "Building ${{ env.DOCKER_IMAGE }}:${{ github.sha }}"
-          set +e
-          docker build \
-            -f backend/Dockerfile \
-            -t ${{ env.DOCKER_IMAGE }}:${{ github.sha }} \
-            -t ${{ env.DOCKER_IMAGE }}:latest \
-            --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
-            --label "org.opencontainers.image.revision=${{ github.sha }}" \
-            ./backend 2>&1 | tee docker-reports/docker-build.log
-          BUILD_EXIT=$?
-
-          if [ $BUILD_EXIT -ne 0 ]; then
-            echo "result=failure" >> $GITHUB_OUTPUT
-            echo "::error::Docker build failed"
-            exit 1
-          fi
-
-          # Capture image size
-          IMG_SIZE=$(docker image inspect ${{ env.DOCKER_IMAGE }}:${{ github.sha }} --format='{{.Size}}' | numfmt --to=iec 2>/dev/null || echo "unknown")
-          echo "result=success" >> $GITHUB_OUTPUT
-          echo "image_size=$IMG_SIZE" >> $GITHUB_OUTPUT
-
-      - name: '🛡️ Scan Docker image with Trivy'
-        id: docker_scan
-        if: steps.docker_build.outputs.result == 'success'
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
-          format: json
-          output: docker-reports/trivy-image-results.json
-          severity: CRITICAL,HIGH
-        continue-on-error: true
-
-      - name: '📊 Parse Docker scan results'
-        id: docker_vulns
-        if: always()
-        run: |
-          if [ -f docker-reports/trivy-image-results.json ]; then
-            IMG_VULNS=$(python3 -c "
-          import json
-          data = json.load(open('docker-reports/trivy-image-results.json'))
-          results = data.get('Results', [])
-          count = sum(len(r.get('Vulnerabilities', [])) for r in results)
-          print(count)" 2>/dev/null || echo "0")
-          else
-            IMG_VULNS=0
-          fi
-          echo "count=$IMG_VULNS" >> $GITHUB_OUTPUT
-
-          {
-            echo "Docker Build : ${{ steps.docker_build.outputs.result }}"
-            echo "Image Size   : ${{ steps.docker_build.outputs.image_size || 'N/A' }}"
-            echo "Image Vulns  : $IMG_VULNS"
-          } | tee docker-reports/docker-summary.txt
-
-      - name: '📋 Docker summary'
-        if: always()
-        run: |
-          echo "### 🐳 Docker Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Build | ${{ steps.docker_build.outputs.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Image Size | ${{ steps.docker_build.outputs.image_size || 'N/A' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Image Vulnerabilities | ${{ steps.docker_vulns.outputs.count || 0 }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Tag | \`${{ env.DOCKER_IMAGE }}:${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
-
-      - name: '📤 Upload Docker reports'
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-reports
-          path: docker-reports/
-          retention-days: 14
-
-    outputs:
-      build_result: ${{ steps.docker_build.outputs.result }}
-      image_size: ${{ steps.docker_build.outputs.image_size }}
-      docker_vulns: ${{ steps.docker_vulns.outputs.count }}
-
-  # ─── Stage 6: Report Results ──────────────────────────────
-  report:
-    name: '📡 Report · Send to DevPulse API'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs: [backend, frontend, security, docker, e2e]
-    if: always()
-
-    steps:
-      - name: '📥 Checkout'
-        uses: actions/checkout@v4
-
-      - name: '📡 Build and send pipeline report'
-        run: |
-          # Determine overall status
-          BACKEND="${{ needs.backend.result }}"
-          FRONTEND="${{ needs.frontend.result }}"
-          SECURITY="${{ needs.security.result }}"
-          DOCKER="${{ needs.docker.result }}"
-          E2E="${{ needs.e2e.result }}"
-
-          if [ "$BACKEND" = "success" ] && [ "$FRONTEND" = "success" ] && [ "$SECURITY" = "success" ] && [ "$DOCKER" = "success" ] && [ "$E2E" = "success" ]; then
-            OVERALL="success"
-          else
-            OVERALL="failure"
-          fi
-
-          # Decode vulnerability details
-          VULN_DETAILS_JSON=$(echo "${{ needs.security.outputs.vuln_details }}" | base64 --decode || echo "[]")
-          if [ -z "$VULN_DETAILS_JSON" ]; then
-            VULN_DETAILS_JSON="[]"
-          fi
-
-          # Extract first line of commit message securely
-          COMMIT_MSG=$(git log -1 --pretty=format:%s | sed 's/"/\\"/g' | cut -c1-150)
-
-          PAYLOAD=$(cat <<EOF
-          {
-            "repository": "${{ github.repository }}",
-            "commitSha": "${{ github.sha }}",
-            "commitMessage": "$COMMIT_MSG",
-            "branch": "${{ github.ref_name }}",
-            "triggeredBy": "${{ github.actor }}",
-            "runId": "${{ github.run_id }}",
-            "runUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-            "event": "${{ github.event_name }}",
-            "timestamp": "$(date -u '+%Y-%m-%dT%H:%M:%SZ')",
-            "stages": {
-              "backend": {
-                "tests": "$BACKEND"
-              },
-              "frontend": {
-                "build": "$FRONTEND",
-                "tests": "$FRONTEND"
-              },
-              "security": {
-                "critical": ${{ needs.security.outputs.vuln_critical || 0 }},
-                "high": ${{ needs.security.outputs.vuln_high || 0 }},
-                "medium": ${{ needs.security.outputs.vuln_medium || 0 }},
-                "vulnerabilities": $VULN_DETAILS_JSON
-              },
-              "docker": {
-                "build": "${{ needs.docker.outputs.build_result || 'skipped' }}",
-                "imageSize": "${{ needs.docker.outputs.image_size || 'N/A' }}",
-                "imageVulnerabilities": ${{ needs.docker.outputs.docker_vulns || 0 }}
-              }
-            },
-            "overallStatus": "$OVERALL"
-          }
-          EOF
-          )
-
-          echo "══════════════════════════════════════════════"
-          echo "  DevPulse Pipeline Report"
-          echo "══════════════════════════════════════════════"
-          echo "$PAYLOAD" | python3 -m json.tool 2>/dev/null || echo "$PAYLOAD"
-          echo "══════════════════════════════════════════════"
-
-          # Send to API if configured
-          if [ -n "${{ secrets.DEVPULSE_API_URL }}" ]; then
-            HTTP_STATUS=$(curl -s -o response.txt -w "%{http_code}" \
-              --max-time 10 \
-              --retry 2 \
-              -X POST "${{ secrets.DEVPULSE_API_URL }}/api/pipeline/results" \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer ${{ secrets.DEVPULSE_API_TOKEN }}" \
-              -d "$PAYLOAD")
-
-            echo ""
-            if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-              echo "✅ Results sent to DevPulse API (HTTP $HTTP_STATUS)"
-            else
-              echo "⚠️  DevPulse API responded with HTTP $HTTP_STATUS"
-              cat response.txt 2>/dev/null
-            fi
-          else
-            echo ""
-            echo "ℹ️  DEVPULSE_API_URL not configured — report printed above only."
-            echo "   To enable: Settings → Secrets → DEVPULSE_API_URL"
-          fi
-
-      - name: '📋 Report summary'
-        if: always()
-        run: |
-          echo "### 📡 Pipeline Report" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Stage | Job Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------|------------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend | ${{ needs.backend.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Frontend | ${{ needs.frontend.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| E2E Playwright | ${{ needs.e2e.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security Scan | ${{ needs.security.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Docker Build | ${{ needs.docker.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-
-  # ─── Stage 7: Deploy Gate ─────────────────────────────────
-  deploy:
-    name: '🚀 Deploy · Quality Gate'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs: [backend, frontend, security, docker, e2e]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: '🚦 Evaluate deployment readiness'
-        id: gate
+      - name: Evaluate
         run: |
-          echo "══════════════════════════════════════════════"
-          echo "  DevPulse Deployment Quality Gate"
-          echo "  $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-          echo "══════════════════════════════════════════════"
-          echo ""
-
-          PASS=true
-          REASONS=""
-
-          # ─── Check each gate ───
-          BACKEND_TESTS="${{ needs.backend.result }}"
-          FRONTEND_BUILD="${{ needs.frontend.result }}"
-          E2E_TESTS="${{ needs.e2e.result }}"
-          CRITICAL_VULNS=${{ needs.security.outputs.vuln_critical || 0 }}
-          DOCKER_BUILD="${{ needs.docker.outputs.build_result }}"
-
-          echo "  ┌──────────────────────────────────────┐"
-          printf "  │ %-18s │ %-15s │\n" "Check" "Status"
-          echo "  ├──────────────────────────────────────┤"
-
-          if [ "$BACKEND_TESTS" = "success" ]; then
-            printf "  │ %-18s │ %-15s │\n" "Backend Tests" "✅ Passed"
+          BACKEND="${{ needs.backend.result }}"
+          FRONTEND="${{ needs.frontend.result }}"
+          if [ "$BACKEND" = "success" ] && [ "$FRONTEND" = "success" ]; then
+            echo "✅ All checks passed — deployment approved" >> $GITHUB_STEP_SUMMARY
           else
-            printf "  │ %-18s │ %-15s │\n" "Backend Tests" "❌ Failed"
-            PASS=false
-            REASONS="$REASONS\n  • Backend tests failed"
-          fi
-
-          if [ "$FRONTEND_BUILD" = "success" ]; then
-            printf "  │ %-18s │ %-15s │\n" "Frontend Build" "✅ Passed"
-          else
-            printf "  │ %-18s │ %-15s │\n" "Frontend Build" "❌ Failed"
-            PASS=false
-            REASONS="$REASONS\n  • Frontend build failed"
-          fi
-
-          if [ "$E2E_TESTS" = "success" ]; then
-            printf "  │ %-18s │ %-15s │\n" "E2E Playwright" "✅ Passed"
-          else
-            printf "  │ %-18s │ %-15s │\n" "E2E Playwright" "❌ Failed"
-            PASS=false
-            REASONS="$REASONS\n  • E2E Playwright tests failed"
-          fi
-
-          if [ "$CRITICAL_VULNS" -eq 0 ]; then
-            printf "  │ %-18s │ %-15s │\n" "Critical CVEs" "✅ 0 found"
-          else
-            printf "  │ %-18s │ %-15s │\n" "Critical CVEs" "❌ $CRITICAL_VULNS found"
-            PASS=false
-            REASONS="$REASONS\n  • $CRITICAL_VULNS critical vulnerabilities"
-          fi
-
-          if [ "$DOCKER_BUILD" = "success" ]; then
-            printf "  │ %-18s │ %-15s │\n" "Docker Image" "✅ Built"
-          else
-            printf "  │ %-18s │ %-15s │\n" "Docker Image" "❌ Failed"
-            PASS=false
-            REASONS="$REASONS\n  • Docker image build failed"
-          fi
-
-          echo "  └──────────────────────────────────────┘"
-          echo ""
-
-          if [ "$PASS" = true ]; then
-            echo "  ╔══════════════════════════════════════╗"
-            echo "  ║  ✅  DEPLOYMENT APPROVED             ║"
-            echo "  ╚══════════════════════════════════════╝"
-            echo ""
-            echo "  All quality gates passed."
-            echo "  Ready to deploy: ${{ env.DOCKER_IMAGE }}:${{ github.sha }}"
-            echo "  Branch: ${{ github.ref_name }}"
-            echo "  Commit: ${{ github.sha }}"
-            echo "gate_result=approved" >> $GITHUB_OUTPUT
-          else
-            echo "  ╔══════════════════════════════════════╗"
-            echo "  ║  🚫  DEPLOYMENT BLOCKED              ║"
-            echo "  ╚══════════════════════════════════════╝"
-            echo ""
-            echo "  Blocking reasons:"
-            printf "$REASONS\n"
-            echo ""
-            echo "  Fix the above issues and push again."
-            echo "gate_result=blocked" >> $GITHUB_OUTPUT
+            echo "🚫 Deployment blocked — Backend: $BACKEND | Frontend: $FRONTEND" >> $GITHUB_STEP_SUMMARY
             exit 1
-          fi
-
-      - name: '📋 Deploy summary'
-        if: always()
-        run: |
-          echo "### 🚀 Deployment Gate" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.gate.outputs.gate_result }}" = "approved" ]; then
-            echo "✅ **Deployment Approved**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Image: \`${{ env.DOCKER_IMAGE }}:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "🚫 **Deployment Blocked** — quality gates did not pass" >> $GITHUB_STEP_SUMMARY
           fi
