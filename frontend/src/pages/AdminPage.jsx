@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Shield, Users, Ban, UserCheck, AlertTriangle,
   RefreshCw, Search, ExternalLink, Lock, Eye, EyeOff,
-  CheckCircle, XCircle, Clock, ChevronDown
+  CheckCircle, XCircle, Clock, ChevronDown, LogOut
 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
@@ -249,7 +249,7 @@ function UserRow({ user, onBan, onUnban }) {
 }
 
 // ─── Main Admin Panel ─────────────────────────────────────────────────────────
-function AdminPanel({ secret }) {
+function AdminPanel({ secret, onLogout }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -365,14 +365,23 @@ function AdminPanel({ secret }) {
               <p className="text-xs text-slate-500">DevPulse User Management</p>
             </div>
           </div>
-          <button
-            onClick={fetchUsers}
-            disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 text-xs transition-all"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={fetchUsers}
+              disabled={loading}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 text-xs transition-all"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/5 hover:bg-red-500/15 border border-red-500/10 hover:border-red-500/20 text-red-400 text-xs transition-all"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Lock
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -493,6 +502,11 @@ export default function AdminPage() {
     setSecret(s);
   }
 
+  function handleLogout() {
+    sessionStorage.removeItem('dp_admin_secret');
+    setSecret('');
+  }
+
   if (!secret) return <SecretGate onUnlock={handleUnlock} />;
-  return <AdminPanel secret={secret} />;
+  return <AdminPanel secret={secret} onLogout={handleLogout} />;
 }
