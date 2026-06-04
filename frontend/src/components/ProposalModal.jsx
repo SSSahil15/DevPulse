@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { Lightbulb, Terminal, X, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 
-// ─── Discord Webhook URL ──────────────────────────────────────────────────────
-const DISCORD_PROPOSAL_WEBHOOK_URL = import.meta.env.VITE_DISCORD_PROPOSAL_WEBHOOK_URL || '';
-
-// ─── Helper: send to Discord ───────────────────────────────────────────────────
-async function sendToDiscord(embed, webhookUrl) {
-  if (!webhookUrl) throw new Error('Webhook URL is not configured. Check your .env file.');
-  const res = await fetch(webhookUrl, {
+// ─── Helper: send proposal via serverless proxy ──────────────────────────────
+async function sendProposalEmbed(embed) {
+  const res = await fetch('/api/discord-proposal', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ embeds: [embed] }),
+    body: JSON.stringify(embed),
   });
-  if (!res.ok) throw new Error(`Request failed (${res.status})`);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Request failed (${res.status})`);
+  }
 }
 
 // ─── Shared Sub-components ─────────────────────────────────────────────────────
@@ -158,8 +157,7 @@ export default function ProposalModal({ onClose }) {
     setStatus('loading');
     setErrorMsg('');
     try {
-      await sendToDiscord(
-        {
+      await sendProposalEmbed({
           title: `💡 New Feature Proposal: ${form.title}`,
           color: 0x3b82f6,
           fields: [
@@ -173,9 +171,7 @@ export default function ProposalModal({ onClose }) {
           ],
           footer: { text: 'DevPulse Community · Feature Proposal' },
           timestamp: new Date().toISOString(),
-        },
-        DISCORD_PROPOSAL_WEBHOOK_URL,
-      );
+        });
       setStatus('success');
     } catch (err) {
       setStatus('error');

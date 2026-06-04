@@ -15,7 +15,6 @@ import {
 import { GithubIcon, TwitterIcon, DiscordIcon } from '../components/icons';
 import StaticPageLayout from '../components/StaticPageLayout';
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || '';
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -38,7 +37,7 @@ const ContactPage = () => {
     setIsSubmitting(true);
 
     try {
-      await fetch(`${BACKEND_URL}/api/feedback`, {
+      await fetch(`/api/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -24,9 +24,18 @@ import { GithubIcon, LinkedinIcon, DiscordIcon } from '../components/icons';
 import { Search, Menu, ArrowLeft } from 'lucide-react';
 import ProposalModal from '../components/ProposalModal';
 
-// ─── Discord Webhook URLs ──────────────────────────────────────────────────────
-const DISCORD_PROPOSAL_WEBHOOK_URL = import.meta.env.VITE_DISCORD_PROPOSAL_WEBHOOK_URL || '';
-const DISCORD_ISSUE_WEBHOOK_URL = import.meta.env.VITE_DISCORD_WEBHOOK_URL || '';
+// ─── Helper: send to Discord via serverless proxy ──────────────────────────────
+async function sendToDiscord(embed, proxyPath) {
+  const res = await fetch(proxyPath, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(embed),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Request failed (${res.status})`);
+  }
+}
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const STATS = [
@@ -118,16 +127,9 @@ const TYPE_COLORS = {
   'Q&A': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
 };
 
-// ─── Helper: send to Discord ───────────────────────────────────────────────────
-async function sendToDiscord(embed, webhookUrl) {
-  if (!webhookUrl) throw new Error('Webhook URL is not configured. Check your .env file.');
-  const res = await fetch(webhookUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ embeds: [embed] }),
-  });
-  if (!res.ok) throw new Error(`Request failed (${res.status})`);
-}
+// ─── Helper: send to Discord ─────────────────────────────────────────────────
+// (defined above as sendToDiscord)
+
 
 // ─── Proposal Modal ────────────────────────────────────────────────────────────
 // Imported from '../components/ProposalModal'
@@ -170,7 +172,7 @@ function IssueModal({ onClose }) {
           footer: { text: 'DevPulse Community · Bug Report' },
           timestamp: new Date().toISOString(),
         },
-        DISCORD_ISSUE_WEBHOOK_URL,
+        '/api/discord-issue',
       );
       setStatus('success');
     } catch (err) {
