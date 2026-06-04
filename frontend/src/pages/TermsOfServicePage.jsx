@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Scale,
   CheckCircle2,
@@ -9,13 +9,264 @@ import {
   Lightbulb,
   XOctagon,
   Terminal,
+  X,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  Mail,
+  FileText,
+  MessageSquare,
 } from 'lucide-react';
 import { GithubIcon } from '../components/icons';
 import StaticPageLayout from '../components/StaticPageLayout';
 
+// ─── Legal Contact Modal ───────────────────────────────────────────────────────
+const LEGAL_CATEGORIES = [
+  'Terms Clarification',
+  'Account Termination',
+  'DMCA / IP Dispute',
+  'Data & Privacy Request',
+  'API Usage Dispute',
+  'Other Legal Matter',
+];
+
+async function sendLegalEmbed(embed) {
+  const res = await fetch('/api/legal-contact', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(embed),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Request failed (${res.status})`);
+  }
+}
+
+function LegalContactModal({ onClose }) {
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    category: 'Terms Clarification',
+    subject: '',
+    message: '',
+  });
+  const [status, setStatus] = useState('idle'); // idle | loading | success | error
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus('loading');
+    setErrorMsg('');
+    try {
+      await sendLegalEmbed({
+        title: `⚖️ Legal Enquiry: ${form.subject}`,
+        color: 0x6366f1,
+        fields: [
+          {
+            name: '👤 Name',
+            value: `${form.name} (${form.email})`,
+            inline: true,
+          },
+          { name: '📂 Category', value: form.category, inline: true },
+          { name: '📝 Message', value: form.message, inline: false },
+        ],
+        footer: { text: 'DevPulse · Legal & Support Enquiry' },
+        timestamp: new Date().toISOString(),
+      });
+      setStatus('success');
+    } catch (err) {
+      setStatus('error');
+      setErrorMsg(err.message);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={(e) => e.target === e.currentTarget && onClose()}
+      >
+        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
+        <motion.div
+          className="relative z-10 w-full max-w-lg bg-[#0d1117] border border-white/10 rounded-2xl shadow-2xl shadow-black/60 max-h-[90vh] overflow-y-auto"
+          initial={{ scale: 0.95, y: 20 }}
+          animate={{ scale: 1, y: 0 }}
+          exit={{ scale: 0.95, y: 20 }}
+          transition={{ duration: 0.2 }}
+        >
+          <div className="p-6 md:p-8">
+            {status === 'success' ? (
+              /* ── Success ── */
+              <div className="flex flex-col items-center text-center py-8 gap-4">
+                <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
+                  <CheckCircle className="w-10 h-10 text-indigo-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white mb-2">Enquiry Submitted!</h2>
+                  <p className="text-slate-400 text-sm leading-relaxed max-w-xs mx-auto">
+                    Your legal enquiry has been received. Our team will review it and get back to
+                    you at the email you provided.
+                  </p>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition-all shadow-lg"
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              /* ── Form ── */
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 shrink-0">
+                      <Scale className="w-5 h-5 text-indigo-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-white leading-tight">
+                        Contact Legal Support
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Questions or concerns about our Terms of Service.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 hover:text-white transition-colors ml-2 shrink-0"
+                    aria-label="Close"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Name + Email */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1.5">
+                      Your Name <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      value={form.name}
+                      onChange={handleChange}
+                      placeholder="Jane Doe"
+                      className="w-full bg-[#121822] border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/15 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1.5">
+                      Email <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      value={form.email}
+                      onChange={handleChange}
+                      placeholder="jane@example.com"
+                      className="w-full bg-[#121822] border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/15 transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1.5">
+                    Category <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    name="category"
+                    value={form.category}
+                    onChange={handleChange}
+                    className="w-full bg-[#121822] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/15 transition-all appearance-none cursor-pointer"
+                  >
+                    {LEGAL_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat} className="bg-[#121822]">
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Subject */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1.5">
+                    Subject <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="subject"
+                    required
+                    value={form.subject}
+                    onChange={handleChange}
+                    placeholder="Brief subject of your enquiry"
+                    className="w-full bg-[#121822] border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/15 transition-all"
+                  />
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1.5">
+                    Message <span className="text-red-400">*</span>
+                  </label>
+                  <textarea
+                    name="message"
+                    required
+                    rows={4}
+                    value={form.message}
+                    onChange={handleChange}
+                    placeholder="Please describe your legal question or concern in detail..."
+                    className="w-full bg-[#121822] border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/15 transition-all resize-none"
+                  />
+                </div>
+
+                {/* Error */}
+                {status === 'error' && (
+                  <div className="flex items-start gap-3 p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{errorMsg || 'Something went wrong. Please try again.'}</span>
+                  </div>
+                )}
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={status === 'loading'}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {status === 'loading' ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Sending…
+                    </>
+                  ) : (
+                    'Submit Enquiry'
+                  )}
+                </button>
+              </form>
+            )}
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+// ─── Main Page ─────────────────────────────────────────────────────────────────
 const TermsOfServicePage = () => {
   const lastUpdated = 'May 26, 2026';
   const [activeSection, setActiveSection] = useState('');
+  const [showLegalModal, setShowLegalModal] = useState(false);
 
   const sections = [
     {
@@ -131,11 +382,10 @@ const TermsOfServicePage = () => {
     },
   ];
 
-  // Handle active section tracking for the sidebar navigation
   useEffect(() => {
     const handleScroll = () => {
       const sectionElements = sections.map((s) => document.getElementById(s.id));
-      const currentScrollPos = window.scrollY + 200; // Offset for header
+      const currentScrollPos = window.scrollY + 200;
 
       for (let i = sectionElements.length - 1; i >= 0; i--) {
         const section = sectionElements[i];
@@ -152,6 +402,9 @@ const TermsOfServicePage = () => {
 
   return (
     <StaticPageLayout>
+      {/* Legal Contact Modal */}
+      {showLegalModal && <LegalContactModal onClose={() => setShowLegalModal(false)} />}
+
       <div className="relative min-h-screen bg-[#080b14]">
         {/* Background Gradients */}
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
@@ -180,6 +433,17 @@ const TermsOfServicePage = () => {
                   </a>
                 ))}
               </nav>
+
+              {/* Quick action in sidebar */}
+              <div className="mt-6 pt-6 border-t border-white/8">
+                <button
+                  onClick={() => setShowLegalModal(true)}
+                  className="w-full flex items-center gap-2.5 px-4 py-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 transition-all text-sm font-semibold"
+                >
+                  <Scale className="w-4 h-4 shrink-0" />
+                  Contact Legal Support
+                </button>
+              </div>
             </div>
           </div>
 
@@ -207,7 +471,7 @@ const TermsOfServicePage = () => {
             </div>
 
             <div className="space-y-12">
-              {sections.map((section, idx) => (
+              {sections.map((section) => (
                 <motion.section
                   id={section.id}
                   key={section.id}
@@ -229,7 +493,7 @@ const TermsOfServicePage = () => {
                 </motion.section>
               ))}
 
-              {/* Support Contact */}
+              {/* Support CTA */}
               <motion.section
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -248,16 +512,18 @@ const TermsOfServicePage = () => {
                   available to help clarify our policies.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <a
-                    href="mailto:support@devpulse.com"
+                  <button
+                    onClick={() => setShowLegalModal(true)}
                     className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-white text-indigo-950 font-bold hover:bg-slate-200 transition-colors shadow-lg shadow-white/10"
                   >
+                    <Scale className="w-4 h-4" />
                     Contact Legal Support
-                  </a>
+                  </button>
                   <a
                     href="/contact"
                     className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-indigo-950/50 text-white font-bold border border-indigo-500/30 hover:bg-indigo-900/50 transition-colors"
                   >
+                    <MessageSquare className="w-4 h-4" />
                     General Contact
                   </a>
                 </div>
