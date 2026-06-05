@@ -265,8 +265,8 @@ DevPulse ships with a production-grade GitHub Actions pipeline across **6 automa
 | **Frontend** | `npm ci` → Vite build → test | ✅ Yes |
 | **Security** | Trivy filesystem scan (CRITICAL/HIGH) | ✅ Yes |
 | **Docker** | Build image → Trivy image scan | ✅ Yes |
-| **Report** | POST results to DevPulse API | ✅ Yes |
-| **Deploy** | Gate: main branch only | ✅ Yes |
+| **Report** | POST results to DevPulse API | ❌ No |
+| **Deploy** | Gate: main branch only | N/A |
 
 Additional workflows: CodeQL static analysis, Dependabot auto-merge, Lighthouse performance auditing, pip-audit for Python dependencies.
 
