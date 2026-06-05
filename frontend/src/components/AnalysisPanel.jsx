@@ -494,25 +494,33 @@ function AnalysisPanel({
                 <span className="text-[10px] text-cyan-400 font-mono tracking-wide px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">
                   {analysis.source === 'bootstrap-github-metadata'
                     ? 'Confidence: Metadata only'
-                    : analysis.failurePrediction?.confidence != null
-                    ? `AI Confidence: ${Math.round(analysis.failurePrediction.confidence * 100)}%`
+                    : analysis.failurePrediction?.probability != null
+                    ? `AI Confidence: ${Math.round(100 - analysis.failurePrediction.probability)}%`
                     : 'AI Confidence: High'}
                 </span>
               </div>
               <div className="flex items-center gap-3 mb-5">
                 <span
-                  className={`px-5 py-1.5 rounded-full text-xs font-black tracking-widest ring-1 flex items-center gap-2 ${analysis.decision === 'BLOCK' ? 'bg-red-500/15 text-red-400 ring-red-500/30' : 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/30'}`}
+                  className={`px-5 py-1.5 rounded-full text-xs font-black tracking-widest ring-1 flex items-center gap-2 ${
+                    analysis.decision === 'BLOCK' || analysis.decision === 'FAIL'
+                      ? 'bg-red-500/15 text-red-400 ring-red-500/30'
+                      : 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/30'
+                  }`}
                 >
                   <span
-                    className={`status-dot animate-status-pulse ${analysis.decision === 'BLOCK' ? 'bg-red-400 text-red-400' : 'bg-emerald-400 text-emerald-400'}`}
+                    className={`status-dot animate-status-pulse ${
+                      analysis.decision === 'BLOCK' || analysis.decision === 'FAIL'
+                        ? 'bg-red-400 text-red-400'
+                        : 'bg-emerald-400 text-emerald-400'
+                    }`}
                   />
                   {analysis.decision}
                 </span>
                 <span className="text-[10px] font-mono text-slate-500 bg-white/5 ring-1 ring-white/10 px-3 py-1 rounded-lg uppercase">
                   {analysis.source === 'bootstrap-github-metadata'
                     ? 'Metadata Analysis'
-                    : analysis.source === 'ai-service'
-                    ? 'AI Model'
+                    : analysis.source?.startsWith('devpulse-ai')
+                    ? 'AI Model v1'
                     : analysis.source?.replace(/-/g, ' ') || 'AI Analysis'}
                 </span>
               </div>
