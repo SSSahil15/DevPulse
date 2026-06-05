@@ -6,10 +6,10 @@
   <p><strong>The Intelligent DevSecOps Platform that turns raw engineering signals into action.</strong></p>
 
   <p>
-    <a href="#-demo">Live Demo</a> ·
+    <a href="https://dev-pulse-azure.vercel.app/">Live Demo</a> ·
     <a href="#-quick-start">Quick Start</a> ·
     <a href="#-features">Features</a> ·
-    <a href="#%EF%B8%8F-architecture">Architecture</a> ·
+    <a href="#️-architecture">Architecture</a> ·
     <a href="#-roadmap">Roadmap</a>
   </p>
 
