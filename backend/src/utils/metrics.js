@@ -138,12 +138,30 @@ async function metricsHandler(req, res) {
   }
 }
 
+/** Returns a plain JS object snapshot of key metrics for the /metrics/json endpoint */
+function getMetrics() {
+  return {
+    bullmqQueueWaiting: bullmqQueueWaiting.hashMap,
+    bullmqQueueActive: bullmqQueueActive.hashMap,
+    bullmqJobsTotal: bullmqJobsTotal.hashMap,
+  };
+}
+
 module.exports = {
+  register,
   httpMetricsMiddleware,
   metricsHandler,
+  getMetrics,
   // Exported so other modules can record metrics
+  httpRequestsTotal,
+  httpRequestDurationSeconds,
   bullmqQueueWaiting,
   bullmqQueueActive,
   bullmqJobsTotal,
   bullmqJobDurationSeconds,
+  dbPoolTotal,
+  dbPoolIdle,
+  dbPoolWaiting,
+  githubApiCallsTotal,
+  githubApiDurationSeconds,
 };
