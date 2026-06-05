@@ -536,9 +536,59 @@ function AnalysisPanel({
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-secondary italic max-w-[65ch] mb-[18px]">
-                  "{analysis.failurePrediction?.rationale}"
-                </p>
+                <div className="flex flex-col gap-3 mb-[18px]">
+                  <div
+                    className="p-4 rounded-xl border"
+                    style={{
+                      background: 'linear-gradient(to bottom right, rgba(14, 165, 233, 0.05), rgba(99, 102, 241, 0.05))',
+                      borderColor: 'rgba(99, 102, 241, 0.15)',
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-indigo-400 mt-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                      </span>
+                      <div className="flex-1">
+                        <h4 className="text-xs font-bold text-indigo-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+                          AI Model Prediction
+                          <span className="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                            v1.0
+                          </span>
+                        </h4>
+                        <p className="text-sm text-slate-300 leading-relaxed font-medium">
+                          "{analysis.failurePrediction?.rationale || 'Analysis complete. No specific rationale provided.'}"
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {analysis.failurePrediction?.probability !== undefined && (
+                    <div className="px-4 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center gap-4">
+                      <div className="text-xs font-semibold text-slate-400 w-24">Failure Risk</div>
+                      <div className="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden relative">
+                        <div 
+                          className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ${
+                            analysis.failurePrediction.probability >= 60 
+                              ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' 
+                              : analysis.failurePrediction.probability >= 35 
+                              ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' 
+                              : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'
+                          }`}
+                          style={{ width: `${Math.max(0, Math.min(100, analysis.failurePrediction.probability))}%` }}
+                        />
+                      </div>
+                      <div className={`text-sm font-bold w-12 text-right ${
+                        analysis.failurePrediction.probability >= 60 
+                          ? 'text-red-400' 
+                          : analysis.failurePrediction.probability >= 35 
+                          ? 'text-amber-400' 
+                          : 'text-emerald-400'
+                      }`}>
+                        {Math.round(analysis.failurePrediction.probability)}%
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
             <div className="surface-2 rounded-2xl p-6">

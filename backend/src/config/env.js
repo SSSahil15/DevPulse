@@ -15,7 +15,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().optional(),
   REDIS_URL: z.string().optional(),
   GITHUB_REPO_PAGE_LIMIT: z.coerce.number().int().positive().max(50).default(10),
-  AI_SERVICE_URL: z.string().url().default('http://localhost:8000'),
+  AI_SERVICE_URL: z.string().url().default('https://devpulse-ai-odvc.onrender.com'),
   GITHUB_CLIENT_ID: z.string().min(1, 'GITHUB_CLIENT_ID is required.'),
   GITHUB_CLIENT_SECRET: z.string().min(1, 'GITHUB_CLIENT_SECRET is required.'),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters.'),
