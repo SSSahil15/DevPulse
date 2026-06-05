@@ -284,7 +284,7 @@ DevPulse is fully containerized and deploys cleanly to any VPS (AWS EC2, Digital
 
 Update your GitHub OAuth App's callback URL to your production backend domain before deploying.
 
-See [`DEPLOYMENT.md`](./DEPLOYMENT.md) for the full cloud configuration guide.
+See [`docs/deployment/DEPLOYMENT.md`](./docs/deployment/DEPLOYMENT.md) for the full cloud configuration guide.
 
 ---
 
@@ -331,7 +331,7 @@ Additional workflows: CodeQL static analysis, Dependabot auto-merge, Lighthouse 
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read [`CONTRIBUTING.md`](./CONTRIBUTING.md) for guidelines on opening issues, submitting pull requests, and the local development workflow.
+Contributions are welcome! Please read [`docs/developer-guide/CONTRIBUTING.md`](./docs/developer-guide/CONTRIBUTING.md) for guidelines on opening issues, submitting pull requests, and the local development workflow.
 
 ---
 
