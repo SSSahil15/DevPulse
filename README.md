@@ -29,21 +29,21 @@
 ## 🖼️ Screenshots
 
 <div align="center">
-  <img src="./assets/Devpulse12.png" alt="DevPulse Landing Page" width="800" />
+  <img src="./assets/Devpulse12.jpg" alt="DevPulse Landing Page" width="800" />
   <p><em>DevPulse Landing Page — Ship faster with zero deployment fear</em></p>
 </div>
 
 <br/>
 
 <div align="center">
-  <img src="./assets/Devpulse1.png" alt="Dashboard Pipeline Analysis" width="800" />
+  <img src="./assets/Devpulse1.jpg" alt="Dashboard Pipeline Analysis" width="800" />
   <p><em>Dashboard — Real-time CI/CD Pipeline Analysis</em></p>
 </div>
 
 <br/>
 
 <div align="center">
-  <img src="./assets/Devpulse10.png" alt="AI Repository Analyzer" width="800" />
+  <img src="./assets/Devpulse10.jpg" alt="AI Repository Analyzer" width="800" />
   <p><em>AI Repository Analyzer — Predictive Risk Scoring & Intelligence</em></p>
 </div>
 
@@ -109,24 +109,24 @@ Generate a clean, public-read-only report link for any analyzed repository. Shar
 
 #### Security & AI Remediation
 <div align="center">
-  <img src="./assets/Devpulse4.png" width="400" alt="Security Findings & Vulnerabilities" />
-  <img src="./assets/Devpulse6.png" width="400" alt="AI Remediation Dashboard" />
+  <img src="./assets/Devpulse4.jpg" width="400" alt="Security Findings & Vulnerabilities" />
+  <img src="./assets/Devpulse6.jpg" width="400" alt="AI Remediation Dashboard" />
 </div>
 <div align="center">
-  <img src="./assets/Devpulse7.png" width="400" alt="Remediation Analysis" />
-  <img src="./assets/Devpulse8.png" width="400" alt="Automated PR Generation Preview" />
+  <img src="./assets/Devpulse7.jpg" width="400" alt="Remediation Analysis" />
+  <img src="./assets/Devpulse8.jpg" width="400" alt="Automated PR Generation Preview" />
 </div>
 
 #### Actionable Intelligence & Reporting
 <div align="center">
-  <img src="./assets/Devpulse5.png" width="400" alt="Action-First AI Copilot" />
-  <img src="./assets/Devpulse9.png" width="400" alt="PDF Scan Report Generation" />
+  <img src="./assets/Devpulse5.jpg" width="400" alt="Action-First AI Copilot" />
+  <img src="./assets/Devpulse9.jpg" width="400" alt="PDF Scan Report Generation" />
 </div>
 
 #### Deep Pipeline Insights
 <div align="center">
-  <img src="./assets/Devpulse11.png" width="400" alt="CI/CD Pipeline Live Logs" />
-  <img src="./assets/Devpulse3.png" width="400" alt="Pipeline Telemetry Node Graph" />
+  <img src="./assets/Devpulse11.jpg" width="400" alt="CI/CD Pipeline Live Logs" />
+  <img src="./assets/Devpulse3.jpg" width="400" alt="Pipeline Telemetry Node Graph" />
 </div>
 
 ---
