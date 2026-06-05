@@ -547,10 +547,97 @@ export default function RemediationPage({ accessToken, repositoryFullName, scanD
                   diffPreviews={rem.diffPreviews}
                   aiSummary={rem.aiSummary}
                   rollbackWarnings={rem.rollbackWarnings}
-                  status={rem.status}
                   onConfirmPR={handleConfirmPR}
                 />
               )}
+
+            {/* Vuln Details panel */}
+            {activePanel === 'vulns' &&
+              (rem.status === 'dry_run_complete' || rem.status === 'complete') && (() => {
+                // Show vulnerabilities that were targeted for this remediation
+                const targeted = remediationTargets.length > 0
+                  ? allVulns.filter((v) => remediationTargets.includes(v.id))
+                  : allVulns.filter((v) => v.hasFixedVersion);
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        {targeted.length} Vulnerabilities in this remediation
+                      </p>
+                    </div>
+                    {targeted.map((vuln) => {
+                      const patch = getPatch(vuln);
+                      const cfg = SEV_CONFIG[vuln.severity] || SEV_CONFIG.LOW;
+                      const fixVersion = patch?.toVersion || vuln.fixedVersion;
+                      const confidence = patch?.confidenceScore ?? null;
+                      const breakingRisk = patch?.breakingRisk ?? null;
+                      return (
+                        <div
+                          key={vuln.id}
+                          className="rounded-2xl overflow-hidden"
+                          style={{ border: '1px solid rgba(255,255,255,0.07)' }}
+                        >
+                          {/* Header */}
+                          <div
+                            className="px-4 py-3 flex items-center gap-3"
+                            style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                          >
+                            <span
+                              className="text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-widest shrink-0"
+                              style={{ background: cfg.bg, color: cfg.color }}
+                            >
+                              {vuln.severity}
+                            </span>
+                            <span className="text-xs font-mono text-sky-400 truncate flex-1">{vuln.id}</span>
+                            {confidence !== null && (
+                              <span
+                                className="text-[9px] font-black shrink-0"
+                                style={{ color: confidence >= 80 ? '#10b981' : confidence >= 50 ? '#f59e0b' : '#ef4444' }}
+                              >
+                                {confidence}% confidence
+                              </span>
+                            )}
+                          </div>
+                          {/* Body */}
+                          <div className="px-4 py-3 space-y-2" style={{ background: 'rgba(8,11,20,0.6)' }}>
+                            <p className="text-sm font-bold text-slate-200">{vuln.pkgName}</p>
+                            {/* Version upgrade */}
+                            <div className="flex items-center gap-2 font-mono text-xs">
+                              <span className="text-red-400/80 line-through">{vuln.installedVersion}</span>
+                              <span className="text-slate-600">→</span>
+                              <span className="text-emerald-400 font-black">{fixVersion || 'resolving…'}</span>
+                            </div>
+                            {/* Breaking risk badge */}
+                            {breakingRisk && (
+                              <span
+                                className="inline-block text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest"
+                                style={{
+                                  background: breakingRisk === 'HIGH' ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.10)',
+                                  color: breakingRisk === 'HIGH' ? '#ef4444' : '#f59e0b',
+                                }}
+                              >
+                                {breakingRisk} breaking risk
+                              </span>
+                            )}
+                            {/* Description */}
+                            {vuln.description && (
+                              <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-3">
+                                {vuln.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {targeted.length === 0 && (
+                      <div className="flex flex-col items-center justify-center py-16 text-center">
+                        <Shield className="w-8 h-8 text-slate-700 mb-3" />
+                        <p className="text-xs text-slate-500">No vulnerabilities were targeted in this remediation.</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
             {/* ── PR CREATED: Full-screen success celebration ─────────────── */}
             {rem.status === 'complete' && rem.prUrl && activePanel !== 'preview' && (
