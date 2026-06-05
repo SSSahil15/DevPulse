@@ -265,7 +265,11 @@ export default function SharedReportPage() {
             <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-3">
               🤖 AI Pipeline Insights
             </p>
-            <p className="text-sm text-slate-300 leading-relaxed">{r.insights.explanation}</p>
+            <ul className="text-sm text-slate-300 leading-relaxed list-disc ml-4 space-y-1">
+              {r.insights.explanation.split('. ').filter(Boolean).map((sentence, idx) => (
+                <li key={idx}>{sentence}{sentence.endsWith('.') ? '' : '.'}</li>
+              ))}
+            </ul>
           </div>
         )}
 

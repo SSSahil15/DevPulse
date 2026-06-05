@@ -354,9 +354,17 @@ export default function ReportTemplate({ report, origin }) {
                   AI Insights
                 </p>
               </div>
-              <p className="text-sm text-slate-300 leading-relaxed mb-5">
-                {report.insights.explanation || 'No insights generated.'}
-              </p>
+              {report.insights.explanation ? (
+                <ul className="text-sm text-slate-300 leading-relaxed mb-5 list-disc ml-4 space-y-1">
+                  {report.insights.explanation.split('. ').filter(Boolean).map((sentence, idx) => (
+                    <li key={idx}>{sentence}{sentence.endsWith('.') ? '' : '.'}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-slate-300 leading-relaxed mb-5">
+                  No insights generated.
+                </p>
+              )}
 
               {report.insights.rootCause && (
                 <div className="mb-5 bg-red-500/5 ring-1 ring-red-500/20 rounded-xl p-4">

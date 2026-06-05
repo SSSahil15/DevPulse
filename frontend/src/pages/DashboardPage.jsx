@@ -519,9 +519,11 @@ function DashboardContent({ accessToken, onLogout, user }) {
                         }}
                       >
                         <p className="section-label mb-[18px]">AI Pipeline Insights</p>
-                        <p className="text-sm text-secondary max-w-[65ch] mb-[18px]">
-                          {r.insights.explanation}
-                        </p>
+                        <ul className="text-sm text-secondary max-w-[65ch] mb-[18px] list-disc ml-4 space-y-1">
+                          {r.insights.explanation.split('. ').filter(Boolean).map((sentence, idx) => (
+                            <li key={idx}>{sentence}{sentence.endsWith('.') ? '' : '.'}</li>
+                          ))}
+                        </ul>
                       </div>
                     )}
 
