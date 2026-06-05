@@ -265,8 +265,8 @@ DevPulse ships with a production-grade GitHub Actions pipeline across **6 automa
 | **Frontend** | `npm ci` → Vite build → test | ✅ Yes |
 | **Security** | Trivy filesystem scan (CRITICAL/HIGH) | ✅ Yes |
 | **Docker** | Build image → Trivy image scan | ✅ Yes |
-| **Report** | POST results to DevPulse API | ❌ No |
-| **Deploy** | Gate: main branch only | N/A |
+| **Report** | POST results to DevPulse API | ✅ Yes |
+| **Deploy** | Gate: main branch only | ✅ Yes |
 
 Additional workflows: CodeQL static analysis, Dependabot auto-merge, Lighthouse performance auditing, pip-audit for Python dependencies.
 
@@ -274,20 +274,27 @@ Additional workflows: CodeQL static analysis, Dependabot auto-merge, Lighthouse 
 
 ## 🗺️ Roadmap
 
-- [x] GitHub OAuth & repository analysis
-- [x] DevPulse Score engine
-- [x] Real-time WebSocket updates
-- [x] AI Copilot with LLaMA 3.3 + deterministic fallback
-- [x] Trivy security scanning integration
-- [x] Grafana LGTM observability stack
-- [x] Shareable reports
-- [x] Swagger / OpenAPI documentation
-- [ ] Historical trend analysis across multiple scans
-- [ ] Team dashboards and multi-user collaboration
-- [ ] Scheduled automatic analysis & notifications
-- [ ] Multi-repository aggregated health view
-- [ ] Support for GitLab and Bitbucket
-- [ ] Code-level remediation suggestions in AI Copilot
+| Status | Feature | Category |
+| :---: | :--- | :--- |
+| ✅ | **GitHub OAuth & repository analysis** | Core Platform |
+| ✅ | **DevPulse Score engine** | Intelligence |
+| ✅ | **Real-time WebSocket updates** | Infrastructure |
+| ✅ | **AI Copilot (LLaMA 3.3 + fallback)** | Copilot |
+| ✅ | **Trivy security scanning integration** | Security |
+| ✅ | **Grafana LGTM observability stack** | Infrastructure |
+| ✅ | **Shareable reports** | Reporting |
+| ✅ | **Swagger / OpenAPI documentation** | Docs |
+| 🔄 | **Historical trend analysis across multiple scans** | Intelligence |
+| 📅 | **Team dashboards and multi-user collaboration** | Enterprise |
+| 📅 | **Scheduled automatic analysis & notifications** | Automation |
+| 📅 | **Multi-repository aggregated health view** | Enterprise |
+| 📅 | **Support for GitLab and Bitbucket** | Integrations |
+| 📅 | **Code-level remediation suggestions in AI Copilot** | Copilot |
+
+<br>
+<p align="center">
+  <em><b>Legend:</b> &nbsp; ✅ Completed &nbsp; | &nbsp; 🔄 In Progress &nbsp; | &nbsp; 📅 Planned</em>
+</p>
 
 ---
 
