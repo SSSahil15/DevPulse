@@ -1166,50 +1166,50 @@ function DashboardContent({ accessToken, onLogout, user }) {
         <main className="flex-1 overflow-y-auto relative z-10">
           <div className="w-full max-w-[1800px] p-8 lg:px-12">
             {/* Premium Dashboard Header */}
-            <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 rounded-3xl bg-slate-900/40 border border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl relative overflow-hidden">
+            <div className="sticky top-0 z-50 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:py-3 md:px-6 rounded-2xl bg-[#0f172a]/80 border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)] backdrop-blur-2xl overflow-hidden">
               {/* Decorative background glow */}
-              <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute -top-[50%] -left-[10%] w-[40%] h-[200%] bg-cyan-500/10 blur-[100px] rounded-full mix-blend-screen" />
-                <div className="absolute -bottom-[50%] -right-[10%] w-[40%] h-[200%] bg-indigo-500/10 blur-[100px] rounded-full mix-blend-screen" />
+              <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                <div className="absolute -top-[50%] -left-[10%] w-[40%] h-[200%] bg-cyan-500/10 blur-[80px] rounded-full mix-blend-screen" />
+                <div className="absolute -bottom-[50%] -right-[10%] w-[40%] h-[200%] bg-indigo-500/10 blur-[80px] rounded-full mix-blend-screen" />
               </div>
 
               <div className="relative z-10">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-                    <span className="relative flex h-2 w-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center justify-center w-5 h-5 rounded-full bg-cyan-500/10 border border-cyan-500/20">
+                    <span className="relative flex h-1.5 w-1.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-500"></span>
                     </span>
                   </div>
-                  <p className="text-xs font-bold text-cyan-400 tracking-widest uppercase">DevPulse Dashboard</p>
+                  <p className="text-[10px] font-bold text-cyan-400 tracking-widest uppercase">DevPulse Dashboard</p>
                 </div>
-                <h1 className="text-3xl lg:text-4xl font-black tracking-tight flex items-center gap-3">
+                <h1 className="text-2xl lg:text-3xl font-black tracking-tight flex items-center gap-2">
                   <span className="text-white">Welcome back,</span>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-400 drop-shadow-sm">
                     {user.displayName || user.username}
                   </span>
-                  <span className="inline-block hover:animate-[wave_1s_ease-in-out_infinite] origin-bottom-right transition-transform cursor-default select-none">
+                  <span className="inline-block animate-wave origin-bottom-right transition-transform cursor-default select-none text-2xl">
                     👋
                   </span>
                 </h1>
               </div>
 
-              <div className="flex items-center gap-5 relative z-10">
+              <div className="flex items-center gap-4 relative z-10">
                 {/* AI Remediation CTA */}
                 {vulnerabilities.length > 0 && selectedRepo && (
                   <button
                     id="open-ai-remediation"
                     onClick={() => openRemediation(selectedRepo, lastScan?.stages?.security)}
-                    className="flex items-center gap-2 text-xs font-black px-4 py-3 rounded-xl transition-all relative overflow-hidden group hover:scale-105 hover:-translate-y-0.5 active:scale-95 duration-300"
+                    className="flex items-center gap-2 text-xs font-black px-4 py-2.5 rounded-xl transition-all relative overflow-hidden group hover:scale-105 hover:-translate-y-0.5 active:scale-95 duration-300"
                     style={{
                       background: 'linear-gradient(135deg, #1d4ed8, #7c3aed)',
-                      boxShadow: '0 10px 25px -5px rgba(124, 58, 237, 0.4)',
+                      boxShadow: '0 8px 20px -5px rgba(124, 58, 237, 0.4)',
                     }}
                   >
-                    <Zap className="w-4 h-4 text-yellow-300 relative z-10 group-hover:animate-pulse" />
+                    <Zap className="w-3.5 h-3.5 text-yellow-300 relative z-10 group-hover:animate-pulse" />
                     <span className="relative z-10 text-white tracking-wide">AI Remediation</span>
                     <span
-                      className="relative z-10 text-[10px] font-black px-2 py-1 rounded-full text-white"
+                      className="relative z-10 text-[9px] font-black px-2 py-0.5 rounded-full text-white"
                       style={{ background: 'rgba(255,255,255,0.2)' }}
                     >
                       {fixableVulnerabilities.length} fixable
@@ -1221,28 +1221,29 @@ function DashboardContent({ accessToken, onLogout, user }) {
                   </button>
                 )}
 
-                <div className="flex items-center gap-4 bg-slate-800/50 border border-slate-700/50 rounded-2xl p-2 pr-4 backdrop-blur-md">
-                  <div className="flex flex-col items-end">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Live Sync</span>
-                      <span className="relative flex h-2 w-2 shrink-0">
+                <div className="flex items-center gap-4 bg-slate-800/80 border border-slate-600/50 rounded-xl p-1.5 pr-2 shadow-inner">
+                  <div className="flex flex-col items-end pl-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">Live Sync</span>
+                      <span className="relative flex h-1.5 w-1.5 shrink-0">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                       </span>
                     </div>
-                    <p className="text-[11px] font-medium text-slate-400 mt-0.5">
+                    <p className="text-[10px] font-medium text-slate-400 mt-0.5">
                       {repoState.data?.length ?? 0} repos at {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                   
-                  <div className="w-px h-8 bg-slate-700/50 mx-1"></div>
+                  <div className="w-px h-6 bg-slate-600/50 mx-0.5"></div>
 
                   <button
                     onClick={handleLogout}
-                    className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-slate-300 hover:text-white transition-all group"
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700/50 hover:bg-slate-600 border border-slate-600/50 hover:border-slate-500 text-slate-200 hover:text-white transition-all group"
                     title="Log out"
                   >
-                    <LogOut className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                    <LogOut className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+                    <span className="text-xs font-semibold">Logout</span>
                   </button>
                 </div>
               </div>
