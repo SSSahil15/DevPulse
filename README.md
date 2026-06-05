@@ -9,7 +9,7 @@
     <a href="https://dev-pulse-azure.vercel.app/">Live Demo</a> ·
     <a href="https://dev-pulse-azure.vercel.app/docs">Quick Start</a> ·
     <a href="https://dev-pulse-azure.vercel.app/features">Features</a> ·
-    <a href="https://dev-pulse-azure.vercel.app/docs/architecture">Architecture</a> ·
+    <a href="#architecture">Architecture</a> ·
     <a href="https://dev-pulse-azure.vercel.app/changelog">Roadmap</a>
   </p>
 
