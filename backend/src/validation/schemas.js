@@ -30,6 +30,7 @@ const DANGER_PATTERNS = [
   /\bINSERT\s+INTO\b/i, // SQL INSERT INTO
   /\bUNION\s+SELECT\b/i, // SQL UNION SELECT
   /--\s*$/m, // SQL comment suffix
+  // eslint-disable-next-line no-control-regex
   /\u0000/, // null byte
   /\.\.\//, // path traversal
 ];
@@ -163,10 +164,6 @@ module.exports = {
   githubFullNameSchema,
   githubUrlSchema,
   paginationSchema,
-  uuidSchema,
-  jobIdSchema,
   commitShaSchema,
   emailSchema,
-  isMalicious,
-  DANGER_PATTERNS,
 };

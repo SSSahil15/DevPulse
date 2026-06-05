@@ -272,14 +272,4 @@ const deleteResultsBulk = async (req, res) => {
 };
 
 module.exports = {
-  ingestResult,
-  simulateScan,
-  getSimulationStatus,
-  getResultsList,
-  getResultById,
-  getScoreHistory,
-  getLatestScore,
-  getPipelineHealth,
-  deleteResultById,
-  deleteResultsBulk,
 };

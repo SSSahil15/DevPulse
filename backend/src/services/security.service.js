@@ -149,5 +149,4 @@ function parseTrivyResults(output) {
 
 module.exports = {
   runTrivyScan,
-  parseTrivyResults,
 };

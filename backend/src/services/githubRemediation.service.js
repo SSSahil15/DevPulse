@@ -449,7 +449,6 @@ async function getDefaultBranch(client, repoFullName) {
 module.exports = {
   verifyWriteScope,
   checkRateLimit,
-  getFileContent,
   discoverManifests,
   applyDependencyPatch,
   buildDiff,

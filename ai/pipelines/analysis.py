@@ -69,7 +69,7 @@ class AnalysisPipeline:
                 **raw_result,
                 securityScan=security_scan_data,
                 generatedAt=datetime.utcnow().isoformat(),
-                source="devpulse-ai-pipeline-v1"
+                source="devpulse-ai-pipeline-v1",
             )
 
             duration_ms = round((time.perf_counter() - start_time) * 1000)

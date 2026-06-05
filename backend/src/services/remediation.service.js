@@ -391,11 +391,7 @@ function buildPatchSummary(patches) {
 
 module.exports = {
   parseTrivyVulnerabilities,
-  groupByEcosystem,
-  estimateBreakingRisk,
-  scoreConfidence,
   resolveUpgradeVersions,
   deduplicatePatches,
   buildPatchSummary,
-  detectEcosystem,
 };

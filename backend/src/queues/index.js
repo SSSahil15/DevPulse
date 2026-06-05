@@ -21,7 +21,4 @@ const remediationQueue = new Queue('remediationQueue', {
 
 module.exports = {
   scanQueue,
-  aiQueue,
-  reportQueue,
-  remediationQueue,
 };

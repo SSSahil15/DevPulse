@@ -83,7 +83,7 @@ def run_evaluation(dataset_path: str, output_path: str):
 
     log.info(f"Evaluation complete. Report saved to {output_path}")
     log.info(
-        f"Avg Accuracy: {avg_acc:.2f}/5.0 | Hallucination Rate: {hall_rate*100:.1f}%"
+        f"Avg Accuracy: {avg_acc:.2f}/5.0 | Hallucination Rate: {hall_rate * 100:.1f}%"
     )
 
     # CI Enforcement: Fail if accuracy is too low or hallucination is too high
@@ -96,7 +96,6 @@ def run_evaluation(dataset_path: str, output_path: str):
 
 
 if __name__ == "__main__":
-
     base_dir = Path(__file__).parent.parent
     ds_path = base_dir / "datasets" / "security_benchmark.json"
     ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")

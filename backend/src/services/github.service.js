@@ -305,12 +305,8 @@ async function fetchRepoHealth(accessToken, repoFullName) {
 }
 
 module.exports = {
-  fetchAuthenticatedViewer,
-  fetchCommitActivity,
-  fetchContributors,
   fetchRepoHealth,
   fetchRepository,
   fetchUserRepositories,
-  getNextPageUrl,
   mapRepository,
 };

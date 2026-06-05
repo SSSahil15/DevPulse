@@ -13,7 +13,6 @@ const API_BASE = 'http://localhost:4000';
 
 // ─── Shared fixture data ──────────────────────────────────────────────────────
 
-export const mockUser = {
   id: '123',
   username: 'testuser',
   displayName: 'Test User',
@@ -21,14 +20,12 @@ export const mockUser = {
   githubTokenSynced: true,
 };
 
-export const mockScore = {
   score: 85,
   status: 'SAFE',
   riskCategory: 'LOW',
   factors: {},
 };
 
-export const mockResult = {
   id: 'result-1',
   repository: 'octocat/hello-world',
   branch: 'main',
@@ -40,7 +37,6 @@ export const mockResult = {
   insights: { explanation: 'All good', suggestions: [], issues: [], rootCause: null },
 };
 
-export const mockReport = {
   token: 'dp_rpt_aabbccddeeff001122334455',
   repository: 'octocat/hello-world',
   devpulseScore: mockScore,

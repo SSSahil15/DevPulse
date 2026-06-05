@@ -139,19 +139,11 @@ async function metricsHandler(req, res) {
 }
 
 module.exports = {
-  register,
   httpMetricsMiddleware,
   metricsHandler,
   // Exported so other modules can record metrics
-  httpRequestsTotal,
-  httpRequestDurationSeconds,
   bullmqQueueWaiting,
   bullmqQueueActive,
   bullmqJobsTotal,
   bullmqJobDurationSeconds,
-  dbPoolTotal,
-  dbPoolIdle,
-  dbPoolWaiting,
-  githubApiCallsTotal,
-  githubApiDurationSeconds,
 };
