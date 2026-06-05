@@ -26,12 +26,14 @@ export default function InsightsPanel({ insights }) {
               {allClear ? 'All Clear' : 'AI Pipeline Insights'}
             </span>
           </div>
-          <p
-            className="text-sm text-slate-300 leading-[1.8] max-w-[62ch]"
+          <ul
+            className="text-sm text-slate-300 leading-[1.8] max-w-[62ch] list-disc ml-4 space-y-1"
             data-testid="insights-explanation"
           >
-            {explanation}
-          </p>
+            {explanation.split('. ').filter(Boolean).map((sentence, idx) => (
+              <li key={idx}>{sentence}{sentence.endsWith('.') ? '' : '.'}</li>
+            ))}
+          </ul>
         </div>
       )}
 
