@@ -548,6 +548,7 @@ export default function RemediationPage({ accessToken, repositoryFullName, scanD
                   aiSummary={rem.aiSummary}
                   rollbackWarnings={rem.rollbackWarnings}
                   onConfirmPR={handleConfirmPR}
+                  status={rem.status}
                 />
               )}
 
