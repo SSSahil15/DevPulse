@@ -492,7 +492,11 @@ function AnalysisPanel({
               <div className="flex items-center justify-between mb-5">
                 <p className="section-label">AI Decision & Rationale</p>
                 <span className="text-[10px] text-cyan-400 font-mono tracking-wide px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">
-                  AI Confidence: 94%
+                  {analysis.source === 'bootstrap-github-metadata'
+                    ? 'Confidence: Metadata only'
+                    : analysis.failurePrediction?.confidence != null
+                    ? `AI Confidence: ${Math.round(analysis.failurePrediction.confidence * 100)}%`
+                    : 'AI Confidence: High'}
                 </span>
               </div>
               <div className="flex items-center gap-3 mb-5">
@@ -505,24 +509,51 @@ function AnalysisPanel({
                   {analysis.decision}
                 </span>
                 <span className="text-[10px] font-mono text-slate-500 bg-white/5 ring-1 ring-white/10 px-3 py-1 rounded-lg uppercase">
-                  {analysis.source}
+                  {analysis.source === 'bootstrap-github-metadata'
+                    ? 'Metadata Analysis'
+                    : analysis.source === 'ai-service'
+                    ? 'AI Model'
+                    : analysis.source?.replace(/-/g, ' ') || 'AI Analysis'}
                 </span>
               </div>
-              <p className="text-sm text-secondary italic max-w-[65ch] mb-[18px]">
-                "{analysis.failurePrediction?.rationale}"
-              </p>
+              {analysis.source === 'bootstrap-github-metadata' ? (
+                <div
+                  className="flex items-start gap-3 rounded-xl p-3 mb-[18px]"
+                  style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.15)' }}
+                >
+                  <span className="text-amber-400 text-sm shrink-0 mt-0.5">⚠️</span>
+                  <p className="text-xs text-amber-300/80 leading-relaxed">
+                    <strong className="font-bold">Fallback mode</strong> — AI microservice unavailable. This prediction uses repository metadata (age, issues, size) only. Click{' '}
+                    <strong>Analyze Repository</strong> to retry with the full AI model.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-secondary italic max-w-[65ch] mb-[18px]">
+                  "{analysis.failurePrediction?.rationale}"
+                </p>
+              )}
             </div>
             <div className="surface-2 rounded-2xl p-6">
-              <div className="flex items-center gap-2 mb-5">
+              <div className="flex items-center gap-2 mb-2">
                 <Lightbulb className="w-4 h-4 text-amber-400" />
                 <p className="section-label">AI Remediation</p>
+                {analysis.source === 'bootstrap-github-metadata' && (
+                  <span className="ml-auto text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    Baseline
+                  </span>
+                )}
               </div>
+              {analysis.source === 'bootstrap-github-metadata' && (
+                <p className="text-[10px] text-slate-600 mb-4 leading-relaxed">
+                  General setup recommendations based on repository metadata. Run a full AI analysis for context-specific suggestions.
+                </p>
+              )}
               <div className="flex flex-col gap-[18px] mt-[18px]">
                 {analysis.suggestions?.map((s, i) => (
                   <div key={i} className="flex gap-4 group">
                     <div
                       className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black shrink-0 text-white transition-all"
-                      style={{ background: 'linear-gradient(135deg,#38BDF8,#2563EB)' }}
+                      style={{ background: analysis.source === 'bootstrap-github-metadata' ? 'linear-gradient(135deg,#92400e,#b45309)' : 'linear-gradient(135deg,#38BDF8,#2563EB)' }}
                     >
                       {i + 1}
                     </div>
