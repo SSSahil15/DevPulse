@@ -29,22 +29,22 @@
 ## 🖼️ Screenshots
 
 <div align="center">
-  <img src="./assets/Devpulse1.png" alt="DevPulse Dashboard" width="800" />
-  <p><em>Dashboard — Full Repository Health Overview</em></p>
+  <img src="./assets/Devpulse12.png" alt="DevPulse Landing Page" width="800" />
+  <p><em>DevPulse Landing Page — Ship faster with zero deployment fear</em></p>
 </div>
 
 <br/>
 
 <div align="center">
-  <img src="./assets/Devpulse2.png" alt="DevPulse AI Copilot" width="800" />
-  <p><em>AI Copilot — Contextual, Action-First Guidance</em></p>
+  <img src="./assets/Devpulse1.png" alt="Dashboard Pipeline Analysis" width="800" />
+  <p><em>Dashboard — Real-time CI/CD Pipeline Analysis</em></p>
 </div>
 
 <br/>
 
 <div align="center">
-  <img src="./assets/Devpulse3.png" alt="DevPulse Pipeline Analysis" width="800" />
-  <p><em>Pipeline & Security Analysis in Real-Time</em></p>
+  <img src="./assets/Devpulse10.png" alt="AI Repository Analyzer" width="800" />
+  <p><em>AI Repository Analyzer — Predictive Risk Scoring & Intelligence</em></p>
 </div>
 
 ---
@@ -105,23 +105,28 @@ One command adds the complete **Grafana LGTM stack** (Loki, Grafana, Tempo, Mimi
 ### 📤 Shareable Reports
 Generate a clean, public-read-only report link for any analyzed repository. Share repository health with your team, stakeholders, or reviewers in one click.
 
-### 📸 Additional Platform Previews
+### 📸 Platform Features & Previews
 
+#### Security & AI Remediation
 <div align="center">
-  <img src="./assets/Devpulse4.png" width="400" alt="Preview 1" />
-  <img src="./assets/Devpulse5.png" width="400" alt="Preview 2" />
+  <img src="./assets/Devpulse4.png" width="400" alt="Security Findings & Vulnerabilities" />
+  <img src="./assets/Devpulse6.png" width="400" alt="AI Remediation Dashboard" />
 </div>
 <div align="center">
-  <img src="./assets/Devpulse6.png" width="400" alt="Preview 3" />
-  <img src="./assets/Devpulse7.png" width="400" alt="Preview 4" />
+  <img src="./assets/Devpulse7.png" width="400" alt="Remediation Analysis" />
+  <img src="./assets/Devpulse8.png" width="400" alt="Automated PR Generation Preview" />
 </div>
+
+#### Actionable Intelligence & Reporting
 <div align="center">
-  <img src="./assets/Devpulse8.png" width="400" alt="Preview 5" />
-  <img src="./assets/Devpulse9.png" width="400" alt="Preview 6" />
+  <img src="./assets/Devpulse5.png" width="400" alt="Action-First AI Copilot" />
+  <img src="./assets/Devpulse9.png" width="400" alt="PDF Scan Report Generation" />
 </div>
+
+#### Deep Pipeline Insights
 <div align="center">
-  <img src="./assets/Devpulse10.png" width="400" alt="Preview 7" />
-  <img src="./assets/Devpulse11.png" width="400" alt="Preview 8" />
+  <img src="./assets/Devpulse11.png" width="400" alt="CI/CD Pipeline Live Logs" />
+  <img src="./assets/Devpulse3.png" width="400" alt="Pipeline Telemetry Node Graph" />
 </div>
 
 ---
