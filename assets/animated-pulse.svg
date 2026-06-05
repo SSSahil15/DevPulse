@@ -1,0 +1,20 @@
+<svg width="300" height="60" viewBox="0 0 300 60" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .pulse {
+      stroke-dasharray: 400;
+      stroke-dashoffset: 400;
+      animation: dash 3s linear infinite;
+    }
+    @keyframes dash {
+      0% { stroke-dashoffset: 400; }
+      50% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: -400; }
+    }
+  </style>
+  <path class="pulse" d="M 0 30 L 100 30 L 115 10 L 130 50 L 150 5 L 170 55 L 185 30 L 300 30" 
+        fill="transparent" 
+        stroke="#0ea5e9" 
+        stroke-width="3" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" />
+</svg>

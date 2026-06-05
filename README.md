@@ -3,10 +3,14 @@
 
   <h1>DevPulse</h1>
 
-  <p><strong>The Intelligent DevSecOps Platform that turns raw engineering signals into action.</strong></p>
+  <img src="https://readme-typing-svg.demolab.com?font=Inter&weight=600&size=16&duration=4000&pause=1000&color=38BDF8&center=true&vCenter=true&width=800&lines=The+Intelligent+DevSecOps+Platform;Turns+raw+engineering+signals+into+action;Ship+faster+with+zero+deployment+fear" alt="Typing SVG" />
+
+  <br />
+  <img src="./assets/animated-pulse.svg" alt="Animated Pulse" />
+  <br />
 
   <p>
-    <a href="https://dev-pulse-azure.vercel.app/">Live Demo</a> ·
+    <a href="https://dev-pulse-azure.vercel.app/"><img src="./assets/live-dot.svg" width="12" /> Live Demo</a> ·
     <a href="https://dev-pulse-azure.vercel.app/docs">Quick Start</a> ·
     <a href="https://dev-pulse-azure.vercel.app/features">Features</a> ·
     <a href="#architecture">Architecture</a> ·

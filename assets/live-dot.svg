@@ -1,0 +1,14 @@
+<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .pulse-ring {
+      transform-origin: center;
+      animation: pulsate 2s ease-out infinite;
+    }
+    @keyframes pulsate {
+      0% { transform: scale(0.5); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+  </style>
+  <circle class="pulse-ring" cx="10" cy="10" r="6" fill="#10b981" />
+  <circle cx="10" cy="10" r="4" fill="#10b981" />
+</svg>
