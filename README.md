@@ -7,10 +7,10 @@
 
   <p>
     <a href="https://dev-pulse-azure.vercel.app/">Live Demo</a> ·
-    <a href="#-quick-start">Quick Start</a> ·
-    <a href="#-features">Features</a> ·
-    <a href="#️-architecture">Architecture</a> ·
-    <a href="#-roadmap">Roadmap</a>
+    <a href="#quick-start">Quick Start</a> ·
+    <a href="#features">Features</a> ·
+    <a href="#architecture">Architecture</a> ·
+    <a href="#roadmap">Roadmap</a>
   </p>
 
   <p>
@@ -81,6 +81,7 @@ All powered by real-time analysis and an intelligent AI Copilot.
 
 ---
 
+<a id="features"></a>
 ## ✨ Features
 
 ### 📊 The DevPulse Score
@@ -144,6 +145,7 @@ Generate a clean, public-read-only report link for any analyzed repository. Shar
 
 ---
 
+<a id="architecture"></a>
 ## 🏗️ Architecture
 
 ```
@@ -188,6 +190,7 @@ devpulse/
 
 ---
 
+<a id="quick-start"></a>
 ## ⚡ Quick Start
 
 DevPulse is fully Dockerized. The entire platform — frontend, backend, AI service, database, and cache — starts with a single command.
@@ -303,6 +306,7 @@ Additional workflows: CodeQL static analysis, Dependabot auto-merge, Lighthouse 
 
 ---
 
+<a id="roadmap"></a>
 ## 🗺️ Roadmap
 
 | Status | Feature | Category |
