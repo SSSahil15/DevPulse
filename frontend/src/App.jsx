@@ -178,7 +178,7 @@ function App() {
           {/* Public shared report route — no auth required */}
           <Route path="/report/:token" element={<SharedReportPage />} />
           {/* Admin panel — secret-gated, not linked anywhere in the UI */}
-          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/aura076" element={<AdminPage />} />
           <Route
             path="*"
             element={

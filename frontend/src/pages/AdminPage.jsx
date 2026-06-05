@@ -20,7 +20,7 @@ function SecretGate({ onUnlock }) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_BASE}/api/admin/users`, {
+      const res = await fetch(`${API_BASE}/api/aura076/users`, {
         headers: { 'X-Admin-Secret': secret.trim() },
       });
       if (res.ok) {
@@ -270,7 +270,7 @@ function AdminPanel({ secret, onLogout }) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_BASE}/api/admin/users`, {
+      const res = await fetch(`${API_BASE}/api/aura076/users`, {
         headers: { 'X-Admin-Secret': secret },
       });
       if (!res.ok) throw new Error('Failed to fetch users');
@@ -287,7 +287,7 @@ function AdminPanel({ secret, onLogout }) {
 
   async function handleBanConfirm(user, reason) {
     try {
-      const res = await fetch(`${API_BASE}/api/admin/ban`, {
+      const res = await fetch(`${API_BASE}/api/aura076/ban`, {
         method: 'POST',
         headers: makeHeaders(),
         body: JSON.stringify({ userId: user.user_id, githubLogin: user.github_login, reason }),
@@ -313,7 +313,7 @@ function AdminPanel({ secret, onLogout }) {
 
   async function handleUnban(user) {
     try {
-      const res = await fetch(`${API_BASE}/api/admin/unban/${user.user_id}`, {
+      const res = await fetch(`${API_BASE}/api/aura076/unban/${user.user_id}`, {
         method: 'DELETE',
         headers: makeHeaders(),
       });

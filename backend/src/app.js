@@ -399,8 +399,8 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/ai', aiChatRoutes);
 app.use('/api/remediation', remediationRoutes);
 app.use('/api/schedules', schedulesRoutes);
-app.use('/api/admin/db-stats', dbStatsRoutes); // DB observability — auth-gated
-app.use('/api/admin', adminRoutes);             // User ban management — ADMIN_SECRET protected
+app.use('/api/aura076/db-stats', dbStatsRoutes); // DB observability — auth-gated
+app.use('/api/aura076', adminRoutes);             // User ban management — ADMIN_SECRET protected
 
 // ─── Public Share Report Endpoint (no auth required) ────────────────────────
 // GET /api/reports/:token  — retrieve a shared report snapshot by its token
