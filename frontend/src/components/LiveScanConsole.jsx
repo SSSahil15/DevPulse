@@ -295,14 +295,14 @@ function AiInsightsPanel({ aiSummary, aiEvents, isActive }) {
                 </div>
                 <div className="flex items-end gap-1">
                   <span className="text-xl font-black tabular-nums text-amber-400">
-                    {Math.round(aiSummary.failureProbability * 100)}%
+                    {Math.round(aiSummary.failureProbability)}%
                   </span>
                 </div>
                 {/* Bar */}
                 <div className="mt-1.5 h-1 rounded-full bg-white/[0.06] overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-700 bg-amber-500"
-                    style={{ width: `${Math.round(aiSummary.failureProbability * 100)}%` }}
+                    style={{ width: `${Math.round(aiSummary.failureProbability)}%` }}
                   />
                 </div>
               </div>

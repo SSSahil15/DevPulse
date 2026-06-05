@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 
 export default function CountUp({ value, duration = 1500, isSpinning = false }) {
   const [count, setCount] = useState(0);
+  
+  const suffix = typeof value === 'string' && value.endsWith('%') ? '%' : '';
 
   useEffect(() => {
     let animationFrameId;
@@ -55,5 +57,5 @@ export default function CountUp({ value, duration = 1500, isSpinning = false }) 
     return () => cancelAnimationFrame(animationFrameId);
   }, [value, duration, isSpinning]);
 
-  return <span>{count}</span>;
+  return <span>{count}{suffix}</span>;
 }
