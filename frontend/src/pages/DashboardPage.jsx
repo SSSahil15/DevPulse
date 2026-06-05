@@ -26,6 +26,7 @@ import AnalysisPanel from '../components/AnalysisPanel';
 import RepositoryCard from '../components/RepositoryCard';
 import ReportTemplate from '../components/ReportTemplate';
 import CountUp from '../components/CountUp';
+import { AIPipelineInsights, PipelineStages, VulnerabilityList } from '../components/ReportComponents';
 import { DashboardProvider } from '../context/DashboardContext';
 import { useDashboard } from '../hooks/useDashboard';
 
@@ -510,22 +511,7 @@ function DashboardContent({ accessToken, onLogout, user }) {
                     </div>
 
                     {/* AI Pipeline Insights */}
-                    {r.insights?.explanation && (
-                      <div
-                        className="rounded-2xl p-4"
-                        style={{
-                          background: 'rgba(37,99,235,0.05)',
-                          boxShadow: 'inset 0 0 0 1px rgba(37,99,235,0.15)',
-                        }}
-                      >
-                        <p className="section-label mb-[18px]">AI Pipeline Insights</p>
-                        <ul className="text-sm text-secondary max-w-[65ch] mb-[18px] list-disc ml-4 space-y-1">
-                          {r.insights.explanation.split('. ').filter(Boolean).map((sentence, idx) => (
-                            <li key={idx}>{sentence}{sentence.endsWith('.') ? '' : '.'}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    <AIPipelineInsights insights={r.insights} />
 
                     {/* AI Analysis (from Analyze Repository button — current session only) */}
                     {(() => {
@@ -598,32 +584,7 @@ function DashboardContent({ accessToken, onLogout, user }) {
                     })()}
 
                     {/* Pipeline Stages */}
-                    <div className="surface-2 rounded-2xl p-6">
-                      <p className="section-label mb-4">Pipeline Stages</p>
-                      <div className="space-y-2">
-                        {[
-                          { name: 'Backend Tests', status: r.stages?.backend?.tests },
-                          { name: 'Frontend Build', status: r.stages?.frontend?.build },
-                          { name: 'Frontend Tests', status: r.stages?.frontend?.tests },
-                          { name: 'Docker Build', status: r.stages?.docker?.build },
-                        ].map(({ name, status }) => (
-                          <div
-                            key={name}
-                            className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0"
-                          >
-                            <span className="text-sm text-slate-400">{name}</span>
-                            <span
-                              className={`text-xs font-bold uppercase tracking-widest flex items-center gap-2 ${stgColor(status)}`}
-                            >
-                              <span
-                                className={`status-dot animate-status-pulse ${status === 'success' ? 'bg-emerald-400 text-emerald-400' : status === 'failure' ? 'bg-red-400 text-red-400' : 'bg-slate-500 text-slate-500'}`}
-                              />
-                              {stgLabel(status)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    <PipelineStages stages={r.stages} />
 
                     {/* Score History Chart */}
                     {(() => {
@@ -700,43 +661,12 @@ function DashboardContent({ accessToken, onLogout, user }) {
                     })()}
 
                     {/* Top Vulnerabilities */}
-                    {vulns.length > 0 && (
-                      <div className="surface-2 rounded-2xl p-6">
-                        <p className="section-label mb-4">Top Vulnerabilities ({vulns.length})</p>
-                        <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                          {vulns.slice(0, 20).map((v, vi) => (
-                            <div
-                              key={vi}
-                              className="flex items-start gap-3 p-2 rounded-xl bg-white/[0.02]"
-                            >
-                              <span
-                                className={`shrink-0 text-[10px] font-black uppercase px-1.5 py-0.5 rounded tracking-widest ${
-                                  v.severity === 'CRITICAL'
-                                    ? 'bg-red-500/10 text-red-400'
-                                    : v.severity === 'HIGH'
-                                      ? 'bg-orange-500/10 text-orange-400'
-                                      : 'bg-amber-500/10 text-amber-400'
-                                }`}
-                              >
-                                {v.severity}
-                              </span>
-                              <div className="min-w-0">
-                                <p className="text-xs text-slate-300 font-mono truncate">{v.id}</p>
-                                <p className="text-[11px] text-slate-500 truncate">
-                                  {v.pkgName} {v.installedVersion}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {vulns.length === 0 && (
-                      <div className="flex items-center gap-2 text-emerald-400 text-sm font-semibold">
-                        <CheckCircle2 className="w-4 h-4" /> No vulnerabilities found in this scan
-                      </div>
-                    )}
+                    <VulnerabilityList
+                      vulnerabilities={vulns}
+                      maxItems={20}
+                      criticalCount={r.stages?.security?.critical || 0}
+                      highCount={r.stages?.security?.high || 0}
+                    />
                   </div>
                 </div>
               </div>

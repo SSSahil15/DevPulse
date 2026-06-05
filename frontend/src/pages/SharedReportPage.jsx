@@ -21,39 +21,9 @@ import {
   FileText,
   AlertTriangle,
 } from 'lucide-react';
+import { ScoreCard, AIPipelineInsights, PipelineStages, VulnerabilityList } from '../components/ReportComponents';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
-
-function MetricCard({ label, value, color = 'text-white' }) {
-  return (
-    <div
-      className="flex flex-col items-center justify-center p-5 rounded-2xl"
-      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
-    >
-      <div className={`text-3xl font-black tabular-nums ${color}`}>{value}</div>
-      <div className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">
-        {label}
-      </div>
-    </div>
-  );
-}
-
-function SeverityBadge({ severity }) {
-  const cfg =
-    {
-      CRITICAL: 'bg-red-500/10 text-red-400 border-red-500/20',
-      HIGH: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-      MEDIUM: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-      LOW: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    }[severity] || 'bg-slate-500/10 text-slate-400 border-slate-500/20';
-  return (
-    <span
-      className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${cfg}`}
-    >
-      {severity}
-    </span>
-  );
-}
 
 export default function SharedReportPage() {
   const { token } = useParams();
@@ -232,21 +202,21 @@ export default function SharedReportPage() {
 
         {/* Score Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <MetricCard label="DevPulse Score" value={score} color={scoreColor} />
-          <MetricCard
+          <ScoreCard label="DevPulse Score" value={score} colorClass={scoreColor} />
+          <ScoreCard
             label="Critical CVEs"
             value={critical}
-            color={critical > 0 ? 'text-red-400' : 'text-emerald-400'}
+            colorClass={critical > 0 ? 'text-red-400' : 'text-emerald-400'}
           />
-          <MetricCard
+          <ScoreCard
             label="High CVEs"
             value={high}
-            color={high > 0 ? 'text-orange-400' : 'text-emerald-400'}
+            colorClass={high > 0 ? 'text-orange-400' : 'text-emerald-400'}
           />
-          <MetricCard
+          <ScoreCard
             label="Medium CVEs"
             value={medium}
-            color={medium > 0 ? 'text-amber-400' : 'text-emerald-400'}
+            colorClass={medium > 0 ? 'text-amber-400' : 'text-emerald-400'}
           />
         </div>
 
@@ -257,114 +227,17 @@ export default function SharedReportPage() {
         </div>
 
         {/* AI Insights */}
-        {r.insights?.explanation && (
-          <div
-            className="rounded-2xl p-5 space-y-2"
-            style={{ background: 'rgba(37,99,235,0.05)', border: '1px solid rgba(37,99,235,0.15)' }}
-          >
-            <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-3">
-              🤖 AI Pipeline Insights
-            </p>
-            <ul className="text-sm text-slate-300 leading-relaxed list-disc ml-4 space-y-1">
-              {r.insights.explanation.split('. ').filter(Boolean).map((sentence, idx) => (
-                <li key={idx}>{sentence}{sentence.endsWith('.') ? '' : '.'}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <AIPipelineInsights insights={r.insights} />
 
         {/* Pipeline Stages */}
-        <div
-          className="rounded-2xl overflow-hidden"
-          style={{ border: '1px solid rgba(255,255,255,0.06)' }}
-        >
-          <div
-            className="px-5 py-4 border-b border-white/[0.06]"
-            style={{ background: 'rgba(255,255,255,0.02)' }}
-          >
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-              Pipeline Stages
-            </p>
-          </div>
-          <div className="divide-y divide-white/[0.04]">
-            {[
-              { name: 'Backend Tests', status: stages.backend?.tests },
-              { name: 'Frontend Build', status: stages.frontend?.build },
-              { name: 'Frontend Tests', status: stages.frontend?.tests },
-              { name: 'Docker Build', status: stages.docker?.build },
-            ].map(({ name, status: s }) => (
-              <div key={name} className="flex items-center justify-between px-5 py-3">
-                <span className="text-sm text-slate-400">{name}</span>
-                <span
-                  className={`text-xs font-black uppercase tracking-widest flex items-center gap-2 ${stageColor(s)}`}
-                >
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${s === 'success' ? 'bg-emerald-400' : s === 'failure' ? 'bg-red-400' : 'bg-slate-600'}`}
-                  />
-                  {stageLabel(s)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <PipelineStages stages={stages} />
 
         {/* Vulnerabilities */}
-        {vulns.length > 0 && (
-          <div
-            className="rounded-2xl overflow-hidden"
-            style={{ border: '1px solid rgba(255,255,255,0.06)' }}
-          >
-            <div
-              className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between"
-              style={{ background: 'rgba(255,255,255,0.02)' }}
-            >
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                Vulnerabilities ({vulns.length})
-              </p>
-              {(critical > 0 || high > 0) && (
-                <span className="text-[10px] font-bold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20">
-                  ⚠️ Attention required
-                </span>
-              )}
-            </div>
-            <div className="divide-y divide-white/[0.04] max-h-80 overflow-y-auto">
-              {vulns.slice(0, 25).map((v, i) => (
-                <div key={i} className="flex items-center gap-3 px-5 py-3">
-                  <SeverityBadge severity={v.severity} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-mono text-sky-400 truncate">{v.id}</p>
-                    <p className="text-[11px] text-slate-500 truncate">
-                      {v.pkgName} {v.installedVersion}
-                    </p>
-                  </div>
-                  {v.fixedVersion && (
-                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 shrink-0">
-                      Fix: {v.fixedVersion}
-                    </span>
-                  )}
-                </div>
-              ))}
-              {vulns.length > 25 && (
-                <div className="px-5 py-3 text-center text-[11px] text-slate-600">
-                  +{vulns.length - 25} more vulnerabilities not shown
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {vulns.length === 0 && (
-          <div
-            className="flex items-center gap-3 text-emerald-400 text-sm font-semibold p-5 rounded-2xl"
-            style={{
-              background: 'rgba(16,185,129,0.06)',
-              border: '1px solid rgba(16,185,129,0.15)',
-            }}
-          >
-            <CheckCircle2 className="w-5 h-5" />
-            No vulnerabilities found in this scan — repository is clean
-          </div>
-        )}
+        <VulnerabilityList
+          vulnerabilities={vulns}
+          criticalCount={critical}
+          highCount={high}
+        />
 
         {/* CTA */}
         <div className="pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4">

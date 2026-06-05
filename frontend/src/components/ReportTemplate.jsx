@@ -17,6 +17,7 @@ import {
   GitCommit,
   BarChart3,
 } from 'lucide-react';
+import { AIPipelineInsights, VulnerabilityList } from './ReportComponents';
 
 function getRiskColor(category) {
   if (category === 'LOW')
@@ -304,98 +305,19 @@ export default function ReportTemplate({ report, origin }) {
               </div>
 
               {/* Vulnerability details */}
-              {report.stages.security.vulnerabilities?.length > 0 && (
-                <div className="mt-6 border-t border-white/5 pt-6">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-4">
-                    Top Vulnerabilities
-                  </p>
-                  <div className="space-y-2">
-                    {report.stages.security.vulnerabilities.map((vuln, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between p-3 bg-white/[0.02] ring-1 ring-white/[0.06] rounded-xl"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`text-[9px] font-black tracking-widest px-2 py-0.5 rounded uppercase ${
-                              vuln.severity === 'CRITICAL'
-                                ? 'bg-red-500/10 text-red-400'
-                                : vuln.severity === 'HIGH'
-                                  ? 'bg-orange-500/10 text-orange-400'
-                                  : 'bg-amber-500/10 text-amber-400'
-                            }`}
-                          >
-                            {vuln.severity}
-                          </span>
-                          <span className="font-mono font-bold text-sm text-slate-200">
-                            {vuln.id}
-                          </span>
-                          <span className="font-mono text-xs text-blue-400">{vuln.pkgName}</span>
-                        </div>
-                        {vuln.fixedVersion && (
-                          <span className="text-[10px] text-emerald-400 font-mono font-bold">
-                            Fix: {vuln.fixedVersion}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div className="mt-6">
+                <VulnerabilityList
+                  vulnerabilities={report.stages.security.vulnerabilities}
+                  maxItems={report.stages.security.vulnerabilities?.length || 25}
+                  criticalCount={report.stages.security.critical || 0}
+                  highCount={report.stages.security.high || 0}
+                />
+              </div>
             </div>
           )}
 
           {/* AI Insights */}
-          {report.insights && (
-            <div className="glass-card rounded-2xl p-7 mb-6">
-              <div className="flex items-center gap-2 mb-5">
-                <Lightbulb className="w-4 h-4 text-amber-400" />
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                  AI Insights
-                </p>
-              </div>
-              {report.insights.explanation ? (
-                <ul className="text-sm text-slate-300 leading-relaxed mb-5 list-disc ml-4 space-y-1">
-                  {report.insights.explanation.split('. ').filter(Boolean).map((sentence, idx) => (
-                    <li key={idx}>{sentence}{sentence.endsWith('.') ? '' : '.'}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-slate-300 leading-relaxed mb-5">
-                  No insights generated.
-                </p>
-              )}
-
-              {report.insights.rootCause && (
-                <div className="mb-5 bg-red-500/5 ring-1 ring-red-500/20 rounded-xl p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-red-400 mb-2">
-                    Root Cause
-                  </p>
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    {report.insights.rootCause}
-                  </p>
-                </div>
-              )}
-
-              {report.insights.suggestions?.length > 0 && (
-                <div className="bg-emerald-500/5 ring-1 ring-emerald-500/20 rounded-xl p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400 mb-3">
-                    Recommended Actions
-                  </p>
-                  <ul className="space-y-2">
-                    {report.insights.suggestions.map((s, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                        <span className="text-xs text-slate-300 leading-snug whitespace-pre-wrap">
-                          {s}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
+          <AIPipelineInsights insights={report.insights} />
 
           {/* Report Metadata Footer */}
           <div className="bg-white/[0.02] ring-1 ring-white/[0.06] rounded-2xl p-5 flex items-center justify-between text-xs text-slate-500">
