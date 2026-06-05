@@ -82,7 +82,7 @@ All powered by real-time analysis and an intelligent AI Copilot.
 ---
 
 <a id="features"></a>
-## ✨ Features
+## [✨ Features](https://dev-pulse-azure.vercel.app/features)
 
 ### 📊 The DevPulse Score
 A proprietary, composite health metric calculated from security vulnerabilities, test suite reliability, CI/CD stability, and ML-driven predictive risk. One number. Zero ambiguity.
@@ -191,7 +191,7 @@ devpulse/
 ---
 
 <a id="quick-start"></a>
-## ⚡ Quick Start
+## [⚡ Quick Start](https://dev-pulse-azure.vercel.app/docs)
 
 DevPulse is fully Dockerized. The entire platform — frontend, backend, AI service, database, and cache — starts with a single command.
 
@@ -307,7 +307,7 @@ Additional workflows: CodeQL static analysis, Dependabot auto-merge, Lighthouse 
 ---
 
 <a id="roadmap"></a>
-## 🗺️ Roadmap
+## [🗺️ Roadmap](https://dev-pulse-azure.vercel.app/changelog)
 
 | Status | Feature | Category |
 | :---: | :--- | :--- |
@@ -333,7 +333,7 @@ Additional workflows: CodeQL static analysis, Dependabot auto-merge, Lighthouse 
 
 ---
 
-## 🤝 Contributing
+## [🤝 Contributing](https://dev-pulse-azure.vercel.app/contributing)
 
 Contributions are welcome! Please read our [Contributing Guide](https://dev-pulse-azure.vercel.app/contributing) for guidelines on opening issues, submitting pull requests, and the local development workflow.
 
