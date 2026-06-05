@@ -1,221 +1,313 @@
 <div align="center">
   <img src="./assets/logo.png" width="120" alt="DevPulse Logo" />
+
   <h1>DevPulse</h1>
-  <p><strong>Intelligent DevSecOps Platform & AI Pipeline Copilot</strong></p>
-  
+
+  <p><strong>The Intelligent DevSecOps Platform that turns raw engineering signals into action.</strong></p>
+
   <p>
-    <img src="https://img.shields.io/badge/react-18.x-blue.svg" alt="React" />
-    <img src="https://img.shields.io/badge/node.js-20%2B-green.svg" alt="Node" />
-    <img src="https://img.shields.io/badge/python-3.11-yellow.svg" alt="Python" />
-    <img src="https://img.shields.io/badge/ai-Groq-orange.svg" alt="Groq" />
-    <img src="https://img.shields.io/badge/docker-compose-2496ED.svg" alt="Docker" />
+    <a href="#-demo">Live Demo</a> ·
+    <a href="#-quick-start">Quick Start</a> ·
+    <a href="#-features">Features</a> ·
+    <a href="#%EF%B8%8F-architecture">Architecture</a> ·
+    <a href="#-roadmap">Roadmap</a>
+  </p>
+
+  <p>
+    <img src="https://img.shields.io/badge/React-18.x-61DAFB?logo=react&logoColor=white" alt="React" />
+    <img src="https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white" alt="Node" />
+    <img src="https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white" alt="Python" />
+    <img src="https://img.shields.io/badge/AI-Groq%20LLaMA%203.3-FF6F00" alt="Groq" />
+    <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" alt="Docker" />
+    <img src="https://img.shields.io/badge/Observability-Grafana%20LGTM-F46800?logo=grafana&logoColor=white" alt="Grafana" />
+    <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License" />
   </p>
 </div>
 
 ---
 
-## 📖 Overview
+## 🖼️ Screenshots
 
-**DevPulse** is a production-grade DevSecOps platform that analyzes your GitHub repositories, calculates a comprehensive "DevPulse Score," and provides an intelligent, action-oriented AI Copilot to help you fix vulnerabilities, improve test stability, and prevent deployment failures.
+> **Dashboard — Full Repository Health Overview**
 
-By merging CI/CD heuristics, Trivy security scanning, repository health signals, and AI-assisted guidance, DevPulse surfaces exactly what matters, when it matters.
+<!-- SCREENSHOT PLACEHOLDER: Replace with ./assets/dashboard new ui.png -->
+![DevPulse Dashboard](<./assets/dashboard new ui.png>)
 
----
+> **AI Copilot — Contextual, Action-First Guidance**
 
-## ✨ Key Features
-
-- 🔒 **Secure GitHub OAuth**: Direct authentication using GitHub OAuth Apps with encrypted, server-side JWT session management.
-- ⚡ **Asynchronous Scanning Engine**: Powered by **Redis & BullMQ**. Repository analysis jobs are offloaded to dedicated background workers, ensuring zero UI blocking.
-- 📡 **Real-Time WebSockets**: Instant bidirectional communication via Socket.io. The frontend receives live progress updates as scans progress through stages (Cloning, Trivy Scan, AI Analysis).
-- 📊 **The DevPulse Score**: A proprietary metric calculated from security vulnerabilities, test results, and ML-driven predictive failure analysis.
-- 🤖 **Action-First AI Copilot**: A context-aware chat widget powered by `llama-3.3-70b-versatile`. Automatically references pipeline data, cites CVEs, and provides one-click action buttons. Includes a built-in **AI Evaluation Framework** for continuous benchmark testing.
-- 🛡️ **Intelligent Fallback**: Even if the LLM API is unavailable, DevPulse falls back to a deterministic reasoning engine to guide you.
-- 👁️ **Full-Stack Observability**: Built-in integration with the **Grafana LGTM Stack** (Loki, Grafana, Tempo, Mimir/Prometheus) using OpenTelemetry for distributed tracing and centralized logging.
+<!-- SCREENSHOT PLACEHOLDER: Replace with ./assets/chatbot new ui.png -->
+![DevPulse AI Copilot](<./assets/chatbot new ui.png>)
 
 ---
 
-## 🛡️ Hardening, Observability & Quality Engineering
+## 💔 The Problem
 
-DevPulse has been heavily audited, refactored, and hardened:
+Modern development teams rely on dozens of disconnected tools:
 
-### 🔒 Security & Rate Limiting
+- GitHub for source control
+- CI/CD systems for deployments
+- Security scanners for vulnerabilities
+- Monitoring tools for observability
+- Documentation platforms for knowledge sharing
 
-- **Strict Input Validation**: Zod schemas enforce query validation across all API endpoints, mitigating SSRF, XSS, and SQLi.
-- **Redis-Backed Rate Limiting**: Wired rate limiters to critical endpoints (analysis submissions, AI chat) using `express-rate-limit` and `rate-limit-redis` to guard against scraping, bot abuse, and DoS.
-- **HTTP Security Headers**: Enforced using `helmet` with strict CSP rules.
-- **CORS Lockdowns**: Dynamic origin checking for secure local testing and production domains.
+The result is fragmented visibility, delayed issue detection, and slow decision-making.
 
-### 📊 Database Optimizations
+Teams spend more time understanding problems than solving them.
 
-- **PostgreSQL Migration**: Fully migrated to Postgres with a robust connection pool.
-- **Windowed Pagination**: Employs `COUNT(*) OVER()` window functions to retrieve listings and total counts in a single database round-trip.
+---
 
-### 📝 Observability & Distributed Tracing
+## 💡 The Solution
 
-- **Grafana Dashboards**: Includes pre-provisioned Grafana dashboards tracking backend latency, AI inference duration, worker queue depths, and PostgreSQL stats.
-- **OpenTelemetry**: Spans propagate across the Node.js backend and the Python AI microservice. Traces are exported directly to Tempo.
-- **Prometheus Metrics**: `prom-client` in Node and Python exposes robust API tracking metrics.
-- **Loki Logging**: Complete central log aggregation via Docker's Promtail scraper.
+**DevPulse** is an AI-native DevSecOps platform that analyzes repositories, security posture, deployment readiness, and engineering health from a single dashboard.
 
-### 🧹 Codebase Clarity
+Instead of digging through logs, reports, and alerts, DevPulse answers:
 
-- DevPulse has been surgically cleaned. All obsolete test suites, unused legacy custom metric wrappers, dead AI RAG integrations, and abandoned scripts have been entirely removed to ensure a 100% lean, production-only footprint.
+- Is this repository healthy?
+- Is it safe to deploy?
+- What security issues should be fixed first?
+- Where are the highest engineering risks?
+- What actions should the team take next?
+
+All powered by real-time analysis and an intelligent AI Copilot.
+
+---
+
+## ✨ Features
+
+### 📊 The DevPulse Score
+A proprietary, composite health metric calculated from security vulnerabilities, test suite reliability, CI/CD stability, and ML-driven predictive risk. One number. Zero ambiguity.
+
+### 🤖 Action-First AI Copilot
+Powered by **LLaMA 3.3-70B via Groq**, the Copilot is not a generic chatbot. It knows your pipeline, references your CVEs by ID, explains failures in plain language, and offers one-click remediation paths. Even if the LLM is unreachable, a deterministic fallback engine keeps the Copilot useful.
+
+### ⚡ Real-Time Async Scanning
+Repository analysis is offloaded to **BullMQ workers backed by Redis**. Your UI never blocks. Live progress stages — Cloning → Trivy Scan → AI Analysis — stream to your browser via **Socket.io WebSockets** in real time.
+
+### 🔒 Security-First by Design
+- Trivy filesystem and container image scanning with CRITICAL/HIGH/MEDIUM severity gates
+- Zod-validated inputs on every API endpoint — SSRF, XSS, SQLi mitigated by default
+- Redis-backed rate limiting on all sensitive endpoints
+- Strict CSP enforcement via `helmet`
+- OAuth tokens never exposed to the client — encrypted server-side JWT sessions only
+
+### 👁️ Full-Stack Observability
+One command adds the complete **Grafana LGTM stack** (Loki, Grafana, Tempo, Mimir/Prometheus). Pre-provisioned dashboards track backend latency, AI inference duration, BullMQ worker queue depth, and PostgreSQL performance. OpenTelemetry traces span from your Node.js API into the Python microservice.
+
+### 📤 Shareable Reports
+Generate a clean, public-read-only report link for any analyzed repository. Share repository health with your team, stakeholders, or reviewers in one click.
 
 ---
 
 ## 🛠️ Tech Stack
 
-**Frontend**
-
-- React 18 & Vite (Tailwind CSS, Glassmorphism, Recharts, Lucide React)
-- Socket.io Client (Real-time updates)
-
-**Backend (Node.js)**
-
-- Express.js (API & WebSockets)
-- PostgreSQL (Primary DB)
-- Redis & BullMQ (Message broker & Job queues)
-- Custom JWT Authentication & GitHub OAuth
-
-**AI Microservice (Python)**
-
-- FastAPI & Uvicorn
-- LangChain & OpenAI / Groq SDKs
-- Dedicated Evaluation Framework
-
-**Observability & Infrastructure**
-
-- Docker & Docker Compose
-- Grafana, Prometheus, Loki, Tempo, OpenTelemetry Collector
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 18, Vite, Tailwind CSS, Recharts, Lucide React, Socket.io Client |
+| **Backend** | Node.js, Express.js, PostgreSQL, Redis, BullMQ, JWT, GitHub OAuth |
+| **AI Service** | Python, FastAPI, LangChain, Groq SDK, Custom Eval Framework |
+| **Security** | Trivy, Zod, Helmet, express-rate-limit, rate-limit-redis |
+| **Observability** | Grafana, Prometheus, Loki, Tempo, OpenTelemetry Collector, Promtail |
+| **Infrastructure** | Docker, Docker Compose, GitHub Actions CI/CD |
 
 ---
 
 ## 🏗️ Architecture
 
-```text
+```
+┌──────────────────────────────────────────────────────────────┐
+│                         Browser                              │
+│              React + Vite  ←──── Socket.io ────┐            │
+└──────────────────────┬──────────────────────────┼────────────┘
+                       │ REST                      │ WebSocket
+              ┌────────▼────────┐        ┌─────────┴──────────┐
+              │  Node.js API    │        │   BullMQ Worker     │
+              │  (Express)      │        │   (Redis-backed)    │
+              └───┬─────┬───────┘        └──────────┬──────────┘
+                  │     │                            │
+         ┌────────▼┐  ┌─▼──────────┐   ┌────────────▼─────────┐
+         │ GitHub  │  │ PostgreSQL  │   │  Python AI Service   │
+         │  OAuth  │  │    (DB)     │   │  (FastAPI + LangChain)│
+         └─────────┘  └────────────┘   └──────────────────────┘
+                                                    │
+                                           ┌────────▼──────────┐
+                                           │   Groq LLaMA 3.3  │
+                                           │   (LLM Inference) │
+                                           └───────────────────┘
+              │
+   ┌──────────▼──────────────────────────────────┐
+   │        Observability Stack (optional)        │
+   │  Grafana · Prometheus · Loki · Tempo · OTEL  │
+   └─────────────────────────────────────────────┘
+```
+
+**Repository structure:**
+
+```
 devpulse/
-├── ai/                     # Python FastAPI Predictive ML microservice & Eval Framework
+├── ai/                     # Python FastAPI AI microservice & Eval Framework
 ├── backend/                # Node.js Express API, BullMQ Workers, WebSockets
 ├── frontend/               # React / Vite Web Dashboard
-├── observability/          # Grafana Dashboards, Prometheus Configs, Loki/Tempo
-├── docker-compose.yml      # Core application stack (App, DB, Redis)
-└── docker-compose.observability.yml # LGTM Monitoring Stack
+├── observability/          # Grafana Dashboards, Prometheus, Loki, Tempo configs
+├── .github/workflows/      # GitHub Actions CI/CD pipelines
+├── docker-compose.yml                    # Core application stack
+└── docker-compose.observability.yml      # LGTM monitoring stack
 ```
 
 ---
 
-## 🚀 Local Setup & Installation
+## ⚡ Quick Start
 
-DevPulse is fully Dockerized for a seamless one-click local setup!
+DevPulse is fully Dockerized. The entire platform — frontend, backend, AI service, database, and cache — starts with a single command.
 
 ### Prerequisites
 
-- **Docker** and **Docker Compose** installed.
-- **Groq API Key**
-- **GitHub OAuth App** (Authorization callback URL set to `http://localhost:4000/auth/github/callback`)
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+- A [Groq API Key](https://console.groq.com/) (free tier available)
+- A [GitHub OAuth App](https://github.com/settings/developers) with callback URL set to `http://localhost:4000/auth/github/callback`
 
-### 1. Environment Configuration
+### 1. Clone the repository
 
-Create a `.env` file in the `backend/` directory:
+```bash
+git clone https://github.com/SSSahil15/DevPulse.git
+cd DevPulse
+```
 
+### 2. Configure environment variables
+
+**`backend/.env`**
 ```env
 NODE_ENV=production
 PORT=4000
 FRONTEND_URL=http://localhost:5174
 BACKEND_URL=http://localhost:4000
 
-# PostgreSQL and Redis (Docker internal hostnames)
 DATABASE_URL=postgresql://devpulse:devpulse@postgres:5432/devpulse
 REDIS_URL=redis://redis:6379
 
-# GitHub OAuth App credentials
 GITHUB_CLIENT_ID=your_github_client_id
 GITHUB_CLIENT_SECRET=your_github_client_secret
 
-# Secrets
-TOKEN_ENCRYPTION_SECRET=12345678901234567890123456789012
+TOKEN_ENCRYPTION_SECRET=your_32_character_secret_here
 JWT_SECRET=your_secure_jwt_secret_string
 
-# LLM integration
-GROQ_API_KEY=your-groq-api-key
+GROQ_API_KEY=your_groq_api_key
 ```
 
-Create a `.env` file in the `frontend/` directory:
-
+**`frontend/.env`**
 ```env
 VITE_API_URL=http://localhost:4000
 ```
 
-### 2. Start the Application
+### 3. Launch
 
-You can launch the core application alone, or with the full observability stack attached:
-
-**Start Core Stack (Frontend, Backend, Worker, AI, Postgres, Redis):**
-
+**Core stack (App + DB + Redis + AI):**
 ```bash
 docker compose up -d
 ```
 
-**Start Core + Full Observability Stack (Grafana, Loki, Tempo, Prometheus):**
-
+**With full observability (adds Grafana, Loki, Tempo, Prometheus):**
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.observability.yml up -d
 ```
 
-> **The application will be running at [http://localhost:5174](http://localhost:5174)**
-> **Grafana Dashboards will be available at [http://localhost:3001](http://localhost:3001)** (default login: admin / devpulse)
+| Service | URL |
+|---|---|
+| DevPulse App | http://localhost:5174 |
+| Grafana Dashboards | http://localhost:3001 (admin / devpulse) |
+| Backend API | http://localhost:4000 |
+| Swagger Docs | http://localhost:4000/api-docs |
 
 ---
 
-## 🕹️ Usage Workflow
+## 🕹️ Usage
 
-1. Navigate to `http://localhost:5174` and log in via GitHub.
-2. The dashboard fetches your GitHub repositories.
-3. Click a repository to initiate an async analysis. The BullMQ worker processes it, pushing real-time progress via WebSockets to your UI!
-4. The system simulates a CI/CD run, fetches security scans, and runs predictive ML.
-5. Review your **DevPulse Score**.
-6. Open the **AI Copilot** widget in the bottom right corner to discuss vulnerabilities and patch instructions.
+1. **Log in** at `http://localhost:5174` via GitHub OAuth
+2. **Select a repository** from your GitHub account
+3. **Watch the analysis run live** — BullMQ processes the job, WebSockets push stage-by-stage progress to your dashboard
+4. **Review your DevPulse Score** — security findings, test reliability, and predictive risk in one place
+5. **Open the AI Copilot** — ask about any vulnerability, failed stage, or score breakdown and get actionable remediation steps
+6. **Share your report** — generate a public read-only link for stakeholders or teammates
+
+---
+
+## 🔬 AI Evaluation Framework
+
+DevPulse includes a dedicated benchmarking system for the AI service under `ai/evaluators/`. It runs the LLM against curated security and pipeline datasets, scoring responses on accuracy and relevance. This enables continuous quality measurement as models or prompts change.
+
+```bash
+# Run evaluations inside the AI container
+docker compose exec ai python scripts/evaluate.py
+```
 
 ---
 
 ## ☁️ Cloud Deployment
 
-Since DevPulse is entirely containerized, deployment to any VPS (AWS EC2, DigitalOcean, Hetzner) or container platform (Render, Railway) is extremely straightforward.
+DevPulse is fully containerized and deploys cleanly to any VPS (AWS EC2, DigitalOcean, Hetzner) or managed platform (Render, Railway).
 
-If you are deploying the **Frontend** to Vercel and the **Backend/AI** to Render (using their Docker support):
+**Recommended split:**
+- **Frontend** → Vercel (set `VITE_API_URL` to your backend URL)
+- **Backend + AI** → Render (Docker support, free tier available)
 
-1. Set `VITE_API_URL` in Vercel to your deployed backend URL.
-2. In your GitHub OAuth App, set the production callback URL to:
-   ```text
-   https://your-backend.onrender.com/auth/github/callback
-   ```
+Update your GitHub OAuth App's callback URL to your production backend domain before deploying.
 
-**Required Production Backend Variables:**
-
-```env
-NODE_ENV=production
-BACKEND_URL=https://your-backend.onrender.com
-FRONTEND_URL=https://your-frontend.vercel.app
-AI_SERVICE_URL=https://your-ai-service.onrender.com
-
-# Managed Database Connections
-DATABASE_URL=postgresql://user:password@host:5432/devpulse
-REDIS_URL=redis://default:password@host:6379
-
-# GitHub OAuth App credentials
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-
-# Secrets
-TOKEN_ENCRYPTION_SECRET=generate-a-64-char-secret
-JWT_SECRET=generate-a-secure-random-string-min-32-chars
-
-# AI Integration
-GROQ_API_KEY=your-groq-api-key
-```
+See [`DEPLOYMENT.md`](./DEPLOYMENT.md) for the full cloud configuration guide.
 
 ---
 
-## 📝 License
+## 🧪 CI/CD Pipeline
 
-MIT License.
+DevPulse ships with a production-grade GitHub Actions pipeline across **6 automated stages**:
+
+| Stage | What it does | Blocks deploy? |
+|---|---|---|
+| **Backend** | `npm ci` → lint → test | ✅ Yes |
+| **Frontend** | `npm ci` → Vite build → test | ✅ Yes |
+| **Security** | Trivy filesystem scan (CRITICAL/HIGH) | ✅ Yes |
+| **Docker** | Build image → Trivy image scan | ✅ Yes |
+| **Report** | POST results to DevPulse API | ❌ No |
+| **Deploy** | Gate: main branch only | N/A |
+
+Additional workflows: CodeQL static analysis, Dependabot auto-merge, Lighthouse performance auditing, pip-audit for Python dependencies.
+
+---
+
+## 🗺️ Roadmap
+
+- [x] GitHub OAuth & repository analysis
+- [x] DevPulse Score engine
+- [x] Real-time WebSocket updates
+- [x] AI Copilot with LLaMA 3.3 + deterministic fallback
+- [x] Trivy security scanning integration
+- [x] Grafana LGTM observability stack
+- [x] Shareable reports
+- [x] Swagger / OpenAPI documentation
+- [ ] Historical trend analysis across multiple scans
+- [ ] Team dashboards and multi-user collaboration
+- [ ] Scheduled automatic analysis & notifications
+- [ ] Multi-repository aggregated health view
+- [ ] Support for GitLab and Bitbucket
+- [ ] Code-level remediation suggestions in AI Copilot
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read [`CONTRIBUTING.md`](./CONTRIBUTING.md) for guidelines on opening issues, submitting pull requests, and the local development workflow.
+
+---
+
+## 📄 License
+
+[MIT](./LICENSE) — free to use, fork, and build on.
+
+---
+
+<div align="center">
+  <p>Built with ❤️ by <strong>Sahil Ansari</strong></p>
+  <p>
+    <a href="https://github.com/SSSahil15/DevPulse">⭐ Star on GitHub</a> ·
+    <a href="https://github.com/SSSahil15/DevPulse/issues">🐛 Report a Bug</a> ·
+    <a href="https://github.com/SSSahil15/DevPulse/issues">💡 Request a Feature</a>
+  </p>
+</div>
