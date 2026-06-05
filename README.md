@@ -7,10 +7,10 @@
 
   <p>
     <a href="https://dev-pulse-azure.vercel.app/">Live Demo</a> ·
-    <a href="#quick-start">Quick Start</a> ·
-    <a href="#features">Features</a> ·
-    <a href="#architecture">Architecture</a> ·
-    <a href="#roadmap">Roadmap</a>
+    <a href="https://dev-pulse-azure.vercel.app/docs">Quick Start</a> ·
+    <a href="https://dev-pulse-azure.vercel.app/features">Features</a> ·
+    <a href="https://dev-pulse-azure.vercel.app/docs/architecture">Architecture</a> ·
+    <a href="https://dev-pulse-azure.vercel.app/changelog">Roadmap</a>
   </p>
 
   <p>
@@ -335,7 +335,7 @@ Additional workflows: CodeQL static analysis, Dependabot auto-merge, Lighthouse 
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read [`docs/developer-guide/CONTRIBUTING.md`](./docs/developer-guide/CONTRIBUTING.md) for guidelines on opening issues, submitting pull requests, and the local development workflow.
+Contributions are welcome! Please read our [Contributing Guide](https://dev-pulse-azure.vercel.app/contributing) for guidelines on opening issues, submitting pull requests, and the local development workflow.
 
 ---
 
