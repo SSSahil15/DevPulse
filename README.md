@@ -28,15 +28,24 @@
 
 ## 🖼️ Screenshots
 
-> **Dashboard — Full Repository Health Overview**
+<div align="center">
+  <img src="./assets/Devpulse1.png" alt="DevPulse Dashboard" width="800" />
+  <p><em>Dashboard — Full Repository Health Overview</em></p>
+</div>
 
-<!-- SCREENSHOT PLACEHOLDER: Replace with ./assets/dashboard new ui.png -->
-![DevPulse Dashboard](<./assets/dashboard new ui.png>)
+<br/>
 
-> **AI Copilot — Contextual, Action-First Guidance**
+<div align="center">
+  <img src="./assets/Devpulse2.png" alt="DevPulse AI Copilot" width="800" />
+  <p><em>AI Copilot — Contextual, Action-First Guidance</em></p>
+</div>
 
-<!-- SCREENSHOT PLACEHOLDER: Replace with ./assets/chatbot new ui.png -->
-![DevPulse AI Copilot](<./assets/chatbot new ui.png>)
+<br/>
+
+<div align="center">
+  <img src="./assets/Devpulse3.png" alt="DevPulse Pipeline Analysis" width="800" />
+  <p><em>Pipeline & Security Analysis in Real-Time</em></p>
+</div>
 
 ---
 
@@ -95,6 +104,25 @@ One command adds the complete **Grafana LGTM stack** (Loki, Grafana, Tempo, Mimi
 
 ### 📤 Shareable Reports
 Generate a clean, public-read-only report link for any analyzed repository. Share repository health with your team, stakeholders, or reviewers in one click.
+
+### 📸 Additional Platform Previews
+
+<div align="center">
+  <img src="./assets/Devpulse4.png" width="400" alt="Preview 1" />
+  <img src="./assets/Devpulse5.png" width="400" alt="Preview 2" />
+</div>
+<div align="center">
+  <img src="./assets/Devpulse6.png" width="400" alt="Preview 3" />
+  <img src="./assets/Devpulse7.png" width="400" alt="Preview 4" />
+</div>
+<div align="center">
+  <img src="./assets/Devpulse8.png" width="400" alt="Preview 5" />
+  <img src="./assets/Devpulse9.png" width="400" alt="Preview 6" />
+</div>
+<div align="center">
+  <img src="./assets/Devpulse10.png" width="400" alt="Preview 7" />
+  <img src="./assets/Devpulse11.png" width="400" alt="Preview 8" />
+</div>
 
 ---
 
