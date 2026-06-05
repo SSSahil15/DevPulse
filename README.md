@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./assets/logo.png" width="120" alt="DevPulse Logo" />
+  <img src="./assets/logo.jpeg" width="120" alt="DevPulse Logo" />
 
   <h1>DevPulse</h1>
 
