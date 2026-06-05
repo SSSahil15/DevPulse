@@ -346,10 +346,10 @@ Contributions are welcome! Please read our [Contributing Guide](https://dev-puls
 ---
 
 <div align="center">
-  <p>Built with ❤️ by <strong>Sahil Ansari</strong></p>
+  <p>Built with ⚡ by <strong>Sahil Ansari</strong></p>
   <p>
     <a href="https://github.com/SSSahil15/DevPulse">⭐ Star on GitHub</a> ·
-    <a href="https://github.com/SSSahil15/DevPulse/issues">🐛 Report a Bug</a> ·
-    <a href="https://github.com/SSSahil15/DevPulse/issues">💡 Request a Feature</a>
+    <a href="https://dev-pulse-azure.vercel.app/contributing">🐛 Report a Bug</a> ·
+    <a href="https://dev-pulse-azure.vercel.app/contributing">💡 Request a Feature</a>
   </p>
 </div>
