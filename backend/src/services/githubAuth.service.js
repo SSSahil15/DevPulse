@@ -59,7 +59,7 @@ function issueDevPulseJWT(githubUser) {
   };
 
   return jwt.sign(payload, config.jwtSecret, {
-    expiresIn: '30d',
+    expiresIn: '1d',
     issuer: 'devpulse',
   });
 }
