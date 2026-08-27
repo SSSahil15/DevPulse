@@ -45,5 +45,11 @@
   "devDependencies": {
     "eslint": "^8.57.1",
     "nodemon": "^3.1.10"
+  },
+  "overrides": {
+    "serialize-javascript": "^7.0.5"
+  },
+  "resolutions": {
+    "serialize-javascript": "^7.0.5"
   }
 }
