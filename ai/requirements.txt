@@ -14,7 +14,7 @@ langchain>=0.2.14
 langchain-openai>=0.1.22
 
 # ── Observability ─────────────────────────────────────────────────────────────
-prometheus-client>=0.20.0
+prometheus-client>=0.25.0
 opentelemetry-api>=1.25.0
 opentelemetry-sdk>=1.25.0
 opentelemetry-instrumentation-fastapi>=0.46b0
